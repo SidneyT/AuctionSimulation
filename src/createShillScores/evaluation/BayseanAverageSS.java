@@ -49,8 +49,8 @@ public class BayseanAverageSS {
 			
 			// record rank information
 			Path rankFile = Paths.get("shillingResults", "comparisons", "rank.csv");
-			CompareShillScores.writeRanks(ssi.shillScores, bayseanSS, ssi.auctionBidders, ssi.auctionCounts, rankFile, label + ".BSS");
-			CompareShillScores.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, rankFile, label);
+			ShillVsNormalSS.writeRanks(ssi.shillScores, bayseanSS, ssi.auctionBidders, ssi.auctionCounts, rankFile, label + ".BSS");
+			ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, rankFile, label);
 		}
 		
 	}
@@ -90,9 +90,9 @@ public class BayseanAverageSS {
 		private final Map<Integer, Integer> auctionCounts; 
 		public BayseanSS(Collection<ShillScore> shillScores, Map<Integer, Integer> auctionCounts) {
 			for (ShillScore ss : shillScores) {
-				if (ss.lossCount == 0)
+				if (ss.getLossCount() == 0)
 					continue;
-				avgNumLoss.incrementalAvg(ss.lossCount);
+				avgNumLoss.incrementalAvg(ss.getLossCount());
 				avgShillScore.incrementalAvg(ss.getShillScore(auctionCounts));
 			}
 			this.auctionCounts = auctionCounts;
@@ -126,16 +126,16 @@ public class BayseanAverageSS {
 			}
 		}
 		
-		List<Double> ssPercentiles = CompareShillScores.percentiles(normalSS, shillSS);
-		List<Double> bssPercentiles = CompareShillScores.percentiles(normalBSS, shillBSS);
+		List<Double> ssPercentiles = ShillVsNormalSS.percentiles(normalSS, shillSS);
+		List<Double> bssPercentiles = ShillVsNormalSS.percentiles(normalBSS, shillBSS);
 		
-		CompareShillScores.writePercentiles(Paths.get("shillingResults", "comparisons", "SSvsBSS.csv"), runLabel, Arrays.asList(ssPercentiles, bssPercentiles));
+		ShillVsNormalSS.writePercentiles(Paths.get("shillingResults", "comparisons", "SSvsBSS.csv"), runLabel, Arrays.asList(ssPercentiles, bssPercentiles));
 	}
 	
 	public static void writeSSandBSS(ShillScoreInfo ssi, Map<Integer, Double> bayseanSS) {
 		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("shillingResults", "newMeasures", "baysean.csv"), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
 			for (int id : ssi.shillScores.keySet()) {
-				if (ssi.shillScores.get(id).lossCount == 0)
+				if (ssi.shillScores.get(id).getLossCount() == 0)
 					continue;
 				bw.append(id + ",");
 				bw.append(ssi.shillScores.get(id).getShillScore(ssi.auctionCounts) + ",");

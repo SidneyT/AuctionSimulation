@@ -15,6 +15,8 @@ import createShillScores.BuildShillScore.User;
 
 public class WriteScores {
 
+	private static final String delimiter = ",";
+
 	/**
 	 * Writes shill scores of all users to a file.
 	 * 
@@ -24,29 +26,13 @@ public class WriteScores {
 	 */
 	public static void writeShillScores(Map<Integer, ShillScore> shillScores, Map<Integer, Integer> auctionCounts, String suffix, int[]... reweights) {
 		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("shillingResults/ShillScores_" + suffix + ".csv"), Charset.defaultCharset())) {
-			bw.write(shillScoreHeadings(reweights));
+			bw.append(shillScoreHeadings(reweights));
 			bw.newLine();
 			
-			for (Entry<Integer, ShillScore> shillScoreEntry : shillScores.entrySet()) {
-				int bidderId = shillScoreEntry.getKey();
-				ShillScore shillScore = shillScoreEntry.getValue();
-				
-				if (shillScore.lossCount != 0) {
-					bw.append(bidderId + ",");
-					bw.append(shillScore.winCount + ",");
-					bw.append(shillScore.lossCount + ",");
-					bw.append(shillScore.getAlpha(auctionCounts).maxAlpha + ",");
-					bw.append(shillScore.getBeta() + ",");
-					bw.append(shillScore.getGamma() + ",");
-					bw.append(shillScore.getDelta() + ",");
-					bw.append(shillScore.getEpsilon() + ",");
-					bw.append(shillScore.getZeta() + "");
-					bw.append("," + shillScore.getShillScore(auctionCounts));
-					for (int i = 0; i < reweights.length; i++) {
-						double reweighted = shillScore.getShillScore(auctionCounts, reweights[i]);
-						bw.append("," + reweighted);
-					}
-					
+			for (ShillScore ss : shillScores.values()) {
+				if (ss.getLossCount() != 0) {
+					bw.append(ss.getId() + delimiter);
+					bw.append(SSRatingsString(ss, auctionCounts, reweights).toString());
 					bw.newLine();
 				}
 			}
@@ -55,6 +41,24 @@ public class WriteScores {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static StringBuilder SSRatingsString(ShillScore ss, Map<Integer, Integer> auctionCounts, int[]... reweights) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(ss.getWinCount()).append(delimiter);
+		sb.append(ss.getLossCount()).append(delimiter);
+		sb.append(ss.getAlpha(auctionCounts).maxAlpha).append(delimiter);
+		sb.append(ss.getBeta()).append(delimiter);
+		sb.append(ss.getGamma()).append(delimiter);
+		sb.append(ss.getDelta()).append(delimiter);
+		sb.append(ss.getEpsilon()).append(delimiter);
+		sb.append(ss.getZeta()).append(delimiter);
+		sb.append(ss.getShillScore(auctionCounts));
+		for (int i = 0; i < reweights.length; i++) {
+			double reweighted = ss.getShillScore(auctionCounts, reweights[i]);
+			sb.append(delimiter).append(reweighted);
+		}
+		return sb;
 	}
 
 	private static String shillScoreHeadings(int[]... reweights) {
@@ -70,7 +74,7 @@ public class WriteScores {
 		sb.append("zeta,");
 		sb.append("score");
 		for (int i = 0; i < reweights.length; i++) {
-			sb.append(",").append(Arrays.toString(reweights[i]).replaceAll(", ", ""));
+			sb.append(",").append(Arrays.toString(reweights[i]).replaceAll(", ", "-"));
 		}
 		return sb.toString();
 	}
@@ -125,15 +129,9 @@ public class WriteScores {
 			for (int bidderId : cScores.keySet()) {
 				ShillScore sScore = sScores.get(bidderId);
 				CollusiveShillScore cScore = cScores.get(bidderId);
-				
-				bw.append(bidderId + ",");
-				bw.append(cScore.getEta() + ",");
-				bw.append(cScore.getBindingFactorB() + ",");
-				bw.append(cScore.alternatingBidScore(sScore) + ",");
-				bw.append(cScore.getTheta() + ",");
-				bw.append(cScore.getBindingFactorA() + ",");
-				bw.append(cScore.alternatingAuctionScore(sScore) + ",");
-				bw.append(cScore.hybridScore(sScore) + "");
+
+				bw.append(bidderId + delimiter);
+				bw.append(CSSRatingsString(cScore, sScore).toString());
 				bw.newLine();
 			}
 			
@@ -141,6 +139,19 @@ public class WriteScores {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static StringBuilder CSSRatingsString(CollusiveShillScore cs, ShillScore ss) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(cs.getId()).append(delimiter);
+		sb.append(cs.getEta()).append(delimiter);
+		sb.append(cs.getBindingFactorB()).append(delimiter);
+		sb.append(cs.alternatingBidScore(ss)).append(delimiter);
+		sb.append(cs.getTheta()).append(delimiter);
+		sb.append(cs.getBindingFactorA()).append(delimiter);
+		sb.append(cs.alternatingAuctionScore(ss)).append(delimiter);
+		sb.append(cs.hybridScore(ss));
+		return sb;
 	}
 
 	private static String collusiveShillScoreHeadings() {

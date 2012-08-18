@@ -11,10 +11,10 @@ import util.Util;
 
 public class ShillScore {
 	
-	public final int id; // bidderId
+	private final int id; // bidderId
 	public final String userType;
-	public int winCount;
-	public int lossCount;
+	int winCount;
+	int lossCount;
 	final Map<Integer, Integer> lossCounts; // number of auctions lost by this bidder for each seller (sellerId, count)
 	final IncrementalAverage bidProportion; // proportion of bids compared to maximum
 	final IncrementalAverage interBidTime; // number of time units since previous bid
@@ -29,6 +29,18 @@ public class ShillScore {
 		this.interBidTime = new IncrementalAverage(); 
 		this.bidIncrement = new IncrementalAverage(); 
 		this.firstBidTime = new IncrementalAverage(); 
+	}
+	
+	public int getId() {
+		return this.id;
+	}
+	
+	public int getWinCount() {
+		return this.winCount;
+	}
+	
+	public int getLossCount() {
+		return this.lossCount;
 	}
 	
 	@Override
@@ -119,7 +131,7 @@ public class ShillScore {
 	 * Get the shill score. The alpha score used is the highest one for all
 	 * bidder/seller pairs, given this bidder.
 	 */
-	public static int[] DEFAULT_WEIGHTS = {9, 2, 5, 2, 2, 2}; //22
+	public static final int[] DEFAULT_WEIGHTS = {9, 2, 5, 2, 2, 2}; //22
 	public double getShillScore(Map<Integer, Integer> auctionCounts, int[] weights) {
 		double score = 0;
 		score += this.getAlpha(auctionCounts).maxAlpha * weights[0];

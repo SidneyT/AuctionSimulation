@@ -52,8 +52,9 @@ public class ShillEvaluation {
 		int numberOfRuns = 20;
 		
 //		singleShillPairMultipleRuns(simplePairAdderA, numberOfRuns, new int[]{1,1,1,1,1,1});
+		singleShillPairMultipleRuns(simplePairAdderA, numberOfRuns);
 //		singleShillPairMultipleRuns(simplePairAdderB, numberOfRuns);
-		singleShillPairMultipleRuns(simplePairAdderC, numberOfRuns);
+//		singleShillPairMultipleRuns(simplePairAdderC, numberOfRuns);
 		
 //		collusiveShillPairMultiple  Runs(hybridAdderB, numberOfRuns);
 //		collusiveShillPairMultipleRuns(randomHybridAdderA, numberOfRuns);
@@ -96,10 +97,10 @@ public class ShillEvaluation {
 			}
 			
 			// write out percentiles
-			CompareShillScores.writePercentiles(Paths.get("shillingResults", "comparisons", "ssPercentiles.csv"), ssPercentilesRunLabel, ssPercentiless);
+			ShillVsNormalSS.writePercentiles(Paths.get("shillingResults", "comparisons", "ssPercentiles.csv"), ssPercentilesRunLabel, ssPercentiless);
 			
 			// write out the number of shill auctions for which the shill had the highest (or not highest) SS
-			CompareShillScores.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, Paths.get("shillingResults", "comparisons", "rank.csv"), runLabel, weightSets);
+			ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, Paths.get("shillingResults", "comparisons", "rank.csv"), runLabel, weightSets);
 			
 //			WriteScores.writeShillScoresForAuctions(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, runLabel);
 		}
@@ -116,7 +117,7 @@ public class ShillEvaluation {
 				normalSS.add(ss.getShillScore(auctionCounts, weights));
 			}
 		}
-		return CompareShillScores.percentiles(normalSS, shillSS);
+		return ShillVsNormalSS.percentiles(normalSS, shillSS);
 	}
 	
 	private static void collusiveShillPairMultipleRuns(AgentAdder adder, int numberOfRuns) {
@@ -142,7 +143,7 @@ public class ShillEvaluation {
 			
 			List<Double> ssPercentiles = BuildCollusiveShillScore.getPercentiles(ScoreType.Hybrid, ssi, css, runLabel);
 			// write out percentiles
-			CompareShillScores.writePercentiles(Paths.get("shillingResults", "comparisons", "cssPercentiles.csv"), runLabel, Collections.singletonList(ssPercentiles));
+			ShillVsNormalSS.writePercentiles(Paths.get("shillingResults", "comparisons", "cssPercentiles.csv"), runLabel, Collections.singletonList(ssPercentiles));
 			
 //			WriteScores.writeShillScoresForAuctions(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, runLabel);
 		}

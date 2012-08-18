@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import createShillScores.evaluation.CompareShillScores;
+import createShillScores.evaluation.ShillVsNormalSS;
 
 public class RecalculateSS {
 
@@ -32,7 +32,7 @@ public class RecalculateSS {
 		String label = Arrays.toString(weights).replaceAll(", ", "");
 		String date = new Date().toString();
 		
-		List<Double> originalShillPercentiles = CompareShillScores.filePercentiles(file);
+		List<Double> originalShillPercentiles = ShillVsNormalSS.filePercentiles(file);
 		
 		List<Double> normalScores = new ArrayList<>();
 		List<Double> shillScores = new ArrayList<>();
@@ -54,7 +54,7 @@ public class RecalculateSS {
 		}
 
 		// calculate percentiles
-		List<Double> percentiles = CompareShillScores.percentiles(normalScores, shillScores);
+		List<Double> percentiles = ShillVsNormalSS.percentiles(normalScores, shillScores);
 		assert originalShillPercentiles.size() == percentiles.size();
 		for (int i = 0; i < percentiles.size(); i++) {
 			// write label

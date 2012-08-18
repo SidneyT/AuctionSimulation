@@ -5,11 +5,11 @@ import util.Util;
 
 public class CollusiveShillScore {
 
-	final int id; // bidderId
+	private final int id; // bidderId
 	
-	double eta;
+	private double eta;
 	final IncrementalAverage bindingFactorB;
-	double theta;
+	private double theta;
 	final IncrementalAverage bindingFactorA;
 	
 	public CollusiveShillScore(int id) {
@@ -18,6 +18,9 @@ public class CollusiveShillScore {
 		bindingFactorA = new IncrementalAverage();
 	}
 	
+	public int getId() {
+		return this.id;
+	}
 	public void setEta(double eta) {
 		this.eta = eta;
 	}
@@ -74,7 +77,7 @@ public class CollusiveShillScore {
 	
 	public double bayseanScore(ScoreType type, ShillScore ss, double groupSize, double groupMean) {
 		double score = getScore(type, ss);
-		double bayseanScore = Util.bayseanAverage(groupSize, groupMean, ss.lossCount, score);
+		double bayseanScore = Util.bayseanAverage(groupSize, groupMean, ss.getLossCount(), score);
 		return bayseanScore;
 	}
 

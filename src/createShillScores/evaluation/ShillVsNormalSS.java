@@ -33,7 +33,7 @@ import au.com.bytecode.opencsv.CSVReader;
 /**
  * Calculate statistics about the shill scores of shillers vs. normal users.
  */
-public class CompareShillScores {
+public class ShillVsNormalSS {
 	
 	public static void main(String[] args) {
 //		go("SingleShill");

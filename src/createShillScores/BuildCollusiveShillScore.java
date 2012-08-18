@@ -21,8 +21,8 @@ import java.util.Set;
 
 import createShillScores.BuildShillScore.ShillScoreInfo;
 import createShillScores.CollusiveShillScore.ScoreType;
-import createShillScores.evaluation.CompareShillScores;
-import createShillScores.evaluation.CompareShillScores.TpFpPair;
+import createShillScores.evaluation.ShillVsNormalSS;
+import createShillScores.evaluation.ShillVsNormalSS.TpFpPair;
 
 import simulator.database.SimulationDbConn;
 import util.CombinationGenerator;
@@ -71,7 +71,7 @@ public class BuildCollusiveShillScore {
 			}
 		}
 
-		List<Double> percentiles = CompareShillScores.percentiles(normalCollusionScores, shillCollusionScores);
+		List<Double> percentiles = ShillVsNormalSS.percentiles(normalCollusionScores, shillCollusionScores);
 //		CompareShillScores.writePercentiles(Paths.get("shillingResults", "comparisons", "Percentiles" + type.name + suffix + ".csv"), percentiles, "");
 		
 //		List<TpFpPair> tpFps = CompareShillScores.generateTpFp(percentiles);
