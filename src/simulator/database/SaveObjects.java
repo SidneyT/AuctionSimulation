@@ -15,7 +15,7 @@ import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.objects.Feedback;
 
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 public class SaveObjects {
 

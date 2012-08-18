@@ -1,4 +1,4 @@
-package evaluation;
+package simulator.modelEvaluation;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -19,7 +19,6 @@ import org.apache.log4j.Logger;
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
 
-import simulator.evaluation.AccuracyEvaluation;
 import util.HungarianAlgorithm;
 import weka.classifiers.Classifier;
 import weka.core.Instances;

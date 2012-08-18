@@ -1,4 +1,4 @@
-package simulator.evaluation;
+package simulator.modelEvaluation;
 
 import java.io.BufferedWriter;
 import java.io.File;

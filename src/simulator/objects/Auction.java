@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 
 import util.Util;
 
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 /**
  * Not thread safe. Should be single thread access only.

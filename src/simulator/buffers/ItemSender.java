@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 import simulator.objects.Auction;
 import simulator.objects.Item;

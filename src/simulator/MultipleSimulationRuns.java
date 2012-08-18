@@ -1,4 +1,4 @@
-package simulator.evaluation;
+package simulator;
 
 import java.nio.file.Paths;
 import java.util.TreeMap;
@@ -6,7 +6,6 @@ import java.util.TreeMap;
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildUserFeatures;
 import createUserFeatures.UserFeatures;
-import simulator.Main;
 
 /**
  * Runs the simulator multiple times with each run giving multiple files with different feature sets.

@@ -2,7 +2,7 @@ package simulator.objects;
 
 import org.apache.log4j.Logger;
 
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 /**
  * Bid object. Comparator sorts list from lowest to highest.

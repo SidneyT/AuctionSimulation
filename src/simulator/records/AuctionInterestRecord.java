@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import simulator.objects.Auction;
-import agent.EventListener;
+import agents.EventListener;
 
 public class AuctionInterestRecord {
 	

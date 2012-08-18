@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 import simulator.objects.Auction;
 

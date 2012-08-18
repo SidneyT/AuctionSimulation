@@ -1,6 +1,6 @@
 package simulator.objects;
 
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 public class Feedback {
 	private boolean forSeller;

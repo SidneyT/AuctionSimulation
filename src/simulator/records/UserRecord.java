@@ -7,7 +7,7 @@ import java.util.List;
 
 import simulator.database.SaveObjects;
 
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 /**
  * Keeps track of bidders/sellers in the Auction House.
