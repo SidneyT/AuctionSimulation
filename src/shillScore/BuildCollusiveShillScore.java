@@ -1,4 +1,4 @@
-package createShillScores;
+package shillScore;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -19,11 +19,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import createShillScores.BuildShillScore.ShillScoreInfo;
-import createShillScores.CollusiveShillScore.ScoreType;
-import createShillScores.evaluation.ShillVsNormalSS;
-import createShillScores.evaluation.ShillVsNormalSS.TpFpPair;
 
+import shillScore.BuildShillScore.ShillScoreInfo;
+import shillScore.CollusiveShillScore.ScoreType;
+import shillScore.evaluation.ShillVsNormalSS;
+import shillScore.evaluation.ShillVsNormalSS.TpFpPair;
 import simulator.database.SimulationDbConn;
 import util.CombinationGenerator;
 import util.Util;

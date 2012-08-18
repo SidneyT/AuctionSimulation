@@ -1,6 +1,7 @@
-package agents.shills;
+package agents.shills.strategies;
 
 import java.util.List;
+
 
 import simulator.objects.Auction;
 import simulator.objects.Bid;

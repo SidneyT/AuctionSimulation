@@ -1,4 +1,4 @@
-package createShillScores;
+package shillScore;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;

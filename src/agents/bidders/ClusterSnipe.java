@@ -1,4 +1,4 @@
-package agent.bidders;
+package agents.bidders;
 
 import java.util.HashMap;
 import java.util.HashSet;

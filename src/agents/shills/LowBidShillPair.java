@@ -1,4 +1,4 @@
-package agent.shills;
+package agents.shills;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,8 +24,9 @@ import simulator.objects.ItemCondition;
 import simulator.objects.Feedback.Val;
 import simulator.records.UserRecord;
 import util.Util;
-import agent.EventListener;
-import agent.SimpleUser;
+import agents.EventListener;
+import agents.SimpleUser;
+import agents.shills.strategies.Strategy;
 
 public class LowBidShillPair extends EventListener implements Controller {
 	

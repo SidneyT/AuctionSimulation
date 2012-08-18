@@ -1,9 +1,12 @@
-package agent.shills;
+package agents.shills;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import agents.shills.strategies.Strategy;
+import agents.shills.strategies.TrevathanStrategy;
 
 
 import simulator.AgentAdder;

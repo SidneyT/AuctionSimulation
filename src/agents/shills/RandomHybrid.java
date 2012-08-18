@@ -11,6 +11,8 @@ import java.util.Stack;
 
 import org.apache.log4j.Logger;
 
+import agents.shills.strategies.Strategy;
+
 
 import simulator.AgentAdder;
 import simulator.AuctionHouse;

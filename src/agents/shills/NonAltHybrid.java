@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import agents.shills.strategies.Strategy;
+
 import simulator.AgentAdder;
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;

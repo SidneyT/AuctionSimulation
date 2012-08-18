@@ -27,6 +27,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Util;
 import agents.EventListener;
 import agents.SimpleUser;
+import agents.shills.strategies.Strategy;
 
 public class SingleShillController extends EventListener implements Controller {
 	

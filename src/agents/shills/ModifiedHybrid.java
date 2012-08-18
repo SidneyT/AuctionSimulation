@@ -9,6 +9,9 @@ import java.util.Random;
 import org.apache.log4j.Logger;
 
 import agents.SimpleUser;
+import agents.shills.strategies.LowPriceStrategy;
+import agents.shills.strategies.Strategy;
+import agents.shills.strategies.TrevathanStrategy;
 
 
 import simulator.AgentAdder;

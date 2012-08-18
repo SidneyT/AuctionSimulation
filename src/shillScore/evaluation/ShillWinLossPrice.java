@@ -1,4 +1,4 @@
-package createShillScores.evaluation;
+package shillScore.evaluation;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

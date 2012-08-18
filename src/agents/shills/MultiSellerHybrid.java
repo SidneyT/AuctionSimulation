@@ -3,6 +3,8 @@ package agents.shills;
 import java.util.ArrayList;
 import java.util.List;
 
+import agents.shills.strategies.Strategy;
+
 import simulator.AgentAdder;
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;

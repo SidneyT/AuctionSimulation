@@ -1,4 +1,4 @@
-package agent;
+package agents;
 
 import java.util.HashSet;
 import java.util.List;

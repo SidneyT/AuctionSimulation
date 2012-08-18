@@ -27,6 +27,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Util;
 import agents.EventListener;
 import agents.SimpleUser;
+import agents.shills.strategies.Strategy;
 
 /**
  *	Shill bidder that bids using the strategy given.

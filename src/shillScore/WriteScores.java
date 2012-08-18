@@ -1,4 +1,4 @@
-package createShillScores;
+package shillScore;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -10,8 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import createShillScores.BuildShillScore.Auction;
-import createShillScores.BuildShillScore.User;
+import shillScore.BuildShillScore.Auction;
+import shillScore.BuildShillScore.User;
+
 
 public class WriteScores {
 

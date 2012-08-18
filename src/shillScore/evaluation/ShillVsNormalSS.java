@@ -1,4 +1,4 @@
-package createShillScores.evaluation;
+package shillScore.evaluation;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -23,10 +23,11 @@ import java.util.Set;
 
 import org.apache.commons.math3.stat.Frequency;
 
-import createShillScores.ShillScore;
-import createShillScores.BuildShillScore.Auction;
-import createShillScores.BuildShillScore.User;
-import createShillScores.evaluation.BayseanAverageSS.BayseanSS;
+import shillScore.ShillScore;
+import shillScore.BuildShillScore.Auction;
+import shillScore.BuildShillScore.User;
+import shillScore.evaluation.BayseanAverageSS.BayseanSS;
+
 
 import au.com.bytecode.opencsv.CSVReader;
 

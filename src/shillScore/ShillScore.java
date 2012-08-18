@@ -1,4 +1,4 @@
-package createShillScores;
+package shillScore;
 
 import java.util.ArrayList;
 import java.util.HashMap;

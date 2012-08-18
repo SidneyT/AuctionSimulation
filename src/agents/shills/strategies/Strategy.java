@@ -1,4 +1,4 @@
-package agents.shills;
+package agents.shills.strategies;
 
 import simulator.objects.Auction;
 

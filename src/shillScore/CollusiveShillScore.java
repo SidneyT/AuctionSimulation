@@ -1,4 +1,4 @@
-package createShillScores;
+package shillScore;
 
 import util.IncrementalAverage;
 import util.Util;

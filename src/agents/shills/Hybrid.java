@@ -1,4 +1,4 @@
-package agent.shills;
+package agents.shills;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+
+import agents.shills.strategies.Strategy;
+import agents.shills.strategies.TrevathanStrategy;
 
 
 import simulator.AgentAdder;
@@ -23,8 +26,8 @@ public class Hybrid extends CollusiveShillController {
 	
 	private static Logger logger = Logger.getLogger(Hybrid.class);
 
-	public Hybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numBidder) {
-		super(bh, ps, is, ah, ur, types, strategy, 1, numBidder);
+	public Hybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int bidderPerAgent) {
+		super(bh, ps, is, ah, ur, types, strategy, 1, bidderPerAgent);
 	}
 	
 	protected Hybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numSeller, int numBidder) {
@@ -73,19 +76,19 @@ public class Hybrid extends CollusiveShillController {
 		}
 	}
 
-	public static AgentAdder getAgentAdder(final int numberOfAgents, final Strategy strategy, final int numBidder) {
+	public static AgentAdder getAgentAdder(final int numberOfAgents, final Strategy strategy, final int bidderPerAgent) {
 		return new AgentAdder() {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					Hybrid sc = new Hybrid(bh, ps, is, ah, ur, types, strategy, numBidder);
+					Hybrid sc = new Hybrid(bh, ps, is, ah, ur, types, strategy, bidderPerAgent);
 					ah.addEventListener(sc);
 				}
 			}
 			
 			@Override
 			public String toString() {
-				return "AgentAdderHybrid." + numberOfAgents + "." + strategy;
+				return "Hybrid." + numberOfAgents + "." + strategy;
 			}
 		};
 	}

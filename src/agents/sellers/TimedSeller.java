@@ -1,4 +1,4 @@
-package agent.sellers;
+package agents.sellers;
 
 import java.util.List;
 import java.util.Random;
@@ -16,7 +16,7 @@ import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Item;
 import simulator.records.ReputationRecord;
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 /**
  */

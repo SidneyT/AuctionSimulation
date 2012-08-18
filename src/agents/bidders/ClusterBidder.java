@@ -1,4 +1,4 @@
-package agent.bidders;
+package agents.bidders;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,7 +21,7 @@ import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.records.ReputationRecord;
 import util.Util;
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 /**
  * Not thread safe.

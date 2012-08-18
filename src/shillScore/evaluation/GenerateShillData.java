@@ -1,4 +1,4 @@
-package createShillScores.evaluation;
+package shillScore.evaluation;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -10,26 +10,26 @@ import java.util.Map;
 
 import agents.shills.Hybrid;
 import agents.shills.LowBidShillPair;
-import agents.shills.LowPriceStrategy;
 import agents.shills.ModifiedHybrid;
-import agents.shills.ModifiedTrevathanStrategy;
 import agents.shills.MultiSellerHybrid;
 import agents.shills.NonAltHybrid;
 import agents.shills.RandomHybrid;
 import agents.shills.SimpleShillPair;
-import agents.shills.Strategy;
-import agents.shills.TrevathanStrategy;
+import agents.shills.strategies.LowPriceStrategy;
+import agents.shills.strategies.ModifiedTrevathanStrategy;
+import agents.shills.strategies.Strategy;
+import agents.shills.strategies.TrevathanStrategy;
+import shillScore.BuildCollusiveShillScore;
+import shillScore.BuildShillScore;
+import shillScore.CollusiveShillScore;
+import shillScore.ShillScore;
+import shillScore.WriteScores;
+import shillScore.BuildShillScore.ShillScoreInfo;
+import shillScore.CollusiveShillScore.ScoreType;
 import simulator.AgentAdder;
 import simulator.Main;
-import createShillScores.BuildCollusiveShillScore;
-import createShillScores.BuildShillScore;
-import createShillScores.CollusiveShillScore;
-import createShillScores.CollusiveShillScore.ScoreType;
-import createShillScores.ShillScore;
-import createShillScores.WriteScores;
-import createShillScores.BuildShillScore.ShillScoreInfo;
 
-public class ShillEvaluation {
+public class GenerateShillData {
 
 	public static void main(String[] args) {
 		// strategies

@@ -1,4 +1,4 @@
-package createShillScores.evaluation;
+package shillScore.evaluation;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -14,16 +14,16 @@ import java.util.List;
 import java.util.Map;
 
 import agents.shills.SimpleShillPair;
-import agents.shills.Strategy;
-import agents.shills.TrevathanStrategy;
+import agents.shills.strategies.Strategy;
+import agents.shills.strategies.TrevathanStrategy;
 
+import shillScore.BuildShillScore;
+import shillScore.ShillScore;
+import shillScore.BuildShillScore.ShillScoreInfo;
 import simulator.AgentAdder;
 import simulator.Main;
 import util.IncrementalAverage;
 
-import createShillScores.BuildShillScore;
-import createShillScores.ShillScore;
-import createShillScores.BuildShillScore.ShillScoreInfo;
 
 public class BayseanAverageSS {
 

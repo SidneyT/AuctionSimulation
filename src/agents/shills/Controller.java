@@ -1,7 +1,7 @@
-package agent.shills;
+package agents.shills;
 
 import simulator.objects.Auction;
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 public interface Controller {
 	public void winAction(SimpleUser agent, Auction auction);

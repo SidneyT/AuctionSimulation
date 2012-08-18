@@ -1,4 +1,4 @@
-package agent.shills;
+package agents.shills;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -20,8 +19,9 @@ import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.records.UserRecord;
 import util.Util;
-import agent.EventListener;
-import agent.SimpleUser;
+import agents.EventListener;
+import agents.SimpleUser;
+import agents.shills.strategies.Strategy;
 
 public abstract class CollusiveShillController extends EventListener implements Controller {
 	
@@ -41,7 +41,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 	
 	protected final Strategy strategy;
 	
-	public CollusiveShillController(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numSeller, int numBidder) {
+	public CollusiveShillController(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numSeller, int bidderPerAgent) {
 		super(bh, ur.nextId());
 		this.bh = bh;
 		this.ps = ps;
@@ -58,10 +58,8 @@ public abstract class CollusiveShillController extends EventListener implements 
 			css.add(ss);
 		}
 		
-		// set up the shill bidders. Using 4 for now.
-		int numberOfCollusiveBidders = numBidder;
-		cbs = new ArrayList<>(numberOfCollusiveBidders);
-		for (int i = 0; i < numberOfCollusiveBidders; i++) {
+		cbs = new ArrayList<>(bidderPerAgent);
+		for (int i = 0; i < bidderPerAgent; i++) {
 			PuppetBidder cb = new PuppetBidder(bh, ps, is, ah, ur.nextId(), this);
 			ur.addUser(cb);
 			this.cbs.add(cb);
