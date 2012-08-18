@@ -1,4 +1,4 @@
-package agent.shills;
+package agents.shills;
 
 import java.util.List;
 import java.util.Random;
@@ -14,8 +14,8 @@ import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Item;
 import simulator.objects.Auction.AuctionLength;
-import agent.EventListener;
-import agent.SimpleUser;
+import agents.EventListener;
+import agents.SimpleUser;
 
 /**
  * Does nothing; does not react to any events.

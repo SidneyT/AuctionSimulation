@@ -13,9 +13,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import agent.shills.SimpleShillPair;
-import agent.shills.Strategy;
-import agent.shills.TrevathanStrategy;
+import agents.shills.SimpleShillPair;
+import agents.shills.Strategy;
+import agents.shills.TrevathanStrategy;
 
 import simulator.AgentAdder;
 import simulator.Main;

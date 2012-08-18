@@ -33,12 +33,12 @@ import simulator.objects.Auction;
 import simulator.objects.Feedback;
 import simulator.records.UserRecord;
 import util.CrashOnAssertionErrorRunnable;
-import agent.EventListener;
-import agent.SimpleUser;
-import agent.bidders.ClusterBidder;
-import agent.bidders.ClusterEarly;
-import agent.bidders.ClusterSnipe;
-import agent.sellers.TimedSeller;
+import agents.EventListener;
+import agents.SimpleUser;
+import agents.bidders.ClusterBidder;
+import agents.bidders.ClusterEarly;
+import agents.bidders.ClusterSnipe;
+import agents.sellers.TimedSeller;
 
 public class Main {
 

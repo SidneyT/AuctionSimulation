@@ -86,6 +86,7 @@ public class ShillVsNormalSS {
 				shillerSS.add(ss);
 			}
 		}
+		reader.close();
 		
 		// get the runNumber
 		String[] bitsOfName = file.getName().replaceAll(".csv", "").split("\\.");

@@ -1,4 +1,4 @@
-package agent.shills;
+package agents.shills;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,8 +12,8 @@ import simulator.buffers.PaymentSender;
 import simulator.buffers.ItemSender.ItemSold;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
-import agent.EventListener;
-import agent.SimpleUser;
+import agents.EventListener;
+import agents.SimpleUser;
 
 /**
  * Does nothing; does not react to any events.

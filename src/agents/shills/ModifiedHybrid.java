@@ -1,4 +1,4 @@
-package agent.shills;
+package agents.shills;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +8,7 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
-import agent.SimpleUser;
+import agents.SimpleUser;
 
 
 import simulator.AgentAdder;

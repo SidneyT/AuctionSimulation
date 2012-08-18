@@ -1,4 +1,4 @@
-package agent.shills;
+package agents.shills;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,8 +25,8 @@ import simulator.objects.Feedback.Val;
 import simulator.records.UserRecord;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Util;
-import agent.EventListener;
-import agent.SimpleUser;
+import agents.EventListener;
+import agents.SimpleUser;
 
 public class SingleShillController extends EventListener implements Controller {
 	

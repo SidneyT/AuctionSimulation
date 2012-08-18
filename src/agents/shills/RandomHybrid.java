@@ -1,4 +1,4 @@
-package agent.shills;
+package agents.shills;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -12,8 +12,8 @@ import org.apache.log4j.Logger;
 
 
 
-import agent.EventListener;
-import agent.SimpleUser;
+import agents.EventListener;
+import agents.SimpleUser;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.Message;
 import simulator.buffers.MessageType;
