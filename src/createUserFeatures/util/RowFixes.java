@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import simulator.database.TradeMeDbConn;
+import simulator.database.DatabaseConnection;
 
 import createUserFeatures.BuildUserFeatures;
 
@@ -31,7 +31,7 @@ public class RowFixes {
 	private void fixCategoryColumn() {
 		
 		try {
-			Connection conn = TradeMeDbConn.getConnection();
+			Connection conn = DatabaseConnection.getTrademeConnection();
 			PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM auctions WHERE category LIKE '%Cars-bikes-boats%';");
 			ResultSet rs = pstmt.executeQuery();
 

@@ -133,7 +133,7 @@ public class UserFeatures {
 		return userId;
 	}
 	
-	public int numAuctionsBidIn() {
+	public int auctionCount() {
 		return auctionCount;
 	}
 
@@ -226,50 +226,50 @@ public class UserFeatures {
 	
 	public static String headings(FeaturesToUse ufs) {
 		StringBuilder sb = new StringBuilder();
-		if (ufs.printUserId)
+		if (ufs.userId0)
 			sb.append("0userId").append(delimiter);
-		if (ufs.printNumAuctionsBidIn)
+		if (ufs.auctionCount1)
 			sb.append("1AuctionCount").append(delimiter);
-		if (ufs.printNumAuctionsBidInLn)
+		if (ufs.auctionCount1Ln)
 			sb.append("1lnAuctionCount").append(delimiter);
-		if (ufs.printRep)
+		if (ufs.rep2)
 			sb.append("2Rep").append(delimiter);
-		if (ufs.printRepLn)
+		if (ufs.rep2Ln)
 			sb.append("2lnRep").append(delimiter);
-		if (ufs.printAvgBid)
+		if (ufs.avgBid3)
 			sb.append("3AvgBidAmount").append(delimiter);
-		if (ufs.printAvgBidLn)
+		if (ufs.avgBid3Ln)
 			sb.append("3lnAvgBidAmount").append(delimiter);
-		if (ufs.printAvgBidPropMax)
-			sb.append("10AvgBidPropMax").append(delimiter);
-		if (ufs.printBidInc)
+		if (ufs.bidInc4)
 			sb.append("4AvgBidInc").append(delimiter);
-		if (ufs.printBidIncLn)
+		if (ufs.bidInc4Ln)
 			sb.append("4lnAvgBidInc").append(delimiter);
-		if (ufs.printPropWin)
-			sb.append("5PropWin").append(delimiter);
-		if (ufs.printBidsPerAuc)
+		if (ufs.bidsPer6Auc)
 			sb.append("6BidsPerAuc").append(delimiter);
-		if (ufs.printBidsPerAucLn)
+		if (ufs.bidsPerAuc6Ln)
 			sb.append("6lnBidsPerAuc").append(delimiter);
-		if (ufs.printAvgBidProp)
+		if (ufs.firstBidTimes13)
+			sb.append("13FirstBidTimes").append(delimiter);
+		if (ufs.bidTimesUntilEnd9)
+			sb.append("9AvgBidTimesUntilEnd").append(delimiter);
+		if (ufs.propWin5)
+			sb.append("5PropWin").append(delimiter);
+		if (ufs.avgBidPropMax10)
+			sb.append("10AvgBidPropMax").append(delimiter);
+		if (ufs.avgBidProp11)
 			sb.append("11AvgBidProp").append(delimiter);
-		if (ufs.printBidPeriod) {
+		if (ufs.bidPeriod7) {
 			sb.append("7BidBeg").append(delimiter);
 			sb.append("7BidMid").append(delimiter);
 			sb.append("7BidEnd").append(delimiter);
 		}
-		if (ufs.printBidPeriodAlt)
-			sb.append("9AvgBidTimesUntilEnd").append(delimiter);
-		if (ufs.printBidMinsBeforeEnd)
+		if (ufs.bidMinsBeforeEnd12)
 			sb.append("12BidMinsBeforeEnd").append(delimiter);
-		if (ufs.printAucPerCat)
+		if (ufs.aucPerCat8)
 			sb.append("8AuctionsPerCat").append(delimiter);
-		if (ufs.printFirstBidTimes)
-			sb.append("13FirstBidTimes").append(delimiter);
-		if (ufs.printSelfBidInterval)
+		if (ufs.selfBidInterval14)
 			sb.append("14SelfBidInterval").append(delimiter);
-		if (ufs.printAnyBidInterval)
+		if (ufs.anyBidInterval15)
 			sb.append("15AnyBidInterval").append(delimiter);
 		
 
@@ -284,72 +284,76 @@ public class UserFeatures {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		FeaturesToUse featuresToPrint = this.fpWrapper.getFeaturesToUse();
-		if (featuresToPrint.printUserId) {
+		if (featuresToPrint.userId0) {
 			sb.append(userId);
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printNumAuctionsBidIn) {
-			sb.append(numAuctionsBidIn());
+		if (featuresToPrint.auctionCount1) {
+			sb.append(auctionCount());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printNumAuctionsBidInLn) {
+		if (featuresToPrint.auctionCount1Ln) {
 			sb.append(numAuctionsBidInLn());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printRep) {
+		if (featuresToPrint.rep2) {
 			if (pos == -1)
 				throw new RuntimeException("Rep not present for " + userId + ".");
 			sb.append(rep());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printRepLn) {
+		if (featuresToPrint.rep2Ln) {
 			sb.append(repLn());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printAvgBid) {
+		if (featuresToPrint.avgBid3) {
 			sb.append(avgBid());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printAvgBidLn) {
+		if (featuresToPrint.avgBid3Ln) {
 			sb.append(avgBidLn());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printAvgBidPropMax) {
-			sb.append(avgBidAmountComparedToFinal);
-			sb.append(delimiter);
-		}
-		if (featuresToPrint.printBidInc) {
+		if (featuresToPrint.bidInc4) {
 			if (bidIncCount != 0) {
 //				sb.append(avgBidInc());
 				sb.append(avgBidIncMinusMinInc());
 			}
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printBidIncLn) {
+		if (featuresToPrint.bidInc4Ln) {
 			if (bidIncCount != 0)
 				sb.append(avgBidIncMinusMinIncLn());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printPropWin) {
-			sb.append(propWin());
-//			sb.append(propWinOrdinal());
-			sb.append(delimiter);
-		}
-		if (featuresToPrint.printBidsPerAuc) {
+		if (featuresToPrint.bidsPer6Auc) {
 			sb.append(bidsPerAuc());
 //			sb.append(avgBidPerAucOrdinal());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printBidsPerAucLn) {
+		if (featuresToPrint.bidsPerAuc6Ln) {
 			sb.append(bidsPerAucLn());
 //			sb.append(avgBidPerAucOrdinal());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printAvgBidProp) {
-			sb.append(avgBidProp);
+		if (featuresToPrint.firstBidTimes13) {
+			sb.append(Math.log(firstBidTimes));
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printBidPeriod) {
+		if (featuresToPrint.bidTimesUntilEnd9) {
+			sb.append(bidTimeBeforeEndAvg());
+			sb.append(delimiter);
+		}
+		if (featuresToPrint.propWin5) {
+			sb.append(propWin());
+//			sb.append(propWinOrdinal());
+			sb.append(delimiter);
+		}
+		if (featuresToPrint.avgBidPropMax10) {
+			sb.append(avgBidAmountComparedToFinal);
+			sb.append(delimiter);
+		}
+		if (featuresToPrint.bidPeriod7) {
 //			sb.append(avgMinsToEnd());
 //			sb.append(delimiter);
 			sb.append(bidPropBeg()); // beg
@@ -358,41 +362,27 @@ public class UserFeatures {
 			sb.append(delimiter);
 			sb.append(bidPropEnd()); // end
 			sb.append(delimiter);
-//			sb.append(delimiter);
-//			sb.append(bidsInBeginning()); // beg
-//			sb.append(delimiter);
-//			sb.append(bidsInMiddle()); // mid
-//			sb.append(delimiter);
-//			sb.append(bidsInEnd()); // end
-//			sb.append(delimiter);
-//			sb.append(mostBidPeriod());
-//			sb.append(delimiter);
 		}
-		if (featuresToPrint.printBidPeriodAlt) {
-//			sb.append(bidAtEnd());
-			sb.append(bidTimeBeforeEndAvg());
+		if (featuresToPrint.avgBidProp11) {
+			sb.append(avgBidProp);
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printBidMinsBeforeEnd) {
+		if (featuresToPrint.bidMinsBeforeEnd12) {
 			sb.append(bidMinsBeforeEnd());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printAucPerCat) {
+		if (featuresToPrint.aucPerCat8) {
 //			sb.append(auctionsPerCat());
 			sb.append(auctionsPerCatLn());
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printFirstBidTimes) {
-			sb.append(Math.log(firstBidTimes));
-			sb.append(delimiter);
-		}
-		if (featuresToPrint.printSelfBidInterval) {
+		if (featuresToPrint.selfBidInterval14) {
 			if (selfBidInterval != 0)
 				sb.append(Math.log1p(selfBidInterval));
 //				sb.append(selfBidInterval);
 			sb.append(delimiter);
 		}
-		if (featuresToPrint.printAnyBidInterval) {
+		if (featuresToPrint.anyBidInterval15) {
 			if (anyBidInterval != 0)
 				sb.append(Math.log1p(anyBidInterval));
 //				sb.append(anyBidInterval);

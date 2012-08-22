@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.TreeSet;
 
-import simulator.database.TradeMeDbConn;
+import simulator.database.DatabaseConnection;
 
 public class AnalyseAuctionCategories {
 	public static void main(String[] args) throws SQLException {
@@ -15,7 +15,7 @@ public class AnalyseAuctionCategories {
 	}
 	
 	public void run() throws SQLException {
-		Connection conn = TradeMeDbConn.getConnection();
+		Connection conn = DatabaseConnection.getTrademeConnection();
 		
 		PreparedStatement pstmt = conn.prepareStatement("SELECT category, COUNT(*) FROM auctions as a JOIN bids as b ON a.listingId=b.listingId AND a.purchasedWithBuyNow=0 GROUP BY category;");
 		
@@ -46,13 +46,12 @@ public class AnalyseAuctionCategories {
 		String[] parts = fullCategoryName.replace("//", "/").split("/");
 		assert(parts.length >= 2);
 		
-		String shortened;
 		if (parts[0].equals("Home"))
-			return shortened = parts[0] + "/" + parts[1]
+			return parts[0] + "/" + parts[1]
 				//+ parts[2]
 				;
 		else
-			return shortened = parts[0] + "/" + parts[1];
+			return parts[0] + "/" + parts[1];
 	}
 	
 }

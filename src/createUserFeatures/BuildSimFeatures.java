@@ -1,5 +1,6 @@
 package createUserFeatures;
 
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,7 +15,7 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
-import simulator.database.SimulationDbConn;
+import simulator.database.DatabaseConnection;
 import util.Util;
 
 /**
@@ -30,7 +31,8 @@ public class BuildSimFeatures extends BuildUserFeatures{
 //		String features = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
 //		String features = "-3ln-10-5-6ln-11";
 		boolean trim = true;
-		writeToFile(new BuildSimFeatures(features, trim), "BuildTrimmedSimFeatures" + features + ".csv");
+		BuildSimFeatures bf = new BuildSimFeatures(features, trim);
+		writeToFile(bf.build().values(), bf.getFeaturesToPrint(), Paths.get("BuildTrimmedSimFeatures" + features + ".csv"));
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 		System.out.println("Finished.");
 	}
@@ -63,7 +65,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	 */
 	public TreeMap<Integer, UserFeatures> constructUserFeatures(String query) {
 		try {
-			Connection conn = SimulationDbConn.getConnection();
+			Connection conn = DatabaseConnection.getSimulationConnection();
 			
 			PreparedStatement bigQuery = conn.prepareStatement(query);
 			ResultSet bigRS = bigQuery.executeQuery();

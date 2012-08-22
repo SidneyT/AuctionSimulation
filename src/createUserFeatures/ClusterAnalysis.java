@@ -284,7 +284,7 @@ public class ClusterAnalysis {
 
 		ClusterInfo ci = new ClusterInfo();
 		for (UserFeatures userFeatures : userFeaturesCol) {
-			ci.auctionCount(userFeatures.numAuctionsBidIn(), count);
+			ci.auctionCount(userFeatures.auctionCount(), count);
 			ci.auctionCountLn(userFeatures.numAuctionsBidInLn(), count);
 			ci.repAvg(userFeatures.rep(), count);
 			ci.repAvgLn(userFeatures.repLn(), count);

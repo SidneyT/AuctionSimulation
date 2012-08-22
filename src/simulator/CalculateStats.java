@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import simulator.database.SimulationDbConn;
+import simulator.database.DatabaseConnection;
 
 
 public class CalculateStats {
@@ -16,7 +16,7 @@ public class CalculateStats {
 	
 	public static void calculateStats() {
 		try {
-			Connection conn = SimulationDbConn.getConnection();
+			Connection conn = DatabaseConnection.getSimulationConnection();
 			int auctionCount = getAuctionCount(conn);
 			int[] bidFrequencies = getUserBidFrequencies(conn);
 			

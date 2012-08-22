@@ -1,11 +1,11 @@
 package createUserFeatures;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -50,13 +50,6 @@ public abstract class BuildUserFeatures {
 		return this.featuresToPrint.getFeaturesToUseString();
 	}
 	
-	public static void writeToFile(BuildUserFeatures buf, String filename) {
-		writeToFile(buf.build().values(), buf.featuresToPrint.getFeaturesToUse(), filename);
-	}
-	
-	public static void writeToFile(Collection<UserFeatures> userFeaturesCol, FeaturesToUse featuresToPrint, String filename) {
-		writeToFile(userFeaturesCol, featuresToPrint, new File(filename).toPath());
-	}
 	public static void writeToFile(Collection<UserFeatures> userFeaturesCol, FeaturesToUse featuresToPrint, Path path) {
 		try (BufferedWriter bw = Files.newBufferedWriter(path, Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
 			writeToFile(userFeaturesCol, featuresToPrint, bw);
@@ -179,7 +172,7 @@ public abstract class BuildUserFeatures {
 	}
 
 	public abstract TreeMap<Integer, UserFeatures> build();
-	public TreeMap<Integer, UserFeatures> reclustering_contructUserFeatures(int clusterId) {
+	public TreeMap<Integer, UserFeatures> reclustering_build(int clusterId) {
 		throw new NotImplementedException();
 	}
 }

@@ -14,7 +14,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import simulator.database.SimulationDbConn;
+import simulator.database.DatabaseConnection;
 import util.IncrementalAverage;
 import util.Util;
 
@@ -41,7 +41,7 @@ public class BuildShillScore {
 	 */
 	public static ShillScoreInfo build() {
 		try {
-			Connection conn = SimulationDbConn.getConnection();
+			Connection conn = DatabaseConnection.getSimulationConnection();
 			CallableStatement stmt = conn.prepareCall(
 					"SELECT a.listingId, a.sellerId, a.winnerId, u2.userType as sellerType, a.endTime, b.time as bidTime, b.amount as bidAmount, b.bidderId, u1.userType as bidderType " +
 					"FROM auctions as a " +

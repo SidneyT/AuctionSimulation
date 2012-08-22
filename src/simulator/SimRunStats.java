@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import simulator.database.SimulationDbConn;
+import simulator.database.DatabaseConnection;
 
 
 public class SimRunStats {
@@ -15,7 +15,7 @@ public class SimRunStats {
 	}
 	
 	private static void go() throws SQLException {
-		Connection conn = SimulationDbConn.getConnection();
+		Connection conn = DatabaseConnection.getSimulationConnection();
 		
 		int numberOfAuctions = singleIntQuery(conn, "SELECT COUNT(*) FROM auctions WHERE endTime IS NOT NULL;");
 		System.out.println("Number of auctions: " + numberOfAuctions);

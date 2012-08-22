@@ -19,7 +19,7 @@ import agents.SimpleUser;
 
 public class SaveObjects {
 
-	private static final Connection conn = SimulationDbConn.getConnection();
+	private static final Connection conn;
 	private static final PreparedStatement saveBidPstmt;
 	private static final PreparedStatement saveExpiredAuctionPstmt;
 	private static final PreparedStatement saveAuctionPstmt;
@@ -29,6 +29,8 @@ public class SaveObjects {
 	private static final PreparedStatement saveFeedbackPstmt;
 	static {
 		try {
+			conn = DatabaseConnection.getSimulationConnection();
+			
 			saveBidPstmt = conn.prepareStatement("INSERT INTO bids " +
 					"(bidId, time, bidderId, amount, listingId) " +
 					"values (?, ?, ?, ?, ?)");

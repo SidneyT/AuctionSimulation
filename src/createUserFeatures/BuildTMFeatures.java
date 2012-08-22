@@ -1,5 +1,6 @@
 package createUserFeatures;
 
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import simulator.database.TradeMeDbConn;
+import simulator.database.DatabaseConnection;
 import util.Util;
 
 /**
@@ -23,35 +24,60 @@ import util.Util;
 public class BuildTMFeatures extends BuildUserFeatures{
 	
 	public static void main(String[] args) {
-		String features = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15"; // all
-//		String features = "-0-1ln-2ln-3ln-4ln-10-5-6-11-7-9-8";
-		writeToFile(new BuildTMFeatures(features), "TradeMeUserFeatures" + features + ".csv");
+//		String features = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15"; // all
+		String features = "-1ln-2ln-3ln-4ln-6ln-13-9-5-10-11";
+		
+		BuildTMFeatures bf = new BuildTMFeatures(features);
+		
+//		writeToFile(bf.build().values(), bf.getFeaturesToPrint(), Paths.get("TradeMeUserFeatures" + features + ".csv"));
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 //		reclustering(features, 4);
+		int minimumFinalPrice = 10000;
+		int maximumFinalPrice = 100000000;
+		writeToFile(bf.build(minimumFinalPrice, maximumFinalPrice).values(), bf.getFeaturesToPrint(), 
+				Paths.get("TradeMeUserFeatures" + features + "-" + minimumFinalPrice + "-" + maximumFinalPrice + ".csv"));
 		System.out.println("Finished.");
+	}
+	
+	/**
+	 * Builds user features for users using only auctions that ended with a price over a certain value. 
+	 * @param minimumPrice
+	 * @param maximumPrice
+	 * @return
+	 */
+	public TreeMap<Integer, UserFeatures> build(int minimumPrice, int maximumPrice) {
+		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time " +
+				"FROM auctions AS a " +
+				"JOIN bids AS b ON a.listingId=b.listingId " +
+				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
+				"AND EXISTS (SELECT DISTINCT b.listingId FROM bids as b2 WHERE b2.listingId=a.listingId GROUP BY b2.listingId " +
+				"HAVING MAX(b2.amount) > " + minimumPrice + " AND " +
+				"MAX(b2.amount) <= " + maximumPrice + ") " +
+				"ORDER BY a.listingId, amount ASC;";
+		return build(query);
 	}
 	
 	public static void reclustering(String features, int numClusters) {
 		for (int clusterId = 0; clusterId < numClusters; clusterId++) {
 			BuildTMFeatures buf = new BuildTMFeatures(features);
-			buf.writeToFile(buf.reclustering_contructUserFeatures(clusterId).values(), buf.getFeaturesToPrint(), "recluster_" + clusterId + ".csv");
+			writeToFile(buf.reclustering_build(clusterId).values(), buf.getFeaturesToPrint(), Paths.get("recluster_" + clusterId + ".csv"));
 		}
 	}
 	@Override
-	public TreeMap<Integer, UserFeatures> reclustering_contructUserFeatures(int clusterId) {
+	public TreeMap<Integer, UserFeatures> reclustering_build(int clusterId) {
 		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time, c.cluster " +  
 				"FROM auctions AS a " +
 				"JOIN bids AS b ON a.listingId=b.listingId " +
-				"LEFT JOIN clusterAssignments AS c ON b.bidderId=c.userId " + 
+				"JOIN cluster AS c ON b.bidderId=c.userId " + 
 				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
 				"ORDER BY a.listingId, b.amount ASC;";
 		
-		TreeMap<Integer, UserFeatures> userFeaturesCol = constructUserFeatures(query); // contains userFeatures from all clusters
+		TreeMap<Integer, UserFeatures> userFeaturesCol = build(query); // contains userFeatures from all clusters
 		
 		Set<Integer> idsInCluster = new HashSet<Integer>();
 		try {
-			Connection conn = TradeMeDbConn.getConnection();
-			PreparedStatement pstmt = conn.prepareStatement("SELECT userId FROM clusterAssignments WHERE cluster=? AND algorithm='SimpleKMeans'");
+			Connection conn = DatabaseConnection.getTrademeConnection();
+			PreparedStatement pstmt = conn.prepareStatement("SELECT userId FROM cluster WHERE cluster=? AND algorithm='SimpleKMeans'");
 			pstmt.setInt(1, clusterId);
 			ResultSet rs = pstmt.executeQuery();
 			while(rs.next()) {
@@ -80,7 +106,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 				"JOIN bids AS b ON a.listingId=b.listingId " +
 				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
 				"ORDER BY a.listingId, amount ASC;";
-		return constructUserFeatures(query);
+		return build(query);
 	}
 	
 	/**
@@ -88,9 +114,9 @@ public class BuildTMFeatures extends BuildUserFeatures{
 	 * Information is stored in class variable "userFeaturesMap".  Map is in ascending key
 	 * order. Key is the userId.
 	 */
-	public TreeMap<Integer, UserFeatures> constructUserFeatures(String query) {
+	public TreeMap<Integer, UserFeatures> build(String query) {
 		try {
-			Connection conn = TradeMeDbConn.getConnection();
+			Connection conn = DatabaseConnection.getTrademeConnection();
 			
 			PreparedStatement bigQuery = conn.prepareStatement(query);
 			ResultSet bigRS = bigQuery.executeQuery();

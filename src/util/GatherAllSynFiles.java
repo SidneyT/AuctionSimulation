@@ -15,7 +15,7 @@ public class GatherAllSynFiles {
 	public static void main(String[] args) throws IOException {
 		File synDataFolder = new File("F:/workstuff2011/AuctionSimulation/shillingResults/temp");
 		
-		BufferedWriter bw = Files.newBufferedWriter(Paths.get("trainingData2.csv"), Charset.defaultCharset());
+		BufferedWriter bw = Files.newBufferedWriter(Paths.get("all.csv"), Charset.defaultCharset());
 		for (File file : synDataFolder.listFiles()) {
 			BufferedReader br = Files.newBufferedReader(file.toPath(), Charset.defaultCharset());
 

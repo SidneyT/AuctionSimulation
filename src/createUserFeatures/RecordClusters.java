@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import simulator.database.TradeMeDbConn;
+import simulator.database.DatabaseConnection;
 
 
 public class RecordClusters {
@@ -46,12 +46,12 @@ public class RecordClusters {
 
 	Connection conn;
 	private void record(File idFile, File clusterFile, String algName) throws SQLException {
-		conn = TradeMeDbConn.getConnection();
+		conn = DatabaseConnection.getTrademeConnection();
 		List<Integer> userId = getUserIds(idFile);
 		List<Integer> clusters = getClusters(clusterFile);
 		
 		conn.setAutoCommit(false);
-		PreparedStatement pstmt = conn.prepareStatement("INSERT INTO clusterAssignments (userId, cluster, algorithm) VALUES (?, ?, ?);");
+		PreparedStatement pstmt = conn.prepareStatement("INSERT INTO cluster (userId, cluster, algorithm) VALUES (?, ?, ?);");
 		if (algName == null || algName.isEmpty())
 			algName = clusterFile.getName().substring(0, clusterFile.getName().lastIndexOf("."));
 		for (int i = 0; i < userId.size(); i++) {
@@ -63,12 +63,12 @@ public class RecordClusters {
 	}
 	
 	private void recordReclustering(File idFile, File clusterFile, String algName, int bigCluster) throws SQLException {
-		conn = TradeMeDbConn.getConnection();
+		conn = DatabaseConnection.getTrademeConnection();
 		List<Integer> userId = getUserIds(idFile);
 		List<Integer> clusters = getClusters(clusterFile);
 		
 		conn.setAutoCommit(false);
-		PreparedStatement pstmt = conn.prepareStatement("INSERT INTO clusterAssignments (userId, cluster, algorithm) VALUES (?, ?, ?);");
+		PreparedStatement pstmt = conn.prepareStatement("INSERT INTO cluster (userId, cluster, algorithm) VALUES (?, ?, ?);");
 		if (algName == null || algName.isEmpty())
 			algName = clusterFile.getName().substring(0, clusterFile.getName().lastIndexOf("."));
 		for (int i = 0; i < userId.size(); i++) {

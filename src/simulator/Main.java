@@ -28,7 +28,7 @@ import simulator.categories.CategoryRecord;
 import simulator.categories.ItemType;
 import simulator.categories.MockCategories;
 import simulator.database.SaveObjects;
-import simulator.database.SimulationDbConn;
+import simulator.database.DatabaseConnection;
 import simulator.objects.Auction;
 import simulator.objects.Feedback;
 import simulator.records.UserRecord;
@@ -66,8 +66,8 @@ public class Main {
 	}
 
 	public static void emptyTables() {
-		Connection conn = SimulationDbConn.getConnection();
 		try {
+			Connection conn = DatabaseConnection.getSimulationConnection();
 			Statement stmt = conn.createStatement();
 			stmt.execute("TRUNCATE feedback;");
 			stmt.execute("TRUNCATE bids;");
