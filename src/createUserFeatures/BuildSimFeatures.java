@@ -174,7 +174,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 			
 			// record proportion of bids in the auction are made by this user
 			double bidProp = ((double) bidderBidCount.get(bidderId) / trimmedBidList.size());
-			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.auctionCount, bidProp);
+			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.getAuctionCount(), bidProp);
 
 			// add this auction's information to this bidder's UserFeatures object
 			// *** should be last in this method because of auctionCount increment ***
@@ -211,7 +211,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 			BidObject firstBid = bidListsByUser.get(bidderId).get(0); // first bid in the list must be first, since it's in order
 			long firstBidTime = Util.timeDiffInMin(auctionEnd, firstBid.time);
 			UserFeatures user = userFeaturesMap.get(bidderId);
-			user.firstBidTimes = Util.incrementalAvg(user.firstBidTimes, user.auctionCount, firstBidTime);
+			user.firstBidTimes = Util.incrementalAvg(user.firstBidTimes, user.getAuctionCount(), firstBidTime);
 //			System.out.println("firstBidTimes: " + user.firstBidTimes);
 		}
 		

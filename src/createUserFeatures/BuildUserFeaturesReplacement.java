@@ -22,35 +22,35 @@ import createUserFeatures.features.Feature;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-public abstract class BuildUserFeatures {
+public abstract class BuildUserFeaturesReplacement {
 	protected static final double BEG_MID_BOUNDARY = 0.5;
 	protected static final double MID_END_BOUNDARY = 0.95;
 	
 	protected TreeMap<Integer, UserFeatures> userFeaturesMap;
-	protected final FeaturesToUseWrapper featuresToPrint; // controls what features are printed
+	protected final List<Feature> features; // controls what features are printed
 	public boolean trim; // trim auction bid list lengths to 20
 	
-	public BuildUserFeatures(String features) {
+	public BuildUserFeaturesReplacement(List<Feature> features) {
 		this.userFeaturesMap = new TreeMap<Integer, UserFeatures>();
-		this.featuresToPrint = new FeaturesToUseWrapper(features);
+		this.features = features;
 		trim = false;
-	}
-	
-	public FeaturesToUse getFeaturesToPrint() {
-		return featuresToPrint.getFeaturesToUse();
 	}
 	
 	public boolean trim() {
 		return trim;
 	}
 	
-	public void setFeaturesToPrint(String featureString) {
-		this.featuresToPrint.setFeaturesToPrint(featureString);
-	}
-
-	public String getFeaturesToPrintString() {
-		return this.featuresToPrint.getFeaturesToUseString();
-	}
+//	public FeaturesToUse getFeaturesToPrint() {
+//		return features.getFeaturesToUse();
+//	}
+//	
+//	public void setFeaturesToPrint(List<Feature> features) {
+//		this.features.setFeaturesToPrint(featureString);
+//	}
+//
+//	public String getFeaturesToPrintString() {
+//		return this.features.getFeaturesToUseString();
+//	}
 	
 	public static void writeToFile(Collection<UserFeatures> userFeaturesCol, FeaturesToUse featuresToPrint, Path path) {
 		try (BufferedWriter bw = Files.newBufferedWriter(path, Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
