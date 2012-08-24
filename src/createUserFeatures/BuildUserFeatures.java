@@ -12,12 +12,10 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import createUserFeatures.FeaturesToUseWrapper.FeaturesToUse;
-import createUserFeatures.features.Feature;
 
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;

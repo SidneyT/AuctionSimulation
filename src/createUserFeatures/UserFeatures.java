@@ -22,115 +22,15 @@ public class UserFeatures {
 	int pos, neg; // reputation
 	
 	int bidCount = 0; // number of bids made
-	double avgBid; // average value of bids
+	double bidAvg; // average value of bids
 	
 	int bidIncCount; // number of bidIncrements made (does not count as incrementing a bid if user is first to bid)
-	public static String getDelimiter() {
-		return delimiter;
-	}
-
-	public int getUserId() {
-		return userId;
-	}
-
-	public int getPos() {
-		return pos;
-	}
-
-	public int getNeg() {
-		return neg;
-	}
-
-	public int getBidCount() {
-		return bidCount;
-	}
-
-	public double getAvgBid() {
-		return avgBid;
-	}
-
-	public int getBidIncCount() {
-		return bidIncCount;
-	}
-
-	public double getAvgBidInc() {
-		return avgBidInc;
-	}
-
-	public double getAvgBidIncMinusMinInc() {
-		return avgBidIncMinusMinInc;
-	}
-
-	public double getBidsPerAuc() {
-		return bidsPerAuc;
-	}
-
-	public double getLastBidTime() {
-		return lastBidTime;
-	}
-
-	public double[] getBidPeriods() {
-		return bidPeriods;
-	}
-
-	public double[] getBidPeriodsLogBins() {
-		return bidPeriodsLogBins;
-	}
-
-	public double getFirstBidTimes() {
-		return firstBidTimes;
-	}
-
-	public double getSelfBidInterval() {
-		return selfBidInterval;
-	}
-
-	public double getAnyBidInterval() {
-		return anyBidInterval;
-	}
-
-	public List<Double> getBidTimesBeforeEnd() {
-		return bidTimesBeforeEnd;
-	}
-
-	public List<Long> getBidMinsBeforeEnd() {
-		return bidMinsBeforeEnd;
-	}
-
-	public double getAvgNumCategory() {
-		return avgNumCategory;
-	}
-
-	public Set<String> getCategories() {
-		return categories;
-	}
-
-	public String getCluster() {
-		return cluster;
-	}
-
-	public FeaturesToUseWrapper getFpWrapper() {
-		return fpWrapper;
-	}
-
-	public double getAvgBidAmountComparedToMax() {
-		return avgBidAmountComparedToMax;
-	}
-
-	public double getAvgBidProp() {
-		return avgBidProp;
-	}
-
-	public static double getBidinthreshold() {
-		return bidInThreshold;
-	}
-
 	double avgBidInc; // average bid increment
 	double avgBidIncMinusMinInc; // average bid increment minus minimum increment
 
-	private int auctionCount; // number of auctions as a bidder
-	private int auctionsWon; // number of auctions won
-	double bidsPerAuc; // average number of bids made in all auctions
+	int auctionCount; // number of auctions as a bidder
+	int auctionsWon; // number of auctions won
+	double bidCountAvg; // average number of bids made in all auctions
 //	double bidCountVar; // variance in the number of bids made in an auction
 	double lastBidTime; // average time until the end of the auction the last bid was made
 	final double[] bidPeriods;
@@ -138,7 +38,7 @@ public class UserFeatures {
 	double firstBidTimes; // average number of minutes from the end of the auction the first bid was made
 	double selfBidInterval; // average bid interval
 	double anyBidInterval; // average bid interval
-	final List<Double> bidTimesBeforeEnd; // bid time as fraction befor
+	final List<Double> bidTimesBeforeEnd;
 	final List<Long> bidMinsBeforeEnd;
 
 	double avgNumCategory; // number of categories per auction the user is in
@@ -147,7 +47,7 @@ public class UserFeatures {
 	public String cluster;
 	public final FeaturesToUseWrapper fpWrapper;
 	
-	double avgBidAmountComparedToMax; // average of the bid amounts as fractions of the maximum bid in the same auction
+	double avgBidAmountComparedToFinal; // average of the bid amounts as fractions of the maximum bid in the same auction
 	double avgBidProp;
 	
 	public UserFeatures(FeaturesToUseWrapper featuresToPrintWrapper) {
@@ -165,13 +65,6 @@ public class UserFeatures {
 		neg = -1;
 	}
 
-	public int getAuctionsWon() {
-		return auctionsWon;
-	}
-	public int getAuctionCount() {
-		return auctionCount;
-	}
-	
 	public void setUserId(int userId) {
 		this.userId = userId;
 	}
@@ -203,10 +96,10 @@ public class UserFeatures {
 			bidIncCount++;
 		}
 		// update average bid value
-		avgBid = Util.incrementalAvg(avgBid, bidCount, bid);
+		bidAvg = Util.incrementalAvg(bidAvg, bidCount, bid);
 		// update avgBidComparedToFinal
 		double fractionOfMax = ((double) bid) / maximumBid;
-		avgBidAmountComparedToMax = Util.incrementalAvg(avgBidAmountComparedToMax, bidCount, fractionOfMax);
+		avgBidAmountComparedToFinal = Util.incrementalAvg(avgBidAmountComparedToFinal, bidCount, fractionOfMax);
 		bidCount++;
 	}
 	
@@ -230,7 +123,7 @@ public class UserFeatures {
 //			boolean won
 			) {
 		categories.add(category);
-		bidsPerAuc = Util.incrementalAvg(bidsPerAuc, auctionCount, numberOfBids);
+		bidCountAvg = Util.incrementalAvg(bidCountAvg, auctionCount, numberOfBids);
 		lastBidTime = Util.incrementalAvg(lastBidTime, auctionCount, timeUntilEnd);
 //		if (won) { auctionsWon++; }
 		auctionCount++;
@@ -270,15 +163,15 @@ public class UserFeatures {
 	}
 	
 	public double avgBid() {
-		return avgBid;
+		return bidAvg;
 	}
 	public double avgBidLn() {
-		return Math.log(avgBid);
+		return Math.log(bidAvg);
 	}
 	public double bidAvgOrdinal() {
-		if (avgBid < 800)
+		if (bidAvg < 800)
 			return 1;
-		else if (avgBid < 2500)
+		else if (bidAvg < 2500)
 			return 2;
 		else
 			return 3;
@@ -304,13 +197,16 @@ public class UserFeatures {
 		return discritiseEvenBins(3, propWin());
 	}
 	
+	public double bidsPerAuc() {
+		return bidCountAvg;
+	}
 	public double bidsPerAucLn() {
-		return Math.log(bidsPerAuc);
+		return Math.log(bidCountAvg);
 	}
 	public int avgBidPerAucOrdinal() {
-		if (bidsPerAuc == 1)
+		if (bidCountAvg == 1)
 			return 1;
-		else if (bidsPerAuc <= 4)
+		else if (bidCountAvg <= 4)
 			return 2;
 		else
 			return 3;
@@ -431,7 +327,7 @@ public class UserFeatures {
 			sb.append(delimiter);
 		}
 		if (featuresToPrint.bidsPer6Auc) {
-			sb.append(getBidsPerAuc());
+			sb.append(bidsPerAuc());
 //			sb.append(avgBidPerAucOrdinal());
 			sb.append(delimiter);
 		}
@@ -454,7 +350,7 @@ public class UserFeatures {
 			sb.append(delimiter);
 		}
 		if (featuresToPrint.avgBidPropMax10) {
-			sb.append(getAvgBidAmountComparedToMax());
+			sb.append(avgBidAmountComparedToFinal);
 			sb.append(delimiter);
 		}
 		if (featuresToPrint.bidPeriod7) {

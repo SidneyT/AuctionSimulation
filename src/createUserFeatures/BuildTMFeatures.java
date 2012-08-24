@@ -15,9 +15,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import createUserFeatures.features.Feature;
-import createUserFeatures.features.Features;
-
 import simulator.database.DatabaseConnection;
 import util.Util;
 
@@ -29,20 +26,6 @@ public class BuildTMFeatures extends BuildUserFeatures{
 	public static void main(String[] args) {
 //		String features = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15"; // all
 		String features = "-1ln-2ln-3ln-4ln-6ln-13-9-5-10-11";
-		
-		List<? extends Feature> allFeatures = Arrays.asList(Features.values());
-		List<? extends Feature> featureList = Arrays.asList(
-				Features.AuctionCount1, 
-				Features.Rep2,
-				Features.Rep2Ln,
-				Features.AvgBid3Ln,
-				Features.AvgBidIncMinusMinInc4Ln,
-				Features.BidsPerAuc6Ln,
-				Features.FirstBidTimes13,
-				Features.BidTimesUntilEnd9,
-				Features.PropWin5,
-				Features.AvgBidPropMax10,
-				Features.AvgBidProp11);
 		
 		BuildTMFeatures bf = new BuildTMFeatures(features);
 		
@@ -233,7 +216,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 			
 			// record proportion of bids in the auction are made by this user
 			double bidProp = ((double) bidderBidCount.get(bidderId) / bidList.size());
-			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.getAuctionCount(), bidProp);
+			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.auctionCount, bidProp);
 
 			// add this auction's information to this bidder's UserFeatures object
 			// *** should be last in this method because of auctionCount ***
@@ -270,7 +253,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 			BidObject firstBid = bidListsByUser.get(bidderId).get(0); // first bid in the list must be first, since it's in order
 			long firstBidTime = Util.timeDiffInMin(auctionEnd, firstBid.time);
 			UserFeatures user = userFeaturesMap.get(bidderId);
-			user.firstBidTimes = Util.incrementalAvg(user.firstBidTimes, user.getAuctionCount(), firstBidTime);
+			user.firstBidTimes = Util.incrementalAvg(user.firstBidTimes, user.auctionCount, firstBidTime);
 //			System.out.println("firstBidTimes: " + user.firstBidTimes);
 		}
 		

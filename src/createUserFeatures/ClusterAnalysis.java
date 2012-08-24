@@ -289,10 +289,10 @@ public class ClusterAnalysis {
 			ci.repAvg(userFeatures.rep(), count);
 			ci.repAvgLn(userFeatures.repLn(), count);
 			ci.bidAvgAvg(userFeatures.avgBid(), count);
-			ci.avgBidPropMaxAvg(userFeatures.getAvgBidAmountComparedToMax(), count);
+			ci.avgBidPropMaxAvg(userFeatures.avgBidAmountComparedToFinal, count);
 			ci.avgBidIncAvg(userFeatures.avgBidInc(), count);
 			ci.propWinAvg(userFeatures.propWin(), count);
-			ci.avgBidPerAucAvg(userFeatures.getBidsPerAuc(), count);
+			ci.avgBidPerAucAvg(userFeatures.bidsPerAuc(), count);
 			ci.avgBidPropAvg(userFeatures.avgBidProp, count);
 			ci.bidPeriodBegAvg(userFeatures.bidPropBeg(), count);
 			ci.bidPeriodMidAvg(userFeatures.bidPropMid(), count);
