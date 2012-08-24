@@ -3,8 +3,10 @@ package util;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 public class Util {
@@ -125,4 +127,21 @@ public class Util {
 		return average;
 	}
 	
+	public static <T> List<T> getSample(Iterator<T> it, int sampleSize) {
+		List<T> sample = new ArrayList<>(sampleSize);
+		int seen = 0;
+		Random r = new Random();
+		while(it.hasNext()) {
+			T item = it.next();
+			seen++;
+			if (seen <= sampleSize) {
+				sample.add(item);
+			} else if (r.nextInt(seen) < sampleSize) { // element kept with p=1/seen
+				// remove a random element
+				sample.set(r.nextInt(sampleSize), item);
+			}
+		}
+		return sample;
+	}
+
 }
