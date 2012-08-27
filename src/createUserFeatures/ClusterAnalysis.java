@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import createUserFeatures.FeaturesToUseWrapper.FeaturesToUse;
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 

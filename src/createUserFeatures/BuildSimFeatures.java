@@ -141,41 +141,4 @@ public class BuildSimFeatures extends BuildUserFeatures{
 		}
 	}
 	
-//	private void go() {
-//		try {
-//
-//			Connection connection = DatabaseConn.getConnection();
-//			
-////		    auctionBidFrequencies(connection, 0);
-//		    avgBidPerUser(connection);
-//		    
-//		} catch (SQLException e) {
-//		    // Could not connect to the database
-//			e.printStackTrace();
-//		}
-//	}
-//	
-//	private void avgBidPerUser(Connection conn) throws SQLException {
-//		PreparedStatement pstmt = conn.prepareStatement("SELECT a.bidderId, count(a.listingId), AVG(bidCounts) FROM " +  
-//			    "(SELECT listingId, bidderId, count(*) bidCounts FROM bids GROUP BY bidderId, listingId) as a " + 
-//			    "GROUP BY a.bidderId ORDER BY AVG(bidCounts) DESC;");
-//    	ResultSet rs = pstmt.executeQuery();
-//    	
-//    	// bins of size 0.5
-//    	int[] bins = new int[40];
-//    	while (rs.next()) {
-//    		double avgBids = rs.getDouble("AVG(bidCounts)");
-//    		int binNum = (int)(avgBids/0.5);
-//    		bins[binNum]++;
-//    	}
-//
-//    	Integer[] binNames=  new Integer[40];
-//    	for (int i = 0; i < 40; i++) {
-//    		double binNum = (double)(i);
-//    		binNames[i] = i;
-//    	}
-//    	
-//    	makeChart(bins, binNames, "Bids Per 2 Auctions", "Number of Bids", "Frequency");
-//	}
-	
 }

@@ -22,7 +22,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 
 import createUserFeatures.BuildUserFeatures.BidObject.BidObjectComparator;
-import createUserFeatures.FeaturesToUseWrapper.FeaturesToUse;
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 
@@ -44,18 +43,6 @@ public abstract class BuildUserFeatures {
 	public boolean trim() {
 		return trim;
 	}
-
-	// public FeaturesToUse getFeaturesToPrint() {
-	// return features.getFeaturesToUse();
-	// }
-	//
-	// public void setFeaturesToPrint(List<Feature> features) {
-	// this.features.setFeaturesToPrint(featureString);
-	// }
-	//
-	// public String getFeaturesToPrintString() {
-	// return this.features.getFeaturesToUseString();
-	// }
 
 	public static void writeToFile(Collection<UserFeatures> userFeaturesCol, List<Feature> featuresToPrint, Path path) {
 		try (BufferedWriter bw = Files.newBufferedWriter(path, Charset.defaultCharset(), StandardOpenOption.CREATE,
