@@ -85,7 +85,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 				if (lastListingId != currentListingId) { // new auction
 					if (lastListingId != -1) { // if this is not the first auction,
 						// process the stuff from the previous auction
-						processAuction(ao, bidList);
+						processAuction(ao, trim ? trimTo20(bidList) : bidList);
 						// clear the lists
 						bidList.clear();
 					}
@@ -97,14 +97,22 @@ public class BuildSimFeatures extends BuildUserFeatures{
 				}
 				bidList.add(new BidObject(bigRS.getInt("bidderId"), bigRS.getInt("amount"), convertTimeunitToTimestamp(bigRS.getLong("time"))));
 			}
-			processAuction(ao, bidList); // process the bidList for the last remaining auction
+			processAuction(ao, trim ? trimTo20(bidList) : bidList); // process the bidList for the last remaining auction
 			
 			userRep(conn);
+			conn.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		
 		return this.userFeaturesMap;
+	}
+	
+	private static List<BidObject> trimTo20(List<BidObject> bidList) {
+		if (bidList.size() > 20)
+			return new ArrayList<>(bidList.subList(bidList.size() - 20, bidList.size())); 
+		else
+			return bidList;
 	}
 	
 	/**
@@ -131,23 +139,17 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	
 	private int trimmedCounter = 0;
 	/**
-	 * 
 	 * @param auctionObject
 	 * @param bidList list of bids for this auction in chronological order
 	 */
 	private void processAuction(SimAuctionObject auctionObject, List<BidObject> bidList) {
-		List<BidObject> trimmedBidList = bidList;
-		if (trim && bidList.size() > 20) {
-			trimmedBidList = bidList.subList(trimmedBidList.size() - 20, trimmedBidList.size());
-			logger.debug(++trimmedCounter + " bidList trimmed from " + bidList.size() + " to 20");
-		}
 //		System.out.println(auctionObject + ", " + bidObjects);
 
 		// count the number of bids made for each user in the bidList
 		// and record the time of the last bid made for each user in the bidList 
  		Map<Integer, Integer> bidderBidCount = new HashMap<Integer, Integer>(); // Map<UserId, Count>
 		Map<Integer, Date> bidderLastBidTime = new HashMap<Integer, Date>(); // Map<UserId, Date>
-		for (BidObject bo : trimmedBidList) {
+		for (BidObject bo : bidList) {
 			int bidderId = bo.bidderId;
 			if (bidderBidCount.get(bidderId) == null) {
 				bidderBidCount.put(bidderId, 0);
@@ -166,7 +168,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 		}
 		
 		// record when bids are made
-		recordBidPeriods(auctionObject.endTime, trimmedBidList);
+		recordBidPeriods(auctionObject.endTime, bidList);
 		
 		for (int bidderId : bidderBidCount.keySet()) {
 			UserFeatures uf = userFeaturesMap.get(bidderId);
@@ -178,7 +180,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 //			System.out.println("untilEnd: " + untilEndMin);
 			
 			// record proportion of bids in the auction are made by this user
-			double bidProp = ((double) bidderBidCount.get(bidderId) / trimmedBidList.size());
+			double bidProp = ((double) bidderBidCount.get(bidderId) / bidList.size());
 			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.getAuctionCount(), bidProp);
 
 			// add this auction's information to this bidder's UserFeatures object
@@ -191,187 +193,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 			userFeaturesMap.get(auctionObject.winnerId).addWonAuction();
 		
 		// record bid counts, amounts and increments
-		recordBids(trimmedBidList);
-	}
-	
-	private void recordBids(List<BidObject> bidList) {
-		BidObject firstBid = bidList.get(0);
-		BidObject lastBid = bidList.get(bidList.size() - 1);
-		userFeaturesMap.get(firstBid.bidderId).addBid(firstBid.amount, -1, lastBid.amount);
-		if (bidList.size() >= 1) {
-			// record bid increments
-			for (int i = 1; i < bidList.size(); i++) {
-				BidObject bo = bidList.get(i);
-				userFeaturesMap.get(bo.bidderId).addBid(bo.amount, bidList.get(i-1).amount, lastBid.amount);
-			}
-		}
-	}
-	
-	private void recordBidPeriods(Date auctionEnd, List<BidObject> bidList) {
-		// seperate the bidList into a list for each user
-		Map<Integer, List<BidObject>> bidListsByUser = seperateBidListByUser(bidList);
-		
-		// record when the first bid was made by each user
-		for (int bidderId : bidListsByUser.keySet()) {
-			BidObject firstBid = bidListsByUser.get(bidderId).get(0); // first bid in the list must be first, since it's in order
-			long firstBidTime = Util.timeDiffInMin(auctionEnd, firstBid.time);
-			UserFeatures user = userFeaturesMap.get(bidderId);
-			user.firstBidTimes = Util.incrementalAvg(user.firstBidTimes, user.getAuctionCount(), firstBidTime);
-//			System.out.println("firstBidTimes: " + user.firstBidTimes);
-		}
-		
-		updateSelfBidInterval(bidListsByUser);
-		updateAnyBidInterval(bidList, bidListsByUser);
-		
-		// find the proportion of bids made in the Beginning, Middle and End of an auction
-		Map<Integer, double[]> userBidPeriods = findBidPeriods(auctionEnd, bidList);
-		// record the proportion in the UserFeatures object
-		for (int bidderId : userBidPeriods.keySet()) {
-//			UserFeatures.incrementalAvg(currAvg, currNumElements, nextValue)
-			double[] bidPeriod = userFeaturesMap.get(bidderId).bidPeriods; // get the stored bidPeriod
-			double[] newBidPeriod = userBidPeriods.get(bidderId); // get the new bidPeriod
-			for (int i = 0; i < 3; i++) {
-				// update stored bidPeriod using new BidPeriod
-				// averages are weighted using the number of bids made in each auction (in index 3)
-				bidPeriod[i] = Util.incrementalAvg(bidPeriod[i], (int) bidPeriod[3], newBidPeriod[i], (int) newBidPeriod[3]); 
-			}
-			bidPeriod[3] += newBidPeriod[3];
-		}
-		
-		// time from first bid to the end of the auction, and the number of bids
-//		System.out.print((auctionEnd.getTime() - bidList.get(0).time.getTime()) / 60000 + "," + bidList.size() + ";");
-//		System.out.print(userBidPeriods.size() + ",");
-	}
-	
-	/**
-	 * calculate & record the interval of time between bids made by anyone
-	 * @param bidList
-	 * @param bidListsByUser
-	 */
-	private void updateAnyBidInterval(List<BidObject> bidList, Map<Integer, List<BidObject>> bidListsByUser) {
-		// if there's only 1 bid in the auction, there is no interval.
-		if (bidList.size() > 1) {
-			// Map<bidderId, average>
-			Map<Integer, Integer> intervalTotal = new HashMap<>();
-			for (int bidderId : bidListsByUser.keySet()) { // initialise map with all bidders from the auction
-				intervalTotal.put(bidderId, (int) 0);
-			}
-			
-			for (int i = 1; i < bidList.size(); i++) {
-				int bidderId = bidList.get(i).bidderId;
-				long interval = Util.timeDiffInMin(bidList.get(i).time, bidList.get(i-1).time);
-				assert (interval >= 0);
-				intervalTotal.put(bidderId, (int) (intervalTotal.get(bidderId) + interval));
-			}
-			
-			// update userFeature objects with intervalAverage and weights
-			int bidderWhoBidFirst = bidList.get(0).bidderId;
-			for (int bidderId : bidListsByUser.keySet()) {
-				UserFeatures user = userFeaturesMap.get(bidderId); 
-				int numberOfIntervals;
-				// the bidder who bid first does not have a bid interval for that bid, since there is no preceeding bid
-				if (bidderId == bidderWhoBidFirst) {
-					numberOfIntervals = bidListsByUser.get(bidderId).size() - 1;
-				} else {
-					numberOfIntervals = bidListsByUser.get(bidderId).size();
-				}
-				
-				if (numberOfIntervals >= 1) // if the only bid made was the first bid for the auction, there is no bid interval for this user
-					user.anyBidInterval = Util.incrementalAvg(user.anyBidInterval, user.bidCount, (double) intervalTotal.get(bidderId) / numberOfIntervals, numberOfIntervals);
-			}
-			
-		}
-		
-	}
-
-	/**
-	 * calculate & record the interval of time between bids made by the SAME USER
-	 * @param bidListsByUser
-	 */
-	private void updateSelfBidInterval(Map<Integer, List<BidObject>> bidListsByUser) {
-		for (int bidderId : bidListsByUser.keySet()) {
-			List<BidObject> userBidList = bidListsByUser.get(bidderId);
-			// if there is only 1 bid in the list, there is no interval.
-			if (userBidList.size() > 1) {
-				long intervalTotal = 0;
-				UserFeatures user = userFeaturesMap.get(bidderId);
-				for (int i = 1; i < userBidList.size(); i++) {
-					long interval = Util.timeDiffInMin(userBidList.get(i).time, userBidList.get(i-1).time);
-					intervalTotal += interval;
-					assert (interval >= 0);
-				}
-				
-				user.selfBidInterval = Util.incrementalAvg(user.selfBidInterval, user.bidCount, (double) intervalTotal / (userBidList.size() - 1), userBidList.size() - 1);
-//				System.out.println("selfBidInterval: " + user.selfBidInterval);
-			}
-		}
-	}
-
-	/**
-	 * Find the number of bids that fall into the bid periods BEG, MID, END for the bidList.
-	 * 
-	 * @param auctionEnd 
-	 * @param bidList
-	 * 
-	 * @return Map containing mapping between userId and a 4 element array of doubles.  
-	 * The first 3 elements are the number of bids made in BEG, MID and END of the auction.
-	 * The 4th element counts the number of bids that user has in bidList.
-	 * 
-	 */
-	private Map<Integer, double[]> findBidPeriods(Date auctionEnd, List<BidObject> bidList) {
-		Map<Integer, double[]> dist = new HashMap<Integer, double[]>();
-		long length = Util.timeDiffInMin(auctionEnd, bidList.get(0).time);
-//		System.out.println("auction length: " + length);
-		
-		for (BidObject bo : bidList) {
-//			long bidMinsBeforeEnd = timeDiffInMin(bidList.get(bidList.size() - 1).time, bo.time);
-			long bidMinsBeforeEnd = Util.timeDiffInMin(auctionEnd, bo.time);
-			userFeaturesMap.get(bo.bidderId).bidMinsBeforeEnd.add(bidMinsBeforeEnd);
-			
-			// time of bid as a fraction from the time of the first bid in the auction to the end time
-			double fractionToEnd = ((double) Util.timeDiffInMin(bo.time, bidList.get(0).time))/length;
-			userFeaturesMap.get(bo.bidderId).bidTimesBeforeEnd.add(fractionToEnd);
-			
-			// store the bidPeriod this fractionToEnd corresponds to
-			double[] userDist = dist.get(bo.bidderId);
-			if (userDist == null) {
-				userDist = new double[4];
-				Arrays.fill(userDist, 0);
-				dist.put(bo.bidderId, userDist);
-			}
-			
-			BidPeriod period = findBidPeriod(fractionToEnd);
-			for (int i = 0; i < 3; i++) { // increment the correct bin: beg, mid or end
-				if (i == period.getI()) {
-					userDist[i] = Util.incrementalAvg(userDist[i], (int) userDist[3], 1);
-				} else {
-					userDist[i] = Util.incrementalAvg(userDist[i], (int) userDist[3], 0);
-				}
-			}
-			userDist[3]++; // increment count
-		}
-		
-		// print out the proportions found for each user for this bidList
-//		for (int id : dist.keySet()) {
-//			System.out.println(id + ":" + Arrays.toString(dist.get(id)));
-//		}
-		return dist;
-	}
-
-	/**
-	 * @param bidList list of bids from one auction in chronological order by bid submission date
-	 * @return Map of lists with keys as bidderIds and values as a list of bids made by that bidder for this auction. Each list
-	 * 			is in chronological order.
-	 */
-	private Map<Integer, List<BidObject>> seperateBidListByUser(List<BidObject> bidList) {
-		// Map<bidderId, bidObjects>
-		Map<Integer, List<BidObject>> bidLists = new HashMap<>();
-		
-		for (BidObject bid : bidList) {
-			Util.mapListAdd(bidLists, bid.bidderId, bid);
-		}
-		
-		return bidLists;
+		recordBids(bidList);
 	}
 	
 //	private void go() {

@@ -31,6 +31,89 @@ public class UserFeatures {
 		return delimiter;
 	}
 
+	double avgBidInc; // average bid increment
+	double avgBidIncMinusMinInc; // average bid increment minus minimum increment
+
+	private int auctionCount; // number of auctions as a bidder
+	private int auctionsWon; // number of auctions won
+	double bidsPerAuc; // average number of bids made in all auctions
+	// double bidCountVar; // variance in the number of bids made in an auction
+	double lastBidTime; // average time until the end of the auction the last bid was made
+	final double[] bidPeriods;
+	final double[] bidPeriodsLogBins;
+	double firstBidTimes; // average number of minutes from the end of the auction the first bid was made
+	double selfBidInterval; // average bid interval
+	double anyBidInterval; // average bid interval
+	final List<Double> bidTimesFractionBeforeEnd; // bid time as fraction befor
+	final List<Long> bidMinsBeforeEnd;
+
+	double avgNumCategory; // number of categories per auction the user is in
+	Set<String> categories;
+
+	double avgBidAmountComparedToMax; // average of the bid amounts as fractions of the maximum bid in the same auction
+	double avgBidProp;
+
+	public UserFeatures() {
+		this.bidPeriods = new double[4];
+		this.bidPeriodsLogBins = new double[11];
+		this.categories = new HashSet<>();
+
+		this.bidTimesFractionBeforeEnd = new ArrayList<>();
+		this.bidMinsBeforeEnd = new ArrayList<>();
+
+		// uninitilised values. used to find which users do not have a feedback page, and so have no reputation
+		pos = -1;
+		neg = -1;
+	}
+
+	public int getAuctionsWon() {
+		return auctionsWon;
+	}
+
+	public int getAuctionCount() {
+		return auctionCount;
+	}
+
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
+
+	public void setRep(int pos, int neg) {
+		this.pos = pos;
+		this.neg = neg;
+	}
+
+	/**
+	 * 
+	 * Adds this new bid to the list of bids made by the user. If <code>previousBid < 0</code>, this bid is the first in
+	 * the auction, and therefore has no increment or minIncrement.
+	 * 
+	 * @param bid
+	 *            value of the bid
+	 * @param previousBid
+	 *            value of the previous bid
+	 * @param maximumBid
+	 *            the value of the last/highest bid in the auction
+	 */
+	public void addBid(int bid, int previousBid, int maximumBid) {
+		if (previousBid > 0) { // test whether there's a previous bid
+			int increment = bid - previousBid; // find the difference between this and the previous bid amount
+			avgBidInc = Util.incrementalAvg(avgBidInc, bidIncCount, increment);
+
+			int incMinusMin = increment - Util.minIncrement(previousBid);
+			if (incMinusMin < 0)
+				incMinusMin = 0;
+			avgBidIncMinusMinInc = Util.incrementalAvg(avgBidIncMinusMinInc(), bidIncCount, incMinusMin);
+			bidIncCount++;
+		}
+		// update average bid value
+		avgBid = Util.incrementalAvg(avgBid, bidCount, bid);
+		// update avgBidComparedToFinal
+		double fractionOfMax = ((double) bid) / maximumBid;
+		avgBidAmountComparedToMax = Util.incrementalAvg(avgBidAmountComparedToMax, bidCount, fractionOfMax);
+		bidCount++;
+	}
+
 	public int getUserId() {
 		return userId;
 	}
@@ -92,7 +175,7 @@ public class UserFeatures {
 	}
 
 	public List<Double> getBidTimesBeforeEnd() {
-		return bidTimesBeforeEnd;
+		return bidTimesFractionBeforeEnd;
 	}
 
 	public List<Long> getBidMinsBeforeEnd() {
@@ -117,89 +200,6 @@ public class UserFeatures {
 
 	public static double getBidinthreshold() {
 		return bidInThreshold;
-	}
-
-	double avgBidInc; // average bid increment
-	double avgBidIncMinusMinInc; // average bid increment minus minimum increment
-
-	private int auctionCount; // number of auctions as a bidder
-	private int auctionsWon; // number of auctions won
-	double bidsPerAuc; // average number of bids made in all auctions
-	// double bidCountVar; // variance in the number of bids made in an auction
-	double lastBidTime; // average time until the end of the auction the last bid was made
-	final double[] bidPeriods;
-	final double[] bidPeriodsLogBins;
-	double firstBidTimes; // average number of minutes from the end of the auction the first bid was made
-	double selfBidInterval; // average bid interval
-	double anyBidInterval; // average bid interval
-	final List<Double> bidTimesBeforeEnd; // bid time as fraction befor
-	final List<Long> bidMinsBeforeEnd;
-
-	double avgNumCategory; // number of categories per auction the user is in
-	Set<String> categories;
-
-	double avgBidAmountComparedToMax; // average of the bid amounts as fractions of the maximum bid in the same auction
-	double avgBidProp;
-
-	public UserFeatures() {
-		this.bidPeriods = new double[4];
-		this.bidPeriodsLogBins = new double[11];
-		this.categories = new HashSet<>();
-
-		this.bidTimesBeforeEnd = new ArrayList<>();
-		this.bidMinsBeforeEnd = new ArrayList<>();
-
-		// uninitilised values. used to find which users do not have a feedback page, and so have no reputation
-		pos = -1;
-		neg = -1;
-	}
-
-	public int getAuctionsWon() {
-		return auctionsWon;
-	}
-
-	public int getAuctionCount() {
-		return auctionCount;
-	}
-
-	public void setUserId(int userId) {
-		this.userId = userId;
-	}
-
-	public void setRep(int pos, int neg) {
-		this.pos = pos;
-		this.neg = neg;
-	}
-
-	/**
-	 * 
-	 * Adds this new bid to the list of bids made by the user. If <code>previousBid < 0</code>, this bid is the first in
-	 * the auction, and therefore has no increment or minIncrement.
-	 * 
-	 * @param bid
-	 *            value of the bid
-	 * @param previousBid
-	 *            value of the previous bid
-	 * @param maximumBid
-	 *            the value of the last/highest bid in the auction
-	 */
-	public void addBid(int bid, int previousBid, int maximumBid) {
-		if (previousBid > 0) { // test whether there's a previous bid
-			int increment = bid - previousBid; // find the difference between this and the previous bid amount
-			avgBidInc = Util.incrementalAvg(avgBidInc, bidIncCount, increment);
-
-			int incMinusMin = increment - Util.minIncrement(previousBid);
-			if (incMinusMin < 0)
-				incMinusMin = 0;
-			avgBidIncMinusMinInc = Util.incrementalAvg(avgBidIncMinusMinInc(), bidIncCount, incMinusMin);
-			bidIncCount++;
-		}
-		// update average bid value
-		avgBid = Util.incrementalAvg(avgBid, bidCount, bid);
-		// update avgBidComparedToFinal
-		double fractionOfMax = ((double) bid) / maximumBid;
-		avgBidAmountComparedToMax = Util.incrementalAvg(avgBidAmountComparedToMax, bidCount, fractionOfMax);
-		bidCount++;
 	}
 
 	public boolean isComplete() {
@@ -530,8 +530,8 @@ public class UserFeatures {
 	public double bidTimeBeforeEndAvg() {
 		double result = 0;
 		int count = 0;
-		for (int i = 0; i < bidTimesBeforeEnd.size(); i++) {
-			result = Util.incrementalAvg(result, count, bidTimesBeforeEnd.get(i));
+		for (int i = 0; i < bidTimesFractionBeforeEnd.size(); i++) {
+			result = Util.incrementalAvg(result, count, bidTimesFractionBeforeEnd.get(i));
 			count++;
 		}
 		return result;

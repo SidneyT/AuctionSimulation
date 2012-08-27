@@ -80,7 +80,7 @@ public enum Features implements Feature {
 			return FastMath.log1p(uf.getBidsPerAuc());
 		}
 	},
-	BidTimesUntilEnd9 {
+	BidTimesUntilEnd9 { // average number of minutes before the end of the auction each bid was made 
 		@Override
 		public double value(UserFeatures uf) {
 			double result = 0;
@@ -92,13 +92,13 @@ public enum Features implements Feature {
 			return result;
 		}
 	},
-	AvgBidPropMax10 {
+	AvgBidPropMax10 { // average bid amount as a proportion of the final bid
 		@Override
 		public double value(UserFeatures uf) {
 			return uf.getAvgBidAmountComparedToMax();
 		}
 	},
-	AvgBidProp11 {
+	AvgBidProp11 { // average number of bids in auctions as a proportion of total
 		@Override
 		public double value(UserFeatures uf) {
 			return uf.getAvgBidProp();
@@ -122,7 +122,20 @@ public enum Features implements Feature {
 			}
 			return Math.log(result);
 		}
-	};
+	},
+	BidTimesUntilEnd16 { // average number of minutes before the end of the auction each bid was made 
+		@Override
+		public double value(UserFeatures uf) {
+			double result = 0;
+			int count = 0;
+			for (int i = 0; i < uf.getBidTimesBeforeEnd().size(); i++) {
+				result = Util.incrementalAvg(result, count, uf.getBidTimesBeforeEnd().get(i));
+				count++;
+			}
+			return result;
+		}
+	},
+	;
 	
 	public String label() {
 		return this.name();
