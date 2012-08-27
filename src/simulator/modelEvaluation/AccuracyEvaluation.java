@@ -5,6 +5,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 
 import util.HungarianAlgorithm;
@@ -18,6 +20,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
+import createUserFeatures.features.Feature;
 
 /**
  * Runs a modified version of the evaluation described in Stability-based Clustering Evaluation by Lange et al.
@@ -72,7 +75,7 @@ public class AccuracyEvaluation implements Runnable {
 //	}
 
 	public synchronized static void writeResults(BufferedWriter bw_full, BufferedWriter bw_short, int numberOfClusters, 
-			String featuresForClustering, double[][] correctMatrix, int[][] assignment, int correct, int total, 
+			List<Feature> featuresForClustering, double[][] correctMatrix, int[][] assignment, int correct, int total, 
 			int tmSeed, int simSeed, int runNumber) throws IOException {
 		long currentTime = System.currentTimeMillis();
 		write(bw_full, "Clusters:" + numberOfClusters);
@@ -96,13 +99,13 @@ public class AccuracyEvaluation implements Runnable {
 
 //	private enum ClassifyWith {TM, SIM};
 //	private final ClassifyWith classifyWith;
-	private final String featuresForClustering;
-	private final String featuresToPrint;
+	private final List<Feature> featuresForClustering;
+	private final List<Feature>  featuresToPrint;
 	private final int numberOfClusters;
 
 	private final int tmSeed, simSeed;
 	
-	public AccuracyEvaluation(String featuresForClustering, int numberOfClusters
+	public AccuracyEvaluation(List<Feature> featuresForClustering, int numberOfClusters
 //			, ClassifyWith classifyWith
 			, int tmSeed, int simSeed) {
 //		this.classifyWith = classifyWith;
@@ -121,10 +124,10 @@ public class AccuracyEvaluation implements Runnable {
 //		String featuresToPrint = "-3ln-10-5-6ln-11-12";
 //		int numberOfClusters = 4;
 
-		String tmClusteredFile = ClusterAnalysis.clusterToFile(new BuildTMFeatures(featuresForClustering), tmSeed, featuresToPrint, numberOfClusters, "");
+		String tmClusteredFile = ClusterAnalysis.clusterToFile(new BuildTMFeatures(), tmSeed, featuresForClustering, featuresToPrint, numberOfClusters, "");
 		logger.warn("TM clustered instances in file: " + tmClusteredFile + ".");
 		
-		String simClusteredFile = ClusterAnalysis.clusterToFile(new BuildSimFeatures(featuresForClustering, true), simSeed, featuresToPrint, numberOfClusters, "");
+		String simClusteredFile = ClusterAnalysis.clusterToFile(new BuildSimFeatures(true), simSeed, featuresForClustering, featuresToPrint, numberOfClusters, "");
 		logger.warn("Sim clustered instances in file: " + simClusteredFile + ".");
 		
 		evaluate(tmClusteredFile, simClusteredFile, numberOfClusters, bw_full, bw_short, featuresForClustering, tmSeed, simSeed, 0);
@@ -149,7 +152,7 @@ public class AccuracyEvaluation implements Runnable {
 	 * @throws Exception
 	 */
 	public static void evaluate(String tmFile, String simFile, int numberOfClusters, BufferedWriter bw_full, BufferedWriter bw_short, 
-			String featuresForClustering, int tmSeed, int simSeed, int runNumber) throws Exception {
+			List<Feature> featuresForClustering, int tmSeed, int simSeed, int runNumber) throws Exception {
 		Instances tmIs = new DataSource(tmFile).getDataSet();
 //		tmIs.randomize(new Random());
 		tmIs.setClassIndex(tmIs.numAttributes() - 1); // the last attribute is the cluster assignment 

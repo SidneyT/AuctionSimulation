@@ -15,6 +15,9 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
+import createUserFeatures.features.Feature;
+import createUserFeatures.features.Features;
+
 import simulator.database.DatabaseConnection;
 import util.Util;
 
@@ -30,15 +33,17 @@ public class BuildSimFeatures extends BuildUserFeatures{
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 //		String features = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
 //		String features = "-3ln-10-5-6ln-11";
+		
+		List<Feature> allFeatures = Arrays.<Feature>asList(Features.values());
+		
 		boolean trim = true;
-		BuildSimFeatures bf = new BuildSimFeatures(features, trim);
-		writeToFile(bf.build().values(), bf.getFeaturesToPrint(), Paths.get("BuildTrimmedSimFeatures" + features + ".csv"));
+		BuildSimFeatures bf = new BuildSimFeatures(trim);
+		writeToFile(bf.build().values(), allFeatures, Paths.get("BuildTrimmedSimFeatures" + features + ".csv"));
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 		System.out.println("Finished.");
 	}
 	
-	public BuildSimFeatures(String features, boolean trim) {
-		super(features);
+	public BuildSimFeatures(boolean trim) {
 		this.trim = trim;
 	}
 	
@@ -154,7 +159,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 		// create a new UserFeatures the bidder if there is no UserFeatures object for them yet
 		for (int bidderId : bidderBidCount.keySet()) {
 			if (!userFeaturesMap.containsKey(bidderId)) {
-				UserFeatures uf = new UserFeatures(featuresToPrint);
+				UserFeatures uf = new UserFeatures();
 				uf.setUserId(bidderId);
 				userFeaturesMap.put(bidderId, uf);
 			}

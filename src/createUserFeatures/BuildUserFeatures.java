@@ -18,6 +18,7 @@ import java.util.TreeMap;
 
 import createUserFeatures.FeaturesToUseWrapper.FeaturesToUse;
 import createUserFeatures.features.Feature;
+import createUserFeatures.features.Features;
 
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -27,48 +28,49 @@ public abstract class BuildUserFeatures {
 	protected static final double MID_END_BOUNDARY = 0.95;
 	
 	protected TreeMap<Integer, UserFeatures> userFeaturesMap;
-	protected final FeaturesToUseWrapper featuresToPrint; // controls what features are printed
 	public boolean trim; // trim auction bid list lengths to 20
 	
-	public BuildUserFeatures(String features) {
+	public BuildUserFeatures() {
 		this.userFeaturesMap = new TreeMap<Integer, UserFeatures>();
-		this.featuresToPrint = new FeaturesToUseWrapper(features);
 		trim = false;
-	}
-	
-	public FeaturesToUse getFeaturesToPrint() {
-		return featuresToPrint.getFeaturesToUse();
 	}
 	
 	public boolean trim() {
 		return trim;
 	}
 	
-	public void setFeaturesToPrint(String featureString) {
-		this.featuresToPrint.setFeaturesToPrint(featureString);
-	}
-
-	public String getFeaturesToPrintString() {
-		return this.featuresToPrint.getFeaturesToUseString();
-	}
+//	public FeaturesToUse getFeaturesToPrint() {
+//		return features.getFeaturesToUse();
+//	}
+//	
+//	public void setFeaturesToPrint(List<Feature> features) {
+//		this.features.setFeaturesToPrint(featureString);
+//	}
+//
+//	public String getFeaturesToPrintString() {
+//		return this.features.getFeaturesToUseString();
+//	}
 	
-	public static void writeToFile(Collection<UserFeatures> userFeaturesCol, FeaturesToUse featuresToPrint, Path path) {
+	public static void writeToFile(Collection<UserFeatures> userFeaturesCol, List<Feature> featuresToPrint, Path path) {
 		try (BufferedWriter bw = Files.newBufferedWriter(path, Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
 			writeToFile(userFeaturesCol, featuresToPrint, bw);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	public static void writeToFile(Collection<UserFeatures> userFeaturesCol, FeaturesToUse featureHeadings, BufferedWriter w) throws IOException {
-		w.write(UserFeatures.headings(featureHeadings));
+	public static void writeToFile(Collection<UserFeatures> userFeaturesCollection, List<Feature> featuresToPrint, BufferedWriter w) throws IOException {
+		
+		// print headings
+		w.append(Features.labels(featuresToPrint));
 		w.newLine();
-		for (UserFeatures uf : userFeaturesCol) {
-//			System.out.println("id: " + uf.id());
+		
+		for (UserFeatures uf : userFeaturesCollection) { // for each set of user features
 			if (uf.isComplete()) {
-				w.write(uf.toString());
-				w.newLine();
+				w.append(Features.values(featuresToPrint, uf));
 			}
+			w.newLine();
 		}
+		w.newLine();
 		w.close();
 	}
 	

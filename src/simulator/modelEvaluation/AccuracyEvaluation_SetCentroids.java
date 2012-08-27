@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -21,19 +22,19 @@ import weka.core.converters.ConverterUtils.DataSource;
 
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
+import createUserFeatures.features.Feature;
+import createUserFeatures.features.Features;
 
 /**
  * Similar to MultipleEvaluation_SetCentroids except centroids are not randomly picked using
  * a seed value, and instead read from a file.
  */
-public class MultipleEvaluation_SetCentroids implements Runnable {
+public class AccuracyEvaluation_SetCentroids implements Runnable {
 
 	public static void main(String[] args) throws Exception {
 		makeWriters();
 
 		multi();
-		// new MultipleEvaluation(1, new File("synData",
-		// "-3ln-10-6ln-11_t_0.csv")).run();
 		System.out.println("Finished.");
 	}
 
@@ -44,24 +45,15 @@ public class MultipleEvaluation_SetCentroids implements Runnable {
 				StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 	}
 
+	/**
+	 * 
+	 * @param centroidFile
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	private static void multi() throws IOException, InterruptedException {
-		ExecutorService es = Executors.newFixedThreadPool(3);
-		List<Callable<Object>> tasks = new ArrayList<>();
-
-//		 Path centroidsFile = Paths.get("-3ln-10-5-6ln_centroids.csv");
 		Path centroidsFile = Paths.get("-10-5-6ln-11_centroids.csv");
-
-		// for (int simSeed = 0; simSeed < 50; simSeed++) {
-		// int[] seeds = {33};
-		// for (int simSeed : seeds) {
-		// int[] seeds = {29, 37};
-		// for (int simSeed : seeds) {
-		// System.out.println("Using seed: " + simSeed + ".");
-//		tasks.add(Executors.callable(new MultipleEvaluation_SetCentroids(centroidsFile)));
-		new MultipleEvaluation_SetCentroids(centroidsFile).run();
-		// }
-//		es.invokeAll(tasks);
-//		es.shutdown();
+		new AccuracyEvaluation_SetCentroids(centroidsFile).run();
 	}
 
 	private static final String folder = "synData";
@@ -71,7 +63,7 @@ public class MultipleEvaluation_SetCentroids implements Runnable {
 	private final static int numberOfClusters = 4;
 	private final Instances centroids;
 
-	public MultipleEvaluation_SetCentroids(Path centroidFile) {
+	public AccuracyEvaluation_SetCentroids(Path centroidFile) {
 		this.centroids = getCentroids(centroidFile);
 	}
 
@@ -100,15 +92,19 @@ public class MultipleEvaluation_SetCentroids implements Runnable {
 			for (File simFile : getSynDataFiles()) {
 				System.out.println("Processing " + simFile + ".");
 				String[] filenameParts = simFile.getName().replace(".csv", "").split("_");
-				String features = filenameParts[0];
+				
+				List<Feature> features = new ArrayList<>();
+				for (String f : Arrays.asList(filenameParts[0].split(","))) {
+					features.add(Features.valueOf(f));
+				}
+				
 				int runNumber = Integer.parseInt(filenameParts[2]);
 
 				// check if TM clustered file exists. If not, cluster it.
 				String tmFilename = ClusterAnalysis.generateFilename(BuildTMFeatures.class, false, tmSeed, features,
 						numberOfClusters, "") + ".csv";
 				if (!new File(tmFilename).exists()) {
-					ClusterAnalysis
-							.clusterToFile(new BuildTMFeatures(features), tmSeed, features, numberOfClusters, "");
+					ClusterAnalysis.clusterToFile(new BuildTMFeatures(), tmSeed, features, features, numberOfClusters, "");
 					System.out.println(tmFilename + " does not exist. Creating.");
 				}
 

@@ -81,13 +81,13 @@ public class Weka {
 	 * to bw. The order of clustering assignments is the same as the order of
 	 * instances in dataFilename
 	 * @param clusterer
-	 * @param dataFilename
+	 * @param inputDataFilename
 	 * @return
 	 */
-	public static List<Integer> cluster(RandomizableClusterer clusterer, String dataFilename, BufferedWriter infoWriter) {
+	public static List<Integer> cluster(RandomizableClusterer clusterer, String inputDataFilename, BufferedWriter infoWriter) {
 		List<Integer> clusterAssignments = new ArrayList<Integer>();
 		try {
-			DataSource ds = new DataSource(dataFilename);
+			DataSource ds = new DataSource(inputDataFilename);
 			Instances data = ds.getDataSet();
 //			System.out.println(data.toSummaryString());
 			

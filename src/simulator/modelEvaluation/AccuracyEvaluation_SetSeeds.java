@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -20,6 +21,8 @@ import weka.core.Instances;
 
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
+import createUserFeatures.features.Feature;
+import createUserFeatures.features.Features;
 
 /**
  * Measures Accuracy.
@@ -34,7 +37,7 @@ import createUserFeatures.ClusterAnalysis;
  * value given.
  * 
  */
-public class MultipleEvaluation_SetSeeds implements Runnable {
+public class AccuracyEvaluation_SetSeeds implements Runnable {
 	
 	public static void main(String[] args) throws Exception {
 		makeWriters();
@@ -57,7 +60,7 @@ public class MultipleEvaluation_SetSeeds implements Runnable {
 //		int[] seeds = {29, 37};
 //		for (int simSeed : seeds) {
 //			System.out.println("Using seed: " + simSeed + ".");
-			tasks.add(Executors.callable(new MultipleEvaluation_SetSeeds(simSeed)));
+			tasks.add(Executors.callable(new AccuracyEvaluation_SetSeeds(simSeed)));
 		}
 		es.invokeAll(tasks);
 		es.shutdown();
@@ -71,7 +74,7 @@ public class MultipleEvaluation_SetSeeds implements Runnable {
 	
 	private final int simSeed;
 	
-	public MultipleEvaluation_SetSeeds(int simSeed) {
+	public AccuracyEvaluation_SetSeeds(int simSeed) {
 		this.simSeed = simSeed;
 	}
 	
@@ -84,13 +87,18 @@ public class MultipleEvaluation_SetSeeds implements Runnable {
 				for (File simFile : getSynDataFiles()) {
 					System.out.println("Processing " + simFile + ".");
 					String[] filenameParts = simFile.getName().replace(".csv", "").split("_");
-					String features = filenameParts[0];
+
+					List<Feature> features = new ArrayList<>();
+					for (String f : Arrays.asList(filenameParts[0].split(","))) {
+						features.add(Features.valueOf(f));
+					}
+					
 					int runNumber = Integer.parseInt(filenameParts[2]);
 					
 					// check if TM clustered file exists. If not, cluster it.
 					String tmFilename = ClusterAnalysis.generateFilename(BuildTMFeatures.class, false, tmSeed, features, numberOfClusters, "") + ".csv"; 
 					if (!new File(tmFilename).exists()) {
-						ClusterAnalysis.clusterToFile(new BuildTMFeatures(features), tmSeed, features, numberOfClusters, "");
+						ClusterAnalysis.clusterToFile(new BuildTMFeatures(), tmSeed, features, features, numberOfClusters, "");
 						System.out.println(tmFilename + " does not exist. Creating.");
 					}
 					

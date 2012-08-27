@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,6 +20,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import createUserFeatures.FeaturesToUseWrapper.FeaturesToUse;
+import createUserFeatures.features.Feature;
+import createUserFeatures.features.Features;
 
 import util.Util;
 
@@ -43,53 +46,67 @@ import weka.clusterers.SimpleKMeans;
 
 public class ClusterAnalysis {
 	public static void main(String[] args) {
-//		clusterSimData("");
-		clusterTmData("");
+		clusterSimData("");
+//		clusterTmData("");
 		System.out.println("Finished.");
 	}
 	
 	public static void clusterSimData(String suffix) {
-//		String featuresForClustering = "-1ln-2ln-3ln-10-6ln-11-12";
-//		String featuresToPrint = "-1ln-2ln-3ln-10-6ln-5-11-12-15";
-		String featuresForClustering = "-3ln-10-5-6ln-11";
-		String featuresToPrint = "-3ln-10-5-6ln-11";
-//		String featuresForClustering = "-1ln-2ln-3ln-10-4ln-5-11-9";
-//		String featuresToPrint = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
+////		String featuresForClustering = "-1ln-2ln-3ln-10-6ln-11-12";
+////		String featuresToPrint = "-1ln-2ln-3ln-10-6ln-5-11-12-15";
+//		String featuresForClustering = "-3ln-10-5-6ln-11";
+//		String featuresToPrint = "-3ln-10-5-6ln-11";
+////		String featuresForClustering = "-1ln-2ln-3ln-10-4ln-5-11-9";
+////		String featuresToPrint = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
+		
 		int numberOfClusters = 4;
-		clusterToFile(new BuildSimFeatures(featuresForClustering, true), 2468, featuresToPrint, numberOfClusters, suffix);
+		List<Feature> featureList = Arrays.<Feature>asList(
+				Features.AvgBidPropMax10,
+				Features.PropWin5,
+				Features.BidsPerAuc6Ln,
+				Features.AvgBidProp11);
+
+		clusterToFile(new BuildSimFeatures(true), 2468, featureList, featureList, numberOfClusters, suffix);
 	}
 	
 	public static void clusterTmData(String suffix) {
-//		String featuresForClustering = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15";
-		String featuresToPrint = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15";
-//		String featuresForClustering = "-1ln-2ln-3ln-10-6ln-11-12";
-//		String featuresToPrint = "-1ln-2ln-3ln-10-6ln-5-11-12-15";
-		String featuresForClustering = "-10-5-6ln-11";
-//		String featuresToPrint = "-2ln-3ln-10-5-6ln-11";
-//		String featuresForClustering = "-1ln-2ln-3ln-10-4ln-5-11-9";
-//		String featuresToPrint = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
+////		String featuresForClustering = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15";
+//		String featuresToPrint = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15";
+////		String featuresForClustering = "-1ln-2ln-3ln-10-6ln-11-12";
+////		String featuresToPrint = "-1ln-2ln-3ln-10-6ln-5-11-12-15";
+//		String featuresForClustering = "-10-5-6ln-11";
+////		String featuresToPrint = "-2ln-3ln-10-5-6ln-11";
+////		String featuresForClustering = "-1ln-2ln-3ln-10-4ln-5-11-9";
+////		String featuresToPrint = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
+		
+		List<Feature> featureList = Arrays.<Feature>asList(
+				Features.AvgBidPropMax10,
+				Features.PropWin5,
+				Features.BidsPerAuc6Ln,
+				Features.AvgBidProp11);
+
 		int numberOfClusters = 4;
-		clusterToFile(new BuildTMFeatures(featuresForClustering), 1356, featuresToPrint, numberOfClusters, suffix);
+		clusterToFile(new BuildTMFeatures(), 1356, featureList, featureList, numberOfClusters, suffix);
 	}
 	
-	public static String generateFilename(Class clazz, boolean trim, int seed, String featuresToPrintString, int numberOfClusters, String suffix) {
+	public static String generateFilename(Class clazz, boolean trim, int seed, List<Feature> featuresToPrintString, int numberOfClusters, String suffix) {
 		String delimiter = "_";
 		if (trim)
-			return clazz.getSimpleName() + delimiter + featuresToPrintString + delimiter + "t" + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;
+			return clazz.getSimpleName() + delimiter + Features.labels(featuresToPrintString) + delimiter + "t" + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;
 		else
-			return clazz.getSimpleName() + delimiter + featuresToPrintString + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;
+			return clazz.getSimpleName() + delimiter + Features.labels(featuresToPrintString) + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;
 	}
 	
 	// returns the Filename of the file written to
-	public static String clusterToFile(BuildUserFeatures buf, int seed, String featuresToPrint, int numberOfClusters, String suffix) {
-		return clusterToFile(buf, seed, featuresToPrint, numberOfClusters, false, false, -1, suffix);
+	public static String clusterToFile(BuildUserFeatures buf, int seed, List<Feature> featuresToCluster, List<Feature> featuresToPrint, int numberOfClusters, String suffix) {
+		return clusterToFile(buf, seed, featuresToCluster, featuresToPrint, numberOfClusters, false, false, -1, suffix);
 	}
 	
 	/**
 	 * Writes user features from buf to a temporary file, then clusters that file.
 	 * @param buf
 	 * @param seed
-	 * @param featuresToPrintString
+	 * @param featuresToPrint
 	 * @param numberOfClusters
 	 * @param usePca
 	 * @param recluster
@@ -97,14 +114,14 @@ public class ClusterAnalysis {
 	 * @param suffix
 	 * @return
 	 */
-	private static String clusterToFile(BuildUserFeatures buf, int seed, String featuresToPrintString, int numberOfClusters, boolean usePca, boolean recluster, int clusterToRecluster, String suffix) {
+	private static String clusterToFile(BuildUserFeatures buf, int seed, List<Feature> featuresToClusterOn, List<Feature> featuresToPrint, int numberOfClusters, boolean usePca, boolean recluster, int clusterToRecluster, String suffix) {
 		File tempUserFeaturesFile = null;
 		String tempUserFeaturesFilePath = null;
 		try {
 			tempUserFeaturesFile = File.createTempFile("userFeatures", ".csv");
 //			tempUserFeaturesFile.deleteOnExit();
 			tempUserFeaturesFilePath = tempUserFeaturesFile.getCanonicalPath();
-//			System.out.println("Temporary file path: " + tempUserFeaturesFilePath);
+			System.out.println("Temporary file path: " + tempUserFeaturesFilePath);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -116,7 +133,7 @@ public class ClusterAnalysis {
 //			userFeaturesMap = buf.reclustering_contructUserFeatures(clusterId);
 //			filename = "_recluster" + clusterId + buf.getFeaturesToPrintString();
 //		}
-		BuildUserFeatures.writeToFile(userFeaturesMap.values(), buf.featuresToPrint.getFeaturesToUse(), tempUserFeaturesFile.toPath());
+		BuildUserFeatures.writeToFile(userFeaturesMap.values(), featuresToClusterOn, tempUserFeaturesFile.toPath());
 		BuildUserFeatures.removeIncompleteUserFeatures(userFeaturesMap);
 //		
 //		if (usePca) {
@@ -131,7 +148,7 @@ public class ClusterAnalysis {
 //			}
 //		}
 		
-		filename = generateFilename(buf.getClass(), buf.trim(), seed, buf.getFeaturesToPrintString(), numberOfClusters, suffix);
+		filename = generateFilename(buf.getClass(), buf.trim(), seed, featuresToPrint, numberOfClusters, suffix);
 		
 //		filename += buf.getClass().getSimpleName() + buf.getFeaturesToPrintString();
 //		if (buf.trim())
@@ -150,36 +167,35 @@ public class ClusterAnalysis {
 		
 //		filename += "_" + clusterer.getClass().getSimpleName();
 		
-		// name of the output file
+		// name of the output infoFile, and clustered file
 		String infoFilename = filename + "_info.txt";
+		String clusteredDataFilename = filename + suffix +  ".csv";
 		
 		// write UserFeatures object and the cluster it belongs to, to a file
 		try {
-			BufferedWriter bw = Files.newBufferedWriter(Paths.get(infoFilename), Charset.defaultCharset());
-			List<Integer> clusteringAssignments = Weka.cluster(clusterer, tempUserFeaturesFilePath, bw);
-			Map<Integer, List<UserFeatures>> clusterMap = sortIntoClusters(userFeaturesMap.values(), clusteringAssignments);
-			Map<Integer, ClusterInfo> clusterStats = new HashMap<Integer, ClusterInfo>();
+			BufferedWriter infoFileWriter = Files.newBufferedWriter(Paths.get(infoFilename), Charset.defaultCharset());
+			List<Integer> clusteringAssignments = Weka.cluster(clusterer, tempUserFeaturesFilePath, infoFileWriter);
+			Map<Integer, List<UserFeatures>> clusterMap = sortIntoClusters(userFeaturesMap, clusteringAssignments); // Map<Cluster index, list of user features>
+			Map<Integer, ClusterInfo> clusterStats = new HashMap<Integer, ClusterInfo>();// Map<Cluster index, cluster info>
 			
-			bw.write("@cluster_averages");
-			bw.newLine();
-			bw.write(ClusterInfo.headings());
-			bw.newLine();
+			infoFileWriter.write("@cluster_averages");
+			infoFileWriter.newLine();
+			infoFileWriter.write(ClusterInfo.headings());
+			infoFileWriter.newLine();
 			for (int i = 0; i < clusterMap.size(); i++) {
 				ClusterInfo ci = calculateAggregates(clusterMap.get(i));
 				ci.clusterLabel = "c" + i;
 				clusterStats.put(i, ci);
-				bw.write(ci.toString());
-				bw.newLine();
+				infoFileWriter.write(ci.toString());
+				infoFileWriter.newLine();
 			}
-			bw.newLine();
-			bw.flush();
+			infoFileWriter.newLine();
+			infoFileWriter.flush();
+
+			writeUserFeaturesWithClustersToFile(featuresToPrint, userFeaturesMap, clusteringAssignments, clusteredDataFilename);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		String clusteredDataFilename = filename + suffix +  ".csv";
-		
-		buf.setFeaturesToPrint(featuresToPrintString);
-		writeUserFeaturesWithClustersToFile(new FeaturesToUse(featuresToPrintString), userFeaturesMap.values(), clusteredDataFilename);
 		
 		return clusteredDataFilename;
 	}
@@ -229,25 +245,23 @@ public class ClusterAnalysis {
 	/**
 	 * Given 2 ordered collections of user features and clusters, put them into a map, with the user cluster as the key, and a list
 	 * of user features that have that cluster assignment as the value.
-	 * @param userFeaturesCol
+	 * @param userFeatures
 	 * @param userClusters
 	 * @return a Map containing entries (cluster assignment, list(user features))
 	 */
-	private static Map<Integer, List<UserFeatures>> sortIntoClusters(Collection<UserFeatures> userFeaturesCol, List<Integer> userClusters) {
+	private static Map<Integer, List<UserFeatures>> sortIntoClusters(TreeMap<Integer, UserFeatures> userFeatures, List<Integer> userClusters) {
 		// Map<clusterId, UserFeature List>
 		Map<Integer, List<UserFeatures>> clusterMap = new HashMap<Integer, List<UserFeatures>>();
 
 		// record the cluster each instance belongs to
-		Iterator<UserFeatures> it1 = userFeaturesCol.iterator();
+		Iterator<UserFeatures> it1 = userFeatures.values().iterator();
 		Iterator<Integer> it2 = userClusters.iterator();
-		assert(userFeaturesCol.size() == userClusters.size());
+		assert(userFeatures.size() == userClusters.size());
 		while(it1.hasNext()) {
 			UserFeatures userFeature = it1.next();
 			int cluster = it2.next();
 			if (!userFeature.isComplete())
 				continue;
-
-			userFeature.cluster = cluster + "";
 
 			if (!clusterMap.containsKey(cluster)) {
 				clusterMap.put(cluster, new ArrayList<UserFeatures>());
@@ -261,15 +275,19 @@ public class ClusterAnalysis {
 	/**
 	 * Needs ufs to know what headings to print.
 	 * UserFeatures objects in userFeaturesCol are written to the file filename.
+	 * @param clusteringAssignments 
 	 */
-	private static void writeUserFeaturesWithClustersToFile(FeaturesToUse ufs, Collection<UserFeatures> userFeaturesCol, String filename) {
+	private static void writeUserFeaturesWithClustersToFile(List<Feature> featuresToPrint, TreeMap<Integer, UserFeatures> userFeatures, List<Integer> clusteringAssignments, String filename) {
 		try {
 			BufferedWriter w = new BufferedWriter(new FileWriter(filename));
-			w.write(UserFeatures.headingsWithCluster(ufs));
+			
+			w.append(Features.labels(featuresToPrint)).append(",Cluster");
 			w.newLine();
-			for (UserFeatures uf : userFeaturesCol) {
+			
+			int i = 0;
+			for (UserFeatures uf : userFeatures.values()) {
 //				if (uf.pos != -1) { // && uf.neg != -1
-					w.write(uf.toStringWithCluster());
+					w.append(Features.values(featuresToPrint, uf) + ",c" + clusteringAssignments.get(i++));
 					w.newLine();
 //				}
 			}

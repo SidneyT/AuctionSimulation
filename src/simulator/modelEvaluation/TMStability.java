@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -18,6 +19,8 @@ import org.apache.log4j.Logger;
 
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
+import createUserFeatures.features.Feature;
+import createUserFeatures.features.Features;
 
 import util.HungarianAlgorithm;
 import weka.classifiers.Classifier;
@@ -37,8 +40,15 @@ public class TMStability implements Runnable{
 	private static BufferedWriter bw_full, bw_short;
 
 	public static void main(String[] args) throws Exception {
-		makeBws();
 		
+		List<Feature> featuresToPrint = Arrays.<Feature>asList(Features.AvgBidPropMax10, 
+				Features.PropWin5, 
+				Features.BidsPerAuc6Ln, 
+				Features.AvgBidProp11);
+		
+		System.out.println(featuresToPrint);
+		System.out.println(Features.labels(featuresToPrint));
+
 		ExecutorService es = Executors.newFixedThreadPool(3);
 		for (int sampleCount = 0; sampleCount < 10; sampleCount++) {
 			List<Callable<Object>> tasks = new ArrayList<>(); 
@@ -64,11 +74,11 @@ public class TMStability implements Runnable{
 		bw_short.flush();
 	}
 
-	public synchronized static void writeResults(BufferedWriter bw_full, BufferedWriter bw_short, int numberOfClusters, String featuresForClustering, double[][] correctMatrix, int[][] assignment, int correct, int total) throws IOException {
+	public synchronized static void writeResults(BufferedWriter bw_full, BufferedWriter bw_short, int numberOfClusters, List<Feature> featuresForClustering, double[][] correctMatrix, int[][] assignment, int correct, int total) throws IOException {
 		long currentTime = System.currentTimeMillis();
 		write(bw_full, "Clusters:" + numberOfClusters);
 		write(bw_full, "Timestamp:" + new Date(currentTime).toString());
-		write(bw_full, "Clustering Features:" + featuresForClustering);
+		write(bw_full, "Clustering Features:" + Features.labels(featuresForClustering));
 		write(bw_full, AccuracyEvaluation.multiArrayString(correctMatrix).toString());
 		write(bw_full, AccuracyEvaluation.multiArrayString(assignment).toString());
 		write(bw_full, correct + ":" + total);
@@ -91,12 +101,15 @@ public class TMStability implements Runnable{
 		try {
 //			String featuresForClustering = "-1ln-2ln-3ln-10-11-12";
 //			String featuresToPrint = "-1ln-2ln-3ln-10-11-12";
-			String featuresForClustering = "-10-5-6ln-11";
-			String featuresToPrint = "-10-5-6ln-11";
+			List<Feature> featuresToPrint = Arrays.<Feature>asList(Features.AvgBidPropMax10, 
+					Features.PropWin5, 
+					Features.BidsPerAuc6Ln, 
+					Features.AvgBidProp11);
+			List<Feature> featuresForClustering = featuresToPrint;
 			
 			String tmClusteredFile = "BuildTMFeatures_SimpleKMeans" + featuresForClustering + "_" + numberOfClusters + "clusters.csv";
 			Random random = new Random();
-			tmClusteredFile = ClusterAnalysis.clusterToFile(new BuildTMFeatures(featuresForClustering), random.nextInt(), featuresToPrint, numberOfClusters, "");
+			tmClusteredFile = ClusterAnalysis.clusterToFile(new BuildTMFeatures(), random.nextInt(), featuresToPrint, featuresForClustering, numberOfClusters, "");
 //			logger.warn("TM clustered instances in file: " + tmClusteredFile + ".");
 			
 			// split the TM data into training and testing sets
@@ -131,7 +144,6 @@ public class TMStability implements Runnable{
 	//		logger.warn(Evaluate.multiArrayString(correctMatrix));
 			logger.warn("Number of instances that had matching cluster and class for " + numberOfClusters + " clusters with features " + featuresForClustering + ": " + correct + " out of " + training.numInstances() + ".");
 
-			
 			writeResults(bw_full, bw_short, numberOfClusters, featuresForClustering, correctMatrix, assignment, correct, training.numInstances());
 		} catch (Exception e) {
 			e.printStackTrace();

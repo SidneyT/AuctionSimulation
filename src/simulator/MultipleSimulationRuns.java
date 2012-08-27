@@ -1,11 +1,15 @@
 package simulator;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.TreeMap;
 
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildUserFeatures;
 import createUserFeatures.UserFeatures;
+import createUserFeatures.features.Feature;
+import createUserFeatures.features.Features;
 
 /**
  * Runs the simulator multiple times with each run giving multiple files with different feature sets.
@@ -30,29 +34,29 @@ public class MultipleSimulationRuns {
 			Main.run();
 
 			// make multiple sets of user features from the synthetic data
-			String[] featuresArray = {"-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15",
-					"-3ln-10-5-6ln-11",
-					"-3ln-10-6ln-11",
-					"-3ln-10-5-6ln-11-12",
-					"-3ln-10-5-6ln-12",
-					"-3ln-10-6ln-11-12",
-					"-3ln-10-6ln-12",
-					};
+			List<List<Feature>> featureSets = Arrays.asList(
+					Arrays.<Feature>asList(Features.values()),
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.AvgBidProp11),
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.AvgBidProp11),
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidMinsBeforeEnd12),
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.BidMinsBeforeEnd12),
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidMinsBeforeEnd12),
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.BidMinsBeforeEnd12)
+					);
 			boolean trim = true;
-			BuildSimFeatures buildFeatures = new BuildSimFeatures("", trim);
+			BuildSimFeatures buildFeatures = new BuildSimFeatures(trim);
 			
 			
 			TreeMap<Integer, UserFeatures> userFeatureMap = buildFeatures.build();
 			
 			String folder = "synData";
-			for (String features : featuresArray) {
+			for (List<Feature> featureSet : featureSets) {
 				String filename;
 				if (trim)
-					filename = features + "_t_" + label + ".csv";
+					filename = featureSet + "_t_" + label + ".csv";
 				else
-					filename = features + "_" + label + ".csv";
-				buildFeatures.setFeaturesToPrint(features);
-				BuildUserFeatures.writeToFile(userFeatureMap.values(), buildFeatures.getFeaturesToPrint(), Paths.get(folder, filename));
+					filename = featureSet + "_" + label + ".csv";
+				BuildUserFeatures.writeToFile(userFeatureMap.values(), featureSet, Paths.get(folder, filename));
 
 				// cluster the data
 //				SimpleKMeans clusterer = new SimpleKMeans();
