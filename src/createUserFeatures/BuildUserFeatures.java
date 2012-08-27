@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
+
+import createUserFeatures.BuildUserFeatures.BidObject.BidObjectComparator;
 import createUserFeatures.FeaturesToUseWrapper.FeaturesToUse;
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
@@ -351,6 +355,58 @@ public abstract class BuildUserFeatures {
 		// System.out.print(userBidPeriods.size() + ",");
 	}
 
+	/**
+	 * @param ao
+	 * @param bidList list of bids for this auction in ascending price order
+	 */
+	protected void processAuction(Date auctionEndtime, int winnerId, List<BidObject> bidList) {
+		TreeMultimap<Integer, BidObject> treemm = TreeMultimap.create(Ordering.natural(), BidObjectComparator.PRICE_SORT_ASC);
+		for (BidObject bo : bidList) {
+			boolean unique = treemm.put(bo.bidderId, bo);
+			if (!unique)
+				throw new AssertionError("Every bidObject's price should be different.");
+		}
+		
+		// create a new UserFeatures the bidder if there is no UserFeatures object for them yet
+		for (int bidderId : treemm.keySet()) {
+//		for (int bidderId : bidderBidCount.keySet()) {
+			if (!userFeaturesMap.containsKey(bidderId)) {
+				UserFeatures uf = new UserFeatures();
+				uf.setUserId(bidderId);
+				userFeaturesMap.put(bidderId, uf);
+			}
+		}
+		
+		// record when bids are made
+		recordBidPeriods(auctionEndtime, bidList);
+		
+		for (int bidderId : treemm.keySet()) {
+			
+			UserFeatures uf = userFeaturesMap.get(bidderId);
+			
+			// calculate the number of minutes until the end the last bid was made
+			long untilEndMin = Util.timeDiffInMin(auctionEndtime, treemm.get(bidderId).last().time);
+//			System.out.println(auctionObject.endTime + " - " + bidderLastBidTime.get(bidderId));
+//			System.out.println(auctionObject.endTime.getTime() + " - " + bidderLastBidTime.get(bidderId).getTime());
+//			System.out.println("untilEnd: " + untilEndMin);
+			
+			// record proportion of bids in the auction are made by this user
+			double bidProp = ((double) treemm.get(bidderId).size() / bidList.size());
+			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.getAuctionCount(), bidProp);
+
+			// add this auction's information to this bidder's UserFeatures object
+			// *** should be last in this method because of auctionCount increment ***
+			uf.addAuction(null, treemm.get(bidderId).size(), (int)untilEndMin); // TODO: fix the null category, because sim auctions have an item type, which has a category, but doesn't have a direct category..., in contrast to TMAuctionObject  
+		}
+		
+		// record who won the auction
+		if (userFeaturesMap.containsKey(winnerId))
+			userFeaturesMap.get(winnerId).addWonAuction();
+		
+		// record bid counts, amounts and increments
+		recordBids(bidList);
+	}
+	
 	/**
 	 * @param fractionToEnd
 	 *            proportion of time elapsed from the first bid to the end of the auction

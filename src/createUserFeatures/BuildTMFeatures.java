@@ -145,7 +145,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 				int currentListingId = bigRS.getInt("listingId");
 				if (lastListingId != currentListingId) { // new auction
 					if (lastListingId != -1) { // test if there is a previous auction processed, if there is, then process the previous auction
-						processAuction(ao, bidList);
+						processAuction(ao.endTime, ao.winnerId, bidList);
 						// clear the lists
 						bidList.clear();
 					}
@@ -155,7 +155,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 				}
 				bidList.add(new BidObject(bigRS.getInt("bidderId"), bigRS.getInt("amount"), bigRS.getTimestamp("time")));
 			}
-			processAuction(ao, bidList); // process the bidList for the last remaining auction
+			processAuction(ao.endTime, ao.winnerId, bidList); // process the bidList for the last remaining auction
 			
 			userRep(conn);
 			conn.close();
@@ -186,65 +186,6 @@ public class BuildTMFeatures extends BuildUserFeatures{
 			if (userFeaturesMap.containsKey(usersResultSet.getInt("userId")))
 				userFeaturesMap.get(usersResultSet.getInt("userId")).setRep(usersResultSet.getInt("posUnique"), usersResultSet.getInt("negUnique"));
 		}
-	}
-	
-	/**
-	 * @param auctionObject
-	 * @param bidList list of bids for this auction in chronological order
-	 */
-	private void processAuction(TMAuctionObject auctionObject, List<BidObject> bidList) {
-//		System.out.println(auctionObject + ", " + bidObjects);
-
-		// count the number of bids made for each user in the bidList
-		// and record the time of the last bid made for each user in the bidList 
- 		Map<Integer, Integer> bidderBidCount = new HashMap<Integer, Integer>(); // Map<UserId, Count>
-		Map<Integer, Date> bidderLastBidTime = new HashMap<Integer, Date>(); // Map<UserId, Date>
-		for (BidObject bo : bidList) {
-			int bidderId = bo.bidderId;
-			if (bidderBidCount.get(bidderId) == null) { // counting
-				bidderBidCount.put(bidderId, 1);
-			} else {
-				bidderBidCount.put(bidderId, bidderBidCount.get(bidderId) + 1);
-			}
-			bidderLastBidTime.put(bidderId, bo.time); // last bid time
-		}
-		 
-		// create a new UserFeatures the bidder if there is no UserFeatures object for them yet
-		for (int bidderId : bidderBidCount.keySet()) {
-			if (!userFeaturesMap.containsKey(bidderId)) {
-				UserFeatures uf = new UserFeatures();
-				uf.setUserId(bidderId);
-				userFeaturesMap.put(bidderId, uf);
-			}
-		}
-		
-		// record when bids are made
-		recordBidPeriods(auctionObject.endTime, bidList);
-		
-		for (int bidderId : bidderBidCount.keySet()) {
-			UserFeatures uf = userFeaturesMap.get(bidderId);
-			
-			// calculate the number of minutes until the end the last bid was made
-			long untilEndMin = Util.timeDiffInMin(auctionObject.endTime, bidderLastBidTime.get(bidderId));
-//			System.out.println(auctionObject.endTime + " - " + bidderLastBidTime.get(bidderId));
-//			System.out.println(auctionObject.endTime.getTime() + " - " + bidderLastBidTime.get(bidderId).getTime());
-//			System.out.println("untilEnd: " + untilEndMin);
-			
-			// record proportion of bids in the auction are made by this user
-			double bidProp = ((double) bidderBidCount.get(bidderId) / bidList.size());
-			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.getAuctionCount(), bidProp);
-
-			// add this auction's information to this bidder's UserFeatures object
-			// *** should be last in this method because of auctionCount ***
-			uf.addAuction(null, bidderBidCount.get(bidderId), (int)untilEndMin); // TODO: fix the null category, because sim auctions have an item type, which has a category, but doesn't have a direct category..., in contrast to TMAuctionObject  
-		}
-		
-		// record who won the auction
-		if (userFeaturesMap.containsKey(auctionObject.winnerId))
-			userFeaturesMap.get(auctionObject.winnerId).addWonAuction();
-		
-		// record bid counts, amounts and increments
-		recordBids(bidList);
 	}
 	
 	private String simpleCategory(String category) {
