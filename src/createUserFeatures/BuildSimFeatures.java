@@ -33,16 +33,16 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	private static final Logger logger = Logger.getLogger(BuildSimFeatures.class);
 	
 	public static void main(String[] args) {
-		String features = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15"; // all
+//		String features = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15"; // all
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 //		String features = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
 //		String features = "-3ln-10-5-6ln-11";
 		
-		List<Feature> allFeatures = Arrays.<Feature>asList(Features.values());
+		List<Feature> features = Arrays.<Feature>asList(Features.values());
 		
 		boolean trim = true;
 		BuildSimFeatures bf = new BuildSimFeatures(trim);
-		writeToFile(bf.build().values(), allFeatures, Paths.get("BuildTrimmedSimFeatures" + features + ".csv"));
+		writeToFile(bf.build().values(), features, Paths.get("BuildTrimmedSimFeatures" + Features.fileLabels(features) + ".csv"));
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 		System.out.println("Finished.");
 	}

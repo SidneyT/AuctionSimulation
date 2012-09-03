@@ -49,7 +49,7 @@ public class GenerateShillData {
 		
 		AgentAdder nonAltHybridA = NonAltHybrid.getAgentAdder(5, travethanStrategy, 4);
 
-		int numberOfRuns = 20;
+		int numberOfRuns = 140;
 		
 //		singleShillPairMultipleRuns(simplePairAdderA, numberOfRuns, new int[]{1,1,1,1,1,1});
 		singleShillPairMultipleRuns(simplePairAdderA, numberOfRuns);
@@ -65,7 +65,7 @@ public class GenerateShillData {
 	
 	private static void singleShillPairMultipleRuns(AgentAdder adder, int numberOfRuns, int[]... weightSets) {
 //		for (int i = 999; i < 1000; i++) {
-		for (int i = 0; i < numberOfRuns; i++) {
+		for (int i = 40; i < numberOfRuns; i++) {
 			System.out.println("starting run " + i);
 			
 			// run the simulator with the adder

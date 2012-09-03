@@ -42,6 +42,7 @@ import agents.sellers.TimedSeller;
 
 public class Main {
 
+	private static final int NUMBER_OF_THREADS = 4;
 	private final static Logger logger = Logger.getLogger(Main.class);
 
 	public static void main(String[] args) throws InterruptedException {
@@ -150,7 +151,7 @@ public class Main {
 		// print out the list of users
 		logger.debug(userRecord);
 
-		ExecutorService es = Executors.newFixedThreadPool(4);
+		ExecutorService es = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
 		// creating the callables
 		Callable<Object> ahCallable = Executors.callable(new CrashOnAssertionErrorRunnable(ah));

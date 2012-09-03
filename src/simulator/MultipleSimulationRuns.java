@@ -38,10 +38,10 @@ public class MultipleSimulationRuns {
 					Arrays.<Feature>asList(Features.values()),
 					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.AvgBidProp11),
 					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.AvgBidProp11),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidMinsBeforeEnd12),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.BidMinsBeforeEnd12),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidMinsBeforeEnd12),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.BidMinsBeforeEnd12)
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidTimesMinsBeforeEnd12),
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.BidTimesMinsBeforeEnd12),
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidTimesMinsBeforeEnd12),
+					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.BidTimesMinsBeforeEnd12)
 					);
 			boolean trim = true;
 			BuildSimFeatures buildFeatures = new BuildSimFeatures(trim);

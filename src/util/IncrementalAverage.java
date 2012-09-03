@@ -9,7 +9,9 @@ public class IncrementalAverage {
 	public void incrementalAvg(double newValue) {
 		this.average = this.average + (newValue - this.average)/(++numElements);
 	}
-	
+	public void incrementalAvg(long newValue) {
+		this.average = this.average + (newValue - this.average)/(++numElements);
+	}
 	public double getAverage() {
 		return average;
 	}

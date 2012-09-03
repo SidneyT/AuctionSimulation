@@ -30,25 +30,26 @@ public class UserFeatures {
 	}
 
 	double avgBidInc; // average bid increment
-	double avgBidIncMinusMinInc; // average bid increment minus minimum increment
+	double avgBidIncMinusMinInc = Double.NaN; // average bid increment minus minimum increment; initialise to NaN to know when it has not been used
 
-	private int auctionCount; // number of auctions as a bidder
+	int auctionCount; // number of auctions as a bidder
 	private int auctionsWon; // number of auctions won
 	double bidsPerAuc; // average number of bids made in all auctions
 	// double bidCountVar; // variance in the number of bids made in an auction
-	double lastBidTime; // average time until the end of the auction the last bid was made
 	final double[] bidPeriods;
 	final double[] bidPeriodsLogBins;
-	double firstBidTimes; // average number of minutes from the end of the auction the first bid was made
+	double firstBidTime; // average number of minutes from the end of the auction the FIRST bid in the auction by this user was made
+	double lastBidTime; // average number of minutes from the end of the auction the LAST bid in the auction by this user was made
 	double selfBidInterval; // average bid interval
 	double anyBidInterval; // average bid interval
-	final List<Double> bidTimesFractionBeforeEnd; // bid time as fraction befor
-	final List<Long> bidMinsBeforeEnd;
+	final List<Double> bidTimesFractionToEnd; // bid time as fraction of auction time elapsed
+	final List<Long> bidTimesMinsBeforeEnd;// number of minutes before the end of the auction
 
 	double avgNumCategory; // number of categories per auction the user is in
 	Set<String> categories;
 
 	double avgBidAmountComparedToMax; // average of the bid amounts as fractions of the maximum bid in the same auction
+	double avgFinalBidComparedToMax; // average of the last bid as fraction of the maximum
 	double avgBidProp;
 
 	public UserFeatures() {
@@ -56,8 +57,8 @@ public class UserFeatures {
 		this.bidPeriodsLogBins = new double[11];
 		this.categories = new HashSet<>();
 
-		this.bidTimesFractionBeforeEnd = new ArrayList<>();
-		this.bidMinsBeforeEnd = new ArrayList<>();
+		this.bidTimesFractionToEnd = new ArrayList<>();
+		this.bidTimesMinsBeforeEnd = new ArrayList<>();
 
 		// uninitilised values. used to find which users do not have a feedback page, and so have no reputation
 		pos = -1;
@@ -101,6 +102,8 @@ public class UserFeatures {
 			int incMinusMin = increment - Util.minIncrement(previousBid);
 			if (incMinusMin < 0)
 				incMinusMin = 0;
+			if (Double.isNaN(avgBidIncMinusMinInc))
+				avgBidIncMinusMinInc = 0;
 			avgBidIncMinusMinInc = Util.incrementalAvg(avgBidIncMinusMinInc(), bidIncCount, incMinusMin);
 			bidIncCount++;
 		}
@@ -140,6 +143,9 @@ public class UserFeatures {
 		return avgBidInc;
 	}
 
+	/**
+	 * @return Double.NaN if no value for this user exists (i.e., never bid after another bidder).
+	 */
 	public double getAvgBidIncMinusMinInc() {
 		return avgBidIncMinusMinInc;
 	}
@@ -160,8 +166,8 @@ public class UserFeatures {
 		return bidPeriodsLogBins;
 	}
 
-	public double getFirstBidTimes() {
-		return firstBidTimes;
+	public double getFirstBidTime() {
+		return firstBidTime;
 	}
 
 	public double getSelfBidInterval() {
@@ -172,12 +178,8 @@ public class UserFeatures {
 		return anyBidInterval;
 	}
 
-	public List<Double> getBidTimesBeforeEnd() {
-		return bidTimesFractionBeforeEnd;
-	}
-
-	public List<Long> getBidMinsBeforeEnd() {
-		return bidMinsBeforeEnd;
+	public List<Double> getBidTimesFractionToEnd() {
+		return bidTimesFractionToEnd;
 	}
 
 	public double getAvgNumCategory() {
@@ -204,25 +206,15 @@ public class UserFeatures {
 		return pos != -1; // && neg != -1
 	}
 
-	// public void addAuction(String category) {
-	// categories.add(category);
-	// auctionCount++;
-	// }
-
 	public void addWonAuction() {
 		auctionsWon++;
 		assert propWin() <= 1 : "propWin > 1";
 	}
 
-	public void addAuction(String category, int numberOfBids, int timeUntilEnd
-	// boolean won
-	) {
-		categories.add(category);
-		bidsPerAuc = Util.incrementalAvg(bidsPerAuc, auctionCount, numberOfBids);
-		lastBidTime = Util.incrementalAvg(lastBidTime, auctionCount, timeUntilEnd);
-		// if (won) { auctionsWon++; }
-		auctionCount++;
-	}
+//	public void addAuction(String category) {
+//		categories.add(category);
+//		auctionCount++;
+//	}
 
 	public int id() {
 		return userId;
@@ -490,6 +482,10 @@ public class UserFeatures {
 		return bidPeriods[0];
 	}
 
+	public List<Long> getBidTimesMinsBeforeEnd() {
+		return bidTimesMinsBeforeEnd;
+	}
+
 	public double bidPropMid() {
 		return bidPeriods[1];
 	}
@@ -528,8 +524,8 @@ public class UserFeatures {
 	public double bidTimeBeforeEndAvg() {
 		double result = 0;
 		int count = 0;
-		for (int i = 0; i < bidTimesFractionBeforeEnd.size(); i++) {
-			result = Util.incrementalAvg(result, count, bidTimesFractionBeforeEnd.get(i));
+		for (int i = 0; i < bidTimesFractionToEnd.size(); i++) {
+			result = Util.incrementalAvg(result, count, bidTimesFractionToEnd.get(i));
 			count++;
 		}
 		return result;
@@ -552,9 +548,9 @@ public class UserFeatures {
 	public double bidMinsBeforeEnd() {
 		double result = 0;
 		int count = 0;
-		for (int i = 0; i < bidMinsBeforeEnd.size(); i++) {
+		for (int i = 0; i < bidTimesMinsBeforeEnd.size(); i++) {
 			// result = Util.incrementalAvg(result, count, Math.log1p(bidMinsBeforeEnd.get(i)));
-			result = Util.incrementalAvg(result, count, bidMinsBeforeEnd.get(i));
+			result = Util.incrementalAvg(result, count, bidTimesMinsBeforeEnd.get(i));
 			count++;
 		}
 		return Math.log(result);
@@ -570,6 +566,10 @@ public class UserFeatures {
 	 */
 	private int discritiseEvenBins(int numberOfBins, double value) {
 		return (int) (value * numberOfBins) + 1;
+	}
+
+	public double getAvgFinalBidComparedToMax() {
+		return avgFinalBidComparedToMax;
 	}
 
 }

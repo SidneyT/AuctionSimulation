@@ -28,33 +28,31 @@ public class BuildTMFeatures extends BuildUserFeatures{
 	
 	public static void main(String[] args) {
 //		String features = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15"; // all
-		String features = "-1ln-2ln-3ln-4ln-6ln-13-9-5-10-11";
+//		String features = "-1ln-2ln-3ln-4ln-6ln-13-9-5-10-11";
 		
 		List<Feature> allFeatures = Arrays.<Feature>asList(Features.values());
 		List<Feature> featureList = Arrays.<Feature>asList(
-				Features.AuctionCount1, 
-				Features.Rep2,
+				Features.AuctionCount1Ln, 
 				Features.Rep2Ln,
 				Features.AvgBid3Ln,
 				Features.AvgBidIncMinusMinInc4Ln,
 				Features.BidsPerAuc6Ln,
 				Features.FirstBidTimes13,
-				Features.BidTimesUntilEnd9,
+				Features.BidTimesElapsed9,
 				Features.PropWin5,
 				Features.AvgBidPropMax10,
-				Features.AvgBidProp11);
+				Features.AvgBidProp11
+				);
 		
 		BuildTMFeatures bf = new BuildTMFeatures();
-		
-		System.out.println(Features.Rep2.name());
 		
 //		writeToFile(bf.build().values(), bf.getFeaturesToPrint(), Paths.get("TradeMeUserFeatures" + features + ".csv"));
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 //		reclustering(features, 4);
-		int minimumFinalPrice = 10000;
-		int maximumFinalPrice = 100000000;
+		int minimumFinalPrice = 2000;
+		int maximumFinalPrice = 10000;
 		writeToFile(bf.build(minimumFinalPrice, maximumFinalPrice).values(), featureList, 
-				Paths.get("TradeMeUserFeatures" + features + "-" + minimumFinalPrice + "-" + maximumFinalPrice + ".csv"));
+				Paths.get("TradeMeUserFeatures" + Features.fileLabels(featureList) + "-" + minimumFinalPrice + "-" + maximumFinalPrice + ".csv"));
 		System.out.println("Finished.");
 	}
 	

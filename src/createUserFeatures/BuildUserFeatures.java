@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 
@@ -25,9 +27,11 @@ import createUserFeatures.BuildUserFeatures.BidObject.BidObjectComparator;
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Util;
 
+/**
+ * Builds and updates UserFeatures objects using auction bidding information.
+ */
 public abstract class BuildUserFeatures {
 	protected static final double BEG_MID_BOUNDARY = 0.5;
 	protected static final double MID_END_BOUNDARY = 0.95;
@@ -63,8 +67,8 @@ public abstract class BuildUserFeatures {
 		for (UserFeatures uf : userFeaturesCollection) { // for each set of user features
 			if (uf.isComplete()) {
 				w.append(Features.values(featuresToPrint, uf));
+				w.newLine();
 			}
-			w.newLine();
 		}
 		w.newLine();
 		w.close();
@@ -74,10 +78,10 @@ public abstract class BuildUserFeatures {
 	 * POJO
 	 */
 	protected class TMAuctionObject {
-		int auctionId;
-		String category;
-		Date endTime;
-		int winnerId;
+		final int auctionId;
+		final String category;
+		final Date endTime;
+		final int winnerId;
 
 		public TMAuctionObject(int auctionId, String category, Date endTime, int winnerId) {
 			this.auctionId = auctionId;
@@ -96,10 +100,10 @@ public abstract class BuildUserFeatures {
 	 * POJO
 	 */
 	protected class SimAuctionObject {
-		int auctionId;
-		int itemTypeId;
-		Date endTime;
-		int winnerId;
+		final int auctionId;
+		final int itemTypeId;
+		final Date endTime;
+		final int winnerId;
 
 		public SimAuctionObject(int auctionId, int itemTypeId, Date endTime, int winnerId) {
 			this.auctionId = auctionId;
@@ -118,9 +122,9 @@ public abstract class BuildUserFeatures {
 	 * POJO
 	 */
 	protected static class BidObject {
-		int bidderId;
-		int amount;
-		Date time;
+		final int bidderId;
+		final int amount;
+		final Date time;
 
 		public BidObject(int bidderId, int amount, Date time) {
 			this.bidderId = bidderId;
@@ -157,7 +161,11 @@ public abstract class BuildUserFeatures {
 		rs.beforeFirst();
 	}
 
-	protected void recordBids(List<BidObject> bidList) {
+	/**
+	 * record bid counts, amounts and increments
+	 * @param bidList
+	 */
+	protected void recordBidAmounts(List<BidObject> bidList) {
 		BidObject firstBid = bidList.get(0);
 		BidObject lastBid = bidList.get(bidList.size() - 1);
 		userFeaturesMap.get(firstBid.bidderId).addBid(firstBid.amount, -1, lastBid.amount);
@@ -176,7 +184,7 @@ public abstract class BuildUserFeatures {
 	 * @param bidList
 	 * @param bidListsByUser
 	 */
-	protected void updateAnyBidInterval(List<BidObject> bidList, Map<Integer, List<BidObject>> bidListsByUser) {
+	private void updateAnyBidInterval(List<BidObject> bidList, ArrayListMultimap<Integer, BidObject> bidListsByUser) {
 		// if there's only 1 bid in the auction, there is no interval.
 		if (bidList.size() > 1) {
 			// Map<bidderId, average>
@@ -193,12 +201,12 @@ public abstract class BuildUserFeatures {
 			}
 
 			// update userFeature objects with intervalAverage and weights
-			int bidderWhoBidFirst = bidList.get(0).bidderId;
+			int firstBidder = bidList.get(0).bidderId;
 			for (int bidderId : bidListsByUser.keySet()) {
 				UserFeatures user = userFeaturesMap.get(bidderId);
 				int numberOfIntervals;
 				// the bidder who bid first does not have a bid interval for that bid, since there is no preceeding bid
-				if (bidderId == bidderWhoBidFirst) {
+				if (bidderId == firstBidder) {
 					numberOfIntervals = bidListsByUser.get(bidderId).size() - 1;
 				} else {
 					numberOfIntervals = bidListsByUser.get(bidderId).size();
@@ -215,11 +223,11 @@ public abstract class BuildUserFeatures {
 	/**
 	 * calculate & record the interval of time between bids made by the SAME USER
 	 * 
-	 * @param bidListsByUser
+	 * @param bidsByUser
 	 */
-	protected void updateSelfBidInterval(Map<Integer, List<BidObject>> bidListsByUser) {
-		for (int bidderId : bidListsByUser.keySet()) {
-			List<BidObject> userBidList = bidListsByUser.get(bidderId);
+	protected void updateSelfBidInterval(ArrayListMultimap<Integer, BidObject> bidsByUser) {
+		for (int bidderId : bidsByUser.keySet()) {
+			List<BidObject> userBidList = bidsByUser.get(bidderId);
 			// if there is only 1 bid in the list, there is no interval.
 			if (userBidList.size() > 1) {
 				long intervalTotal = 0;
@@ -254,11 +262,13 @@ public abstract class BuildUserFeatures {
 		for (BidObject bo : bidList) {
 			// long bidMinsBeforeEnd = timeDiffInMin(bidList.get(bidList.size() - 1).time, bo.time);
 			long bidMinsBeforeEnd = Util.timeDiffInMin(auctionEnd, bo.time);
-			userFeaturesMap.get(bo.bidderId).bidMinsBeforeEnd.add(bidMinsBeforeEnd);
+			assert bidMinsBeforeEnd >= 0;
+			userFeaturesMap.get(bo.bidderId).bidTimesMinsBeforeEnd.add(bidMinsBeforeEnd);
 
 			// time of bid as a fraction from the time of the first bid in the auction to the end time
-			double fractionToEnd = ((double) Util.timeDiffInMin(bo.time, bidList.get(0).time)) / length;
-			userFeaturesMap.get(bo.bidderId).bidTimesFractionBeforeEnd.add(fractionToEnd);
+			double fractionElapsed = ((double) Util.timeDiffInMin(bo.time, bidList.get(0).time)) / length;
+			assert fractionElapsed <= 1;
+			userFeaturesMap.get(bo.bidderId).bidTimesFractionToEnd.add(fractionElapsed);
 
 			// store the bidPeriod this fractionToEnd corresponds to
 			double[] userDist = dist.get(bo.bidderId);
@@ -268,7 +278,7 @@ public abstract class BuildUserFeatures {
 				dist.put(bo.bidderId, userDist);
 			}
 
-			BidPeriod period = findBidPeriod(fractionToEnd);
+			BidPeriod period = findBidPeriod(fractionElapsed);
 			for (int i = 0; i < 3; i++) { // increment the correct bin: beg, mid or end
 				if (i == period.getI()) {
 					userDist[i] = Util.incrementalAvg(userDist[i], (int) userDist[3], 1);
@@ -287,41 +297,92 @@ public abstract class BuildUserFeatures {
 	}
 
 	/**
-	 * @param bidList
-	 *            list of bids from one auction in chronological order by bid submission date
-	 * @return Map of lists with keys as bidderIds and values as a list of bids made by that bidder for this auction.
-	 *         Each list is in chronological order.
+	 * @param ao
+	 * @param bidList list of bids for this auction in ascending price order
 	 */
-	protected Map<Integer, List<BidObject>> seperateBidListByUser(List<BidObject> bidList) {
-		// Map<bidderId, bidObjects>
-		Map<Integer, List<BidObject>> bidLists = new HashMap<>();
-
-		for (BidObject bid : bidList) {
-			Util.mapListAdd(bidLists, bid.bidderId, bid);
+	protected void processAuction(Date auctionEndtime, int winnerId, List<BidObject> bidList) {
+		ArrayListMultimap<Integer, BidObject> bidsByUser = ArrayListMultimap.create();
+		for (BidObject bo : bidList) {
+			boolean unique = bidsByUser.put(bo.bidderId, bo);
+			if (!unique)
+				throw new AssertionError("Every bidObject's price should be different.");
 		}
+		
+		// create a new UserFeatures the bidder if there is no UserFeatures object for them yet
+		for (int bidderId : bidsByUser.keySet()) {
+			if (!userFeaturesMap.containsKey(bidderId)) {
+				UserFeatures uf = new UserFeatures();
+				uf.setUserId(bidderId);
+				userFeaturesMap.put(bidderId, uf);
+			}
+		}
+		
+		// record when bids are made
+		recordBidPeriods(auctionEndtime, bidsByUser);
+		recordUserBidPeriods(auctionEndtime, bidList);
+		updateSelfBidInterval(bidsByUser);
+		updateAnyBidInterval(bidList, bidsByUser);
+		
 
-		return bidLists;
+		recordLastBidAmountProportionOfMax(bidList.get(bidList.size() - 1).amount, bidsByUser);
+		recordBidProportions(bidsByUser);
+		
+		// record bid counts, amounts and increments
+		recordBidAmounts(bidList);
+
+		// record who won the auction
+		if (userFeaturesMap.containsKey(winnerId))
+			userFeaturesMap.get(winnerId).addWonAuction();
+		
+		for (int bidderId : bidsByUser.keySet()) {
+			UserFeatures uf = userFeaturesMap.get(bidderId);
+			uf.categories.add(null); // TODO: fix the null category, because sim auctions have an item type, which has a category, but doesn't have a direct category..., in contrast to TMAuctionObject
+			uf.auctionCount++; // *** should be last in this method because of auctionCount increment *** 
+		}
+	}
+	
+	private void recordLastBidAmountProportionOfMax(int finalPrice, ArrayListMultimap<Integer, BidObject> bidsByUser) {
+		for (int bidderId : bidsByUser.keySet()) {
+			UserFeatures uf = userFeaturesMap.get(bidderId);
+			double finalBidComparedToMax = (double) bidsByUser.get(bidderId).get(bidsByUser.get(bidderId).size() - 1).amount / finalPrice;
+			uf.avgFinalBidComparedToMax = Util.incrementalAvg(uf.avgFinalBidComparedToMax, uf.auctionCount, finalBidComparedToMax); 
+		}
 	}
 
-	protected void recordBidPeriods(Date auctionEnd, List<BidObject> bidList) {
-		// seperate the bidList into a list for each user
-		Map<Integer, List<BidObject>> bidListsByUser = seperateBidListByUser(bidList);
-
-		// record when the first bid was made by each user
-		for (int bidderId : bidListsByUser.keySet()) {
-			BidObject firstBid = bidListsByUser.get(bidderId).get(0); // first bid in the list must be first, since it's
-																		// in order
-			long firstBidTime = Util.timeDiffInMin(auctionEnd, firstBid.time);
+	/** record proportion of bids in the auction are made by each user */
+	protected void recordBidProportions(Multimap<Integer, BidObject> bidsByUser) {
+		for (int bidderId : bidsByUser.keySet()) {
+			UserFeatures uf = userFeaturesMap.get(bidderId);
+			double bidProp = ((double) bidsByUser.get(bidderId).size() / bidsByUser.size());
+			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.getAuctionCount(), bidProp);
+			uf.bidsPerAuc = Util.incrementalAvg(uf.bidsPerAuc, uf.getAuctionCount(), bidsByUser.get(bidderId).size());
+			
+		}
+	}
+	
+	protected void recordBidPeriods(Date auctionEnd, ArrayListMultimap<Integer, BidObject> bidsByUser) {
+		for (int bidderId : bidsByUser.keySet()) {
 			UserFeatures user = userFeaturesMap.get(bidderId);
-			user.firstBidTimes = Util.incrementalAvg(user.firstBidTimes, user.getAuctionCount(), firstBidTime);
+			// record how many minutes before the end of the auction the FIRST bid was made by each user
+			long firstBidTime = Util.timeDiffInMin(auctionEnd, bidsByUser.get(bidderId).get(0).time);
+			user.firstBidTime = Util.incrementalAvg(user.firstBidTime, user.getAuctionCount(), firstBidTime);
+			
+			// record how many minutes before the end of the auction the LAST bid was made by each user
+			long lastBidTime = Util.timeDiffInMin(auctionEnd, bidsByUser.get(bidderId).get(bidsByUser.get(bidderId).size() - 1).time);
+			user.lastBidTime = Util.incrementalAvg(user.lastBidTime, user.getAuctionCount(), lastBidTime);
+			
 			// System.out.println("firstBidTimes: " + user.firstBidTimes);
 		}
 
-		updateSelfBidInterval(bidListsByUser);
-		updateAnyBidInterval(bidList, bidListsByUser);
+		// time from first bid to the end of the auction, and the number of bids
+		// System.out.print((auctionEnd.getTime() - bidList.get(0).time.getTime()) / 60000 + "," + bidList.size() +
+		// ";");
+		// System.out.print(userBidPeriods.size() + ",");
+	}
 
+	private void recordUserBidPeriods(Date auctionEndtime, List<BidObject> bidList) {
 		// find the proportion of bids made in the Beginning, Middle and End of an auction
-		Map<Integer, double[]> userBidPeriods = findBidPeriods(auctionEnd, bidList);
+		Map<Integer, double[]> userBidPeriods = findBidPeriods(auctionEndtime, bidList);
 		// record the proportion in the UserFeatures object
 		for (int bidderId : userBidPeriods.keySet()) {
 			// UserFeatures.incrementalAvg(currAvg, currNumElements, nextValue)
@@ -335,63 +396,6 @@ public abstract class BuildUserFeatures {
 			}
 			bidPeriod[3] += newBidPeriod[3];
 		}
-
-		// time from first bid to the end of the auction, and the number of bids
-		// System.out.print((auctionEnd.getTime() - bidList.get(0).time.getTime()) / 60000 + "," + bidList.size() +
-		// ";");
-		// System.out.print(userBidPeriods.size() + ",");
-	}
-
-	/**
-	 * @param ao
-	 * @param bidList list of bids for this auction in ascending price order
-	 */
-	protected void processAuction(Date auctionEndtime, int winnerId, List<BidObject> bidList) {
-		TreeMultimap<Integer, BidObject> treemm = TreeMultimap.create(Ordering.natural(), BidObjectComparator.PRICE_SORT_ASC);
-		for (BidObject bo : bidList) {
-			boolean unique = treemm.put(bo.bidderId, bo);
-			if (!unique)
-				throw new AssertionError("Every bidObject's price should be different.");
-		}
-		
-		// create a new UserFeatures the bidder if there is no UserFeatures object for them yet
-		for (int bidderId : treemm.keySet()) {
-//		for (int bidderId : bidderBidCount.keySet()) {
-			if (!userFeaturesMap.containsKey(bidderId)) {
-				UserFeatures uf = new UserFeatures();
-				uf.setUserId(bidderId);
-				userFeaturesMap.put(bidderId, uf);
-			}
-		}
-		
-		// record when bids are made
-		recordBidPeriods(auctionEndtime, bidList);
-		
-		for (int bidderId : treemm.keySet()) {
-			
-			UserFeatures uf = userFeaturesMap.get(bidderId);
-			
-			// calculate the number of minutes until the end the last bid was made
-			long untilEndMin = Util.timeDiffInMin(auctionEndtime, treemm.get(bidderId).last().time);
-//			System.out.println(auctionObject.endTime + " - " + bidderLastBidTime.get(bidderId));
-//			System.out.println(auctionObject.endTime.getTime() + " - " + bidderLastBidTime.get(bidderId).getTime());
-//			System.out.println("untilEnd: " + untilEndMin);
-			
-			// record proportion of bids in the auction are made by this user
-			double bidProp = ((double) treemm.get(bidderId).size() / bidList.size());
-			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.getAuctionCount(), bidProp);
-
-			// add this auction's information to this bidder's UserFeatures object
-			// *** should be last in this method because of auctionCount increment ***
-			uf.addAuction(null, treemm.get(bidderId).size(), (int)untilEndMin); // TODO: fix the null category, because sim auctions have an item type, which has a category, but doesn't have a direct category..., in contrast to TMAuctionObject  
-		}
-		
-		// record who won the auction
-		if (userFeaturesMap.containsKey(winnerId))
-			userFeaturesMap.get(winnerId).addWonAuction();
-		
-		// record bid counts, amounts and increments
-		recordBids(bidList);
 	}
 	
 	/**
@@ -421,6 +425,6 @@ public abstract class BuildUserFeatures {
 	public abstract TreeMap<Integer, UserFeatures> build();
 
 	public TreeMap<Integer, UserFeatures> reclustering_build(int clusterId) {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 }
