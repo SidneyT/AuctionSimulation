@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
-import simulator.objects.Bid;
 
 public class MessagesToUsers {
 
@@ -27,7 +24,6 @@ public class MessagesToUsers {
 	
 	/**
 	 * NOT TO BE CALLED BY AuctionHouse
-	 * Don't need to synchronise when it's read only...?
 	 */
 	public List<Message> getMessages(long userId) {
 		// get messages

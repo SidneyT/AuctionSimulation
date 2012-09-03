@@ -53,16 +53,16 @@ public class PuppetBidder extends SimpleUser {
 	}
 	
 	@Override
-	protected void winAction(Auction auction) {
-		super.winAction(auction);
+	protected void winAction(Auction auction, long time) {
+		super.winAction(auction, time);
 		controller.winAction(this, auction);
 	}
 
 //	Set<Auction> lostAuctions = new HashSet<>();
 	
 	@Override
-	protected void loseAction(Auction auction) {
-		super.loseAction(auction);
+	protected void loseAction(Auction auction, long time) {
+		super.loseAction(auction, time);
 		controller.lossAction(this, auction);
 		
 //		logger.info(this + " got LOSS message for " + auction);

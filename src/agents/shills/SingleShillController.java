@@ -143,8 +143,8 @@ public class SingleShillController extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void newAction(Auction auction) {
-		super.newAction(auction);
+	protected void newAction(Auction auction, long time) {
+		super.newAction(auction, time);
 		
 		if (shillAuctions.contains(auction)) {
 			ah.registerForAuction(this, auction); // have the controller register for the auction, instead of the shill bidder
@@ -152,12 +152,12 @@ public class SingleShillController extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void priceChangeAction(Auction auction) {
-		super.priceChangeAction(auction);
+	protected void priceChangeAction(Auction auction, long time) {
+		super.priceChangeAction(auction, time);
 	}
 
 	@Override
-	protected void loseAction(Auction auction) {
+	protected void loseAction(Auction auction, long time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;
@@ -166,7 +166,7 @@ public class SingleShillController extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void winAction(Auction auction) {
+	protected void winAction(Auction auction, long time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;
@@ -175,13 +175,13 @@ public class SingleShillController extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void expiredAction(Auction auction) {
-		super.expiredAction(auction);
+	protected void expiredAction(Auction auction, long time) {
+		super.expiredAction(auction, time);
 	}
 
 	@Override
-	protected void soldAction(Auction auction) {
-		super.soldAction(auction);
+	protected void soldAction(Auction auction, long time) {
+		super.soldAction(auction, time);
 		this.awaitingPayment.add(auction);
 	}
 

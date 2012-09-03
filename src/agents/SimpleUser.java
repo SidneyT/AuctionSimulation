@@ -75,8 +75,8 @@ public class SimpleUser extends EventListener {
 	
 
 	@Override
-	protected void winAction(Auction auction) {
-		super.winAction(auction);
+	protected void winAction(Auction auction, long time) {
+		super.winAction(auction, time);
 		this.ps.send(2, auction, auction.getCurrentPrice(), this, auction.getSeller());
 		this.awaitingItem.add(auction);
 	}
@@ -86,8 +86,8 @@ public class SimpleUser extends EventListener {
 	 * @param auction
 	 */
 	@Override
-	protected void soldAction(Auction auction) {
-		super.soldAction(auction);
+	protected void soldAction(Auction auction, long time) {
+		super.soldAction(auction, time);
 		this.awaitingPayment.add(auction);
 	}
 	

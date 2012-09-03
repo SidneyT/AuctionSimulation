@@ -269,7 +269,7 @@ public abstract class ClusterBidder extends SimpleUser {
 //	}
 	
 	@Override
-	protected void priceChangeAction(Auction auction) {
+	protected void priceChangeAction(Auction auction, long time) {
 //		if (auction.getBidCount() == 1)
 //			this.oneBidAuctionsUnprocessed.add(auction);
 		
@@ -286,29 +286,29 @@ public abstract class ClusterBidder extends SimpleUser {
 	}
 	
 	@Override
-	protected void newAction(Auction auction) {
-		super.newAction(auction);
+	protected void newAction(Auction auction, long time) {
+		super.newAction(auction, time);
 
 		this.newAuctionsUnprocessed.add(auction);
 	}
 	
 	@Override
-	protected void loseAction(Auction auction) {
-		super.loseAction(auction);
+	protected void loseAction(Auction auction, long time) {
+		super.loseAction(auction, time);
 		
 //		this.oneBidAuctionsUnprocessed.remove(auction);
 	}
 	
 	@Override
-	protected void winAction(Auction auction) {
-		super.winAction(auction);
+	protected void winAction(Auction auction, long time) {
+		super.winAction(auction, time);
 		
 //		this.oneBidAuctionsUnprocessed.remove(auction);
 	}
 	
 	@Override
-	protected void expiredAction(Auction auction) {
-		super.expiredAction(auction);
+	protected void expiredAction(Auction auction, long time) {
+		super.expiredAction(auction, time);
 //		assert(newAuctionsUnprocessed.contains(auction) == false);
 	}
 	

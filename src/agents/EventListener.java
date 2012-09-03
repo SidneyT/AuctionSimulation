@@ -63,27 +63,28 @@ public abstract class EventListener implements Runnable {
 		List<Message> messages = this.bh.getMessagesToUsers().getMessages(id);
 		for (Message message : messages) {
 			Auction auction = message.getAuction();
+			long time = bh.getTimeMessage().getTime();
 			switch (message.getType()) {
 				case NEW:
-					newAction(auction);
+					newAction(auction, time);
 					break;
 				case PRICE_CHANGE:
-					priceChangeAction(auction);
+					priceChangeAction(auction, time);
 					break;
 				case LOSS:
-					loseAction(auction);
+					loseAction(auction, time);
 					break;
 				case WIN:
-					winAction(auction);
+					winAction(auction, time);
 					break;
 				case EXPIRED:
-					expiredAction(auction);
+					expiredAction(auction, time);
 					break;
 				case SOLD:
-					soldAction(auction);
+					soldAction(auction, time);
 					break;
 				case END_SOON:
-					endSoonAction(auction);
+					endSoonAction(auction, time);
 					break;
 			}
 		}
@@ -93,56 +94,56 @@ public abstract class EventListener implements Runnable {
 	 * For bidders
 	 * @param auction
 	 */
-	protected void newAction(Auction auction) {
-		logger.debug(id + " received " + auction + " " + MessageType.NEW + " at " + bh.getTimeMessage().getTime());
+	protected void newAction(Auction auction, long time) {
+		logger.debug(id + " received " + auction + " " + MessageType.NEW + " at " + time);
 	}
 
 	/**
 	 * For bidders
 	 * @param auction
 	 */
-	protected void priceChangeAction(Auction auction) {
-		logger.debug(id + " received " + auction + " " + MessageType.PRICE_CHANGE + " at " + bh.getTimeMessage().getTime());
+	protected void priceChangeAction(Auction auction, long time) {
+		logger.debug(id + " received " + auction + " " + MessageType.PRICE_CHANGE + " at " + time);
 	}
 
 	/**
 	 * For bidders
 	 * @param auction
 	 */
-	protected void loseAction(Auction auction) {
-		logger.debug(id + " received " + auction + " " + MessageType.LOSS + " at " + bh.getTimeMessage().getTime());
+	protected void loseAction(Auction auction, long time) {
+		logger.debug(id + " received " + auction + " " + MessageType.LOSS + " at " + time);
 	}
 
 	/**
 	 * For bidders
 	 * @param auction
 	 */
-	protected void winAction(Auction auction) {
-		logger.debug(id + " received " + auction + " " + MessageType.WIN + " at " + bh.getTimeMessage().getTime());
+	protected void winAction(Auction auction, long time) {
+		logger.debug(id + " received " + auction + " " + MessageType.WIN + " at " + time);
 	}
 
 	/**
 	 * For sellers
 	 * @param auction
 	 */
-	protected void expiredAction(Auction auction) {
-		logger.debug(id + " received " + auction + " " + MessageType.EXPIRED + " at " + bh.getTimeMessage().getTime());
+	protected void expiredAction(Auction auction, long time) {
+		logger.debug(id + " received " + auction + " " + MessageType.EXPIRED + " at " + time);
 	}
 
 	/**
 	 * For sellers
 	 * @param auction
 	 */
-	protected void soldAction(Auction auction) {
-		logger.debug(id + " received " + auction + " " + MessageType.SOLD + " at " + bh.getTimeMessage().getTime());
+	protected void soldAction(Auction auction, long time) {
+		logger.debug(id + " received " + auction + " " + MessageType.SOLD + " at " + time);
 	}
 	
 	/**
 	 * For bidders
 	 * @param auction
 	 */
-	protected void endSoonAction(Auction auction) {
-		logger.debug(id + " received " + auction + " " + MessageType.END_SOON + " at " + bh.getTimeMessage().getTime());
+	protected void endSoonAction(Auction auction, long time) {
+		logger.debug(id + " received " + auction + " " + MessageType.END_SOON + " at " + time);
 	}
 	
 	/**

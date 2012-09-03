@@ -134,8 +134,8 @@ public class ModifiedHybrid extends CollusiveShillController {
 	}
 	
 	@Override
-	protected void endSoonAction(Auction auction) {
-		super.endSoonAction(auction);
+	protected void endSoonAction(Auction auction, long time) {
+		super.endSoonAction(auction, time);
 		
 		if (!shouldSnipe(auction))
 			return;

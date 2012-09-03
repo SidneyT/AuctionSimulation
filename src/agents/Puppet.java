@@ -25,32 +25,32 @@ public class Puppet extends SimpleUser {
 	}
 
 	@Override
-	protected void newAction(Auction auction) {
+	protected void newAction(Auction auction, long time) {
 		master.newAction(this, auction);
 	}
 
 	@Override
-	protected void priceChangeAction(Auction auction) {
+	protected void priceChangeAction(Auction auction, long time) {
 		master.priceChangeAction(this, auction);
 	}
 
 	@Override
-	protected void loseAction(Auction auction) {
+	protected void loseAction(Auction auction, long time) {
 		master.loseAuction(this, auction);
 	}
 
 	@Override
-	protected void winAction(Auction auction) {
+	protected void winAction(Auction auction, long time) {
 		master.winAuction(this, auction);
 	}
 
 	@Override
-	protected void expiredAction(Auction auction) {
+	protected void expiredAction(Auction auction, long time) {
 		master.expiredAuction(this, auction);
 	}
 
 	@Override
-	protected void soldAction(Auction auction) {
+	protected void soldAction(Auction auction, long time) {
 		master.soldAuction(this, auction);
 	}
 	

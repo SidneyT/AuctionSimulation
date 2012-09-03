@@ -156,8 +156,8 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void newAction(Auction auction) {
-		super.newAction(auction);
+	protected void newAction(Auction auction, long time) {
+		super.newAction(auction, time);
 		if (shillAuctions.containsKey(auction)) {
 			ah.registerForAuction(this, auction);
 			shillAuctions.put(auction, true);
@@ -166,14 +166,14 @@ public class LowBidShillPair extends EventListener implements Controller {
 
 	boolean someoneJustBid; 
 	@Override
-	protected void priceChangeAction(Auction auction) {
-		super.priceChangeAction(auction);
+	protected void priceChangeAction(Auction auction, long time) {
+		super.priceChangeAction(auction, time);
 		if (auction.getWinner() != sb)
 			someoneJustBid = true;
 	}
 
 	@Override
-	protected void loseAction(Auction auction) {
+	protected void loseAction(Auction auction, long time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;
@@ -183,7 +183,8 @@ public class LowBidShillPair extends EventListener implements Controller {
 
 	// can remove...
 	@Override
-	protected void winAction(Auction auction) {
+	protected void winAction(Auction auction, long time) {
+		super.winAction(auction, time);
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;
@@ -192,8 +193,8 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void endSoonAction(Auction auction) {
-		super.endSoonAction(auction);
+	protected void endSoonAction(Auction auction, long time) {
+		super.endSoonAction(auction, time);
 		
 		if (!shouldSnipe(auction))
 			return;
@@ -220,14 +221,14 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 	
 	@Override
-	protected void expiredAction(Auction auction) {
-		super.expiredAction(auction);
+	protected void expiredAction(Auction auction, long time) {
+		super.expiredAction(auction, time);
 	}
 
 	// can remove...
 	@Override
-	protected void soldAction(Auction auction) {
-		super.soldAction(auction);
+	protected void soldAction(Auction auction, long time) {
+		super.soldAction(auction, time);
 		this.awaitingPayment.add(auction);
 	}
 	
