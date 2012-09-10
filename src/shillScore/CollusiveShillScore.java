@@ -1,6 +1,6 @@
 package shillScore;
 
-import util.IncrementalAverage;
+import util.IncrementalMean;
 import util.Util;
 
 public class CollusiveShillScore {
@@ -8,14 +8,14 @@ public class CollusiveShillScore {
 	private final int id; // bidderId
 	
 	private double eta;
-	final IncrementalAverage bindingFactorB;
+	final IncrementalMean bindingFactorB;
 	private double theta;
-	final IncrementalAverage bindingFactorA;
+	final IncrementalMean bindingFactorA;
 	
 	public CollusiveShillScore(int id) {
 		this.id = id;
-		bindingFactorB = new IncrementalAverage();
-		bindingFactorA = new IncrementalAverage();
+		bindingFactorB = new IncrementalMean();
+		bindingFactorA = new IncrementalMean();
 	}
 	
 	public int getId() {

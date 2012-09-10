@@ -7,19 +7,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 
 import simulator.database.DatabaseConnection;
-import util.Util;
 
 /**
  *	Builds UserFeature object using scraped TradeMe data. 
@@ -62,7 +58,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 	 * @param maximumPrice
 	 * @return
 	 */
-	public TreeMap<Integer, UserFeatures> build(int minimumPrice, int maximumPrice) {
+	public Map<Integer, UserFeatures> build(int minimumPrice, int maximumPrice) {
 		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time " +
 				"FROM auctions AS a " +
 				"JOIN bids AS b ON a.listingId=b.listingId " +
@@ -81,7 +77,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 		}
 	}
 	@Override
-	public TreeMap<Integer, UserFeatures> reclustering_build(int clusterId) {
+	public Map<Integer, UserFeatures> reclustering_build(int clusterId) {
 		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time, c.cluster " +  
 				"FROM auctions AS a " +
 				"JOIN bids AS b ON a.listingId=b.listingId " +
@@ -89,7 +85,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
 				"ORDER BY a.listingId, b.amount ASC;";
 		
-		TreeMap<Integer, UserFeatures> userFeaturesCol = constructUserFeatures(query); // contains userFeatures from all clusters
+		Map<Integer, UserFeatures> userFeaturesMap = constructUserFeatures(query); // contains userFeatures from all clusters
 		
 		Set<Integer> idsInCluster = new HashSet<Integer>();
 		try {
@@ -104,21 +100,21 @@ public class BuildTMFeatures extends BuildUserFeatures{
 			e.printStackTrace();
 		}
 		
-		userFeaturesCol.keySet().retainAll(idsInCluster);
+		userFeaturesMap.keySet().retainAll(idsInCluster);
 		
-		return userFeaturesCol;
+		return userFeaturesMap;
 	}
 	
 	/**
 	 * calls constructUserFeatures with default query
 	 */
-	public TreeMap<Integer, UserFeatures> build() {
+	public Map<Integer, UserFeatures> build() {
 		// get bids (and user and auction info) for auctions that are not purchased with buy now
 		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time " +
 				"FROM auctions AS a " +
 				"JOIN bids AS b ON a.listingId=b.listingId " +
 				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
-				"ORDER BY a.listingId, amount ASC;";
+				"ORDER BY a.listingId ASC, amount ASC;";
 		return constructUserFeatures(query);
 	}
 	
@@ -127,7 +123,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 	 * Information is stored in class variable "userFeaturesMap".  Map is in ascending key
 	 * order. Key is the userId.
 	 */
-	public TreeMap<Integer, UserFeatures> constructUserFeatures(String query) {
+	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
 		try {
 			Connection conn = DatabaseConnection.getTrademeConnection();
 			
@@ -143,7 +139,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 				int currentListingId = bigRS.getInt("listingId");
 				if (lastListingId != currentListingId) { // new auction
 					if (lastListingId != -1) { // test if there is a previous auction processed, if there is, then process the previous auction
-						processAuction(ao.endTime, ao.winnerId, bidList);
+						processAuction(ao, bidList);
 						// clear the lists
 						bidList.clear();
 					}
@@ -153,7 +149,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 				}
 				bidList.add(new BidObject(bigRS.getInt("bidderId"), bigRS.getInt("amount"), bigRS.getTimestamp("time")));
 			}
-			processAuction(ao.endTime, ao.winnerId, bidList); // process the bidList for the last remaining auction
+			processAuction(ao, bidList); // process the bidList for the last remaining auction
 			
 			userRep(conn);
 			conn.close();

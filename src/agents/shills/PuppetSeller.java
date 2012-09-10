@@ -14,7 +14,6 @@ import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Item;
 import simulator.objects.Auction.AuctionLength;
-import agents.EventListener;
 import agents.SimpleUser;
 
 /**

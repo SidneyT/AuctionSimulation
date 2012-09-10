@@ -36,17 +36,11 @@ public class BidsToAh {
 	 * NOT TO BE CALLED BY AuctionHouse
 	 */
 	public void put(Auction auction, Bid bid) {
-		List<Bid> auctionBids = this.map.get(auction);
-		if (auctionBids == null) {
+		if (!this.map.containsKey(auction)) {
 			List<Bid> newAuctionBids = Collections.synchronizedList(new ArrayList<Bid>());
-			auctionBids = map.putIfAbsent(auction, newAuctionBids);
-			if (auctionBids == null) // newAuctionBids put into map successfully
-				newAuctionBids.add(bid);
-			else // someone else put a list in before this thread
-				auctionBids.add(bid);
-		} else {
-			auctionBids.add(bid);
+			map.putIfAbsent(auction, newAuctionBids);
 		}
+		this.map.get(auction).add(bid);
 	}
 	
 }

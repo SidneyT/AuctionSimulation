@@ -8,6 +8,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import createUserFeatures.BuildSimFeatures;
+import createUserFeatures.UserFeatures;
+import createUserFeatures.features.Features;
+
 import agents.shills.Hybrid;
 import agents.shills.LowBidShillPair;
 import agents.shills.ModifiedHybrid;
@@ -49,29 +53,47 @@ public class GenerateShillData {
 		
 		AgentAdder nonAltHybridA = NonAltHybrid.getAgentAdder(5, travethanStrategy, 4);
 
-		int numberOfRuns = 140;
+		int numberOfRuns = 200;
 		
-//		singleShillPairMultipleRuns(simplePairAdderA, numberOfRuns, new int[]{1,1,1,1,1,1});
-		singleShillPairMultipleRuns(simplePairAdderA, numberOfRuns);
-//		singleShillPairMultipleRuns(simplePairAdderB, numberOfRuns);
-//		singleShillPairMultipleRuns(simplePairAdderC, numberOfRuns);
+//		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new int[]{1,1,1,1,1,1});
+		run(simplePairAdderA, numberOfRuns);
+//		writeSSandPercentiles(simplePairAdderB, numberOfRuns);
+//		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
 		
-//		collusiveShillPairMultiple  Runs(hybridAdderB, numberOfRuns);
+//		collusiveShillPairMultipleRuns(hybridAdderB, numberOfRuns);
 //		collusiveShillPairMultipleRuns(randomHybridAdderA, numberOfRuns);
 //		collusiveShillPairMultipleRuns(multisellerHybridAdderA, numberOfRuns);
 //		collusiveShillPairMultipleRuns(hybridAdderC, numberOfRuns);
 //		collusiveShillPairMultipleRuns(nonAltHybridA, numberOfRuns);
 	}
 	
-	private static void singleShillPairMultipleRuns(AgentAdder adder, int numberOfRuns, int[]... weightSets) {
-//		for (int i = 999; i < 1000; i++) {
-		for (int i = 48; i < numberOfRuns; i++) {
-			System.out.println("starting run " + i);
-			
+	private static void run(AgentAdder adder, int numberOfRuns, int[]... weightSets) {
+		for (int runNumber = 100; runNumber < numberOfRuns; runNumber++) {
 			// run the simulator with the adder
 			Main.run(adder);
+
+			writeSSandPercentiles(adder, runNumber, weightSets);
 			
-			String runLabel = adder.toString() + "." + i;
+			// write out user features too.
+			BuildSimFeatures buildFeatures = new BuildSimFeatures(true);
+			Map<Integer, UserFeatures> features = buildFeatures.build();
+			BuildSimFeatures.writeToFile(features.values(), Features.defaultFeatures, Paths.get("single_feature_shillvsnormal", "synUserFeatures_" + Features.fileLabels(Features.defaultFeatures) + "_" + runNumber + ".csv"));
+		}
+	}
+	
+	/**
+	 * Calculate shill scores for synthetic data.
+	 * Write those scores out to files, and also the ssPercentiles. 
+	 * @param adder
+	 * @param runNumber
+	 * @param weightSets
+	 */
+	private static void writeSSandPercentiles(AgentAdder adder, int runNumber, int[]... weightSets) {
+//		for (int i = 999; i < 1000; i++) {
+			System.out.println("starting run " + runNumber);
+			
+			
+			String runLabel = adder.toString() + "." + runNumber;
 
 			// build shillScores
 			ShillScoreInfo ssi = BuildShillScore.build();
@@ -83,14 +105,10 @@ public class GenerateShillData {
 			ShillWinLossPrice.writeToFile(runLabel);
 			
 			List<List<Double>> ssPercentiless = new ArrayList<List<Double>>();
-			
 			ssPercentiless.add(splitAndCalculatePercentiles(ssi.shillScores.values(), ssi.auctionCounts, ShillScore.DEFAULT_WEIGHTS));
-			
-			// calculate the percentiles for the other ones.
-			for (int[] weights : weightSets) {
+			for (int[] weights : weightSets) {// calculate the percentiles for the other weight sets
 				ssPercentiless.add(splitAndCalculatePercentiles(ssi.shillScores.values(), ssi.auctionCounts, weights));
 			}
-			
 			String ssPercentilesRunLabel = runLabel;
 			for (int[] weights : weightSets) {
 				ssPercentilesRunLabel += "." + Arrays.toString(weights).replaceAll(", " , "");
@@ -103,7 +121,7 @@ public class GenerateShillData {
 			ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, Paths.get("shillingResults", "comparisons", "rank.csv"), runLabel, weightSets);
 			
 //			WriteScores.writeShillScoresForAuctions(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, runLabel);
-		}
+			
 	}
 
 	public static List<Double> splitAndCalculatePercentiles(Collection<ShillScore> sss, Map<Integer, Integer> auctionCounts, int[] weights) {

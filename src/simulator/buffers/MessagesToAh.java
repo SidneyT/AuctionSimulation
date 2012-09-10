@@ -6,16 +6,16 @@ import java.util.List;
 
 public class MessagesToAh<T> {
 
-	private final List<T> list;
+	private final List<T> synchronizedList;
 	
 	public MessagesToAh() {
-		this.list = Collections.synchronizedList(new ArrayList<T>());
+		this.synchronizedList = Collections.synchronizedList(new ArrayList<T>());
 	}
 	
 	public void startUsersTurn() {
 		// make a new list to store new messages to AuctionHouse from users	
-		this.list.clear();
-		assert(list.isEmpty());
+		this.synchronizedList.clear();
+		assert(synchronizedList.isEmpty());
 	}
 	
 	public void startAhTurn() {
@@ -27,7 +27,7 @@ public class MessagesToAh<T> {
 	 */
 	public List<T> get() {
 		// get messages
-		return this.list;
+		return this.synchronizedList;
 	}
 	
 	/**
@@ -35,7 +35,7 @@ public class MessagesToAh<T> {
 	 * @param message
 	 */
 	public void put(T message) {
-		this.list.add(message);
+		this.synchronizedList.add(message);
 	}
 	
 	

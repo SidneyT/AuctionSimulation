@@ -4,15 +4,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
 import org.apache.log4j.Logger;
 
-import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
-import simulator.buffers.ItemSender;
 import simulator.buffers.Message;
 import simulator.buffers.MessageType;
-import simulator.buffers.PaymentSender;
 import simulator.buffers.ItemSender.ItemSold;
 import simulator.buffers.PaymentSender.Payment;
 import simulator.objects.Auction;
@@ -26,10 +22,7 @@ public abstract class EventListener implements Runnable {
 	
 	private static final Logger logger = Logger.getLogger(EventListener.class);
 
-	public BufferHolder bh;
-	protected PaymentSender ps;
-	protected ItemSender is;
-	protected AuctionHouse ah;
+	public final BufferHolder bh;
 	
 	protected final int id;
 
@@ -44,7 +37,7 @@ public abstract class EventListener implements Runnable {
 		this.awaitingItem = new HashSet<Auction>();
 	}
 	
-	public int getId() {
+	public final int getId() {
 		assert(this.id != -1); // id must have been set
 		return id;
 	}

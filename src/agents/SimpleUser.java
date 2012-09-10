@@ -28,21 +28,19 @@ public class SimpleUser extends EventListener {
 	
 	private static final Logger logger = Logger.getLogger(SimpleUser.class);
 
+	protected final AuctionHouse ah;
+	protected final PaymentSender ps;
+	protected final ItemSender is;
 	protected final ReputationRecord rr;
 
 	public SimpleUser(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int uniqueId) {
 		super(bh, uniqueId);
+		this.ah = ah;
 		this.ps = ps;
 		this.is = is;
-		this.ah = ah;
 //		System.out.println("setting id as " + id);
 
 		this.rr = new ReputationRecord();
-	}
-	
-	public int getId() {
-		assert(this.id != -1); // id must have been set
-		return id;
 	}
 	
 	public void addFeedback(Feedback feedback) {

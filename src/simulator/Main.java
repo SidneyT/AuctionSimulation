@@ -4,13 +4,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 
 import createUserFeatures.ClusterAnalysis;
 
@@ -42,7 +43,7 @@ import agents.sellers.TimedSeller;
 
 public class Main {
 
-	private static final int NUMBER_OF_THREADS = 4;
+	private static final int NUMBER_OF_THREADS = 3;
 	private final static Logger logger = Logger.getLogger(Main.class);
 
 	public static void main(String[] args) throws InterruptedException {
@@ -85,34 +86,34 @@ public class Main {
 		final UserRecord userRecord = new UserRecord();
 
 		// create buffers
-		TimeMessage timeMessage = new TimeMessage();
-		MessagesToUsers messagesToUsers = new MessagesToUsers();
-		MessagesToAh<Auction> auctionsToAh = new MessagesToAh<Auction>();
-		MessagesToAh<Feedback> feedbackToAh = new MessagesToAh<Feedback>();
-		BidsToAh bidsToAh = new BidsToAh();
-		BufferHolder bh = new BufferHolder(timeMessage, messagesToUsers, auctionsToAh, feedbackToAh, bidsToAh);
+		final TimeMessage timeMessage = new TimeMessage();
+		final MessagesToUsers messagesToUsers = new MessagesToUsers();
+		final MessagesToAh<Auction> auctionsToAh = new MessagesToAh<Auction>();
+		final MessagesToAh<Feedback> feedbackToAh = new MessagesToAh<Feedback>();
+		final BidsToAh bidsToAh = new BidsToAh();
+		final BufferHolder bh = new BufferHolder(timeMessage, messagesToUsers, auctionsToAh, feedbackToAh, bidsToAh);
 
 		// create item and payment senders
-		PaymentSender ps = new PaymentSender();
-		ItemSender is = new ItemSender();
+		final PaymentSender ps = new PaymentSender();
+		final ItemSender is = new ItemSender();
 
 		// create item types
-		CategoryRecord cr = MockCategories.createCategories();
+		final CategoryRecord cr = MockCategories.createCategories();
 		SaveObjects.saveCategory(cr.getCategories());
 		ArrayList<ItemType> types = ItemType.createItems(20, cr.getCategories());
 		SaveObjects.saveItemTypes(types);
 
-		AuctionHouse ah = new AuctionHouse(userRecord, bh);
+		final AuctionHouse ah = new AuctionHouse(userRecord, bh);
 
 		// parameters of simulator
-		int numClusterBidder = 4000;
-		double numberOfDays = 100;
-//		double auctionsPerBidder = 1.04; // value from TM data
-		double auctionsPerBidder = 1.2; // assuming 35.9% of auctions have no bids, 1.04 becomes 1.62
-		double auctionsPerDay = auctionsPerBidder * numClusterBidder / numberOfDays;
+		final int numClusterBidder = 4000;
+		final double numberOfDays = 100;
+//		final double auctionsPerBidder = 1.04; // value from TM data
+		final double auctionsPerBidder = 1.2; // assuming 35.9% of auctions have no bids, 1.04 becomes 1.62
+		final double auctionsPerDay = auctionsPerBidder * numClusterBidder / numberOfDays;
 
 //		double probIsSniper = 0.33; // from tradeMeData
-		double probIsSniper = 0.5;
+		final double probIsSniper = 0.5;
 		ClusterBidder.setNumUsers(numClusterBidder);
 		for (int i = 0; i < (long) ((1 - probIsSniper) * numClusterBidder + 0.5); i++) {
 			userRecord.addUser(new ClusterEarly(bh, ps, is, ah, userRecord.nextId()));
@@ -154,17 +155,19 @@ public class Main {
 		ExecutorService es = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
 		// creating the callables
-		Callable<Object> ahCallable = Executors.callable(new CrashOnAssertionErrorRunnable(ah));
-		List<Callable<Object>> callables = new ArrayList<Callable<Object>>();
-		callables.add(Executors.callable(new CrashOnAssertionErrorRunnable(ps)));
-		callables.add(Executors.callable(new CrashOnAssertionErrorRunnable(is)));
-		List<Callable<Object>> userCallables = new ArrayList<Callable<Object>>();
+//		final Callable<Object> ahCallable = Executors.callable(new CrashOnAssertionErrorRunnable(ah));
+		final ImmutableList<Callable<Object>> callables = ImmutableList.of(
+				Executors.callable(new CrashOnAssertionErrorRunnable(ps)),
+				Executors.callable(new CrashOnAssertionErrorRunnable(is))
+				);
+		final Builder<Callable<Object>> userCallablesBuilder = ImmutableList.builder();
 		for (SimpleUser user : userRecord.getUsers()) {
-			userCallables.add(Executors.callable(new CrashOnAssertionErrorRunnable(user)));
+			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(user)));
 		}
 		for (EventListener listeners : ah.getEventListeners()) {
-			userCallables.add(Executors.callable(new CrashOnAssertionErrorRunnable(listeners)));
+			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(listeners)));
 		}
+		ImmutableList<Callable<Object>> userCallables = userCallablesBuilder.build();
 		
 		// starting the loops - each loop is 1 time unit
 		// 24 * 60 / 5 == 1 day
@@ -176,16 +179,16 @@ public class Main {
 //			}
 			
 			try {
-				es.submit(ahCallable).get();
-				bh.startUserTurn(); // end AH turn after AH thread has joined
-				es.invokeAll(callables);
-				if (userCallables == null)
-					System.out.println("pause");
+//				es.submit(ahCallable).get();
+				ah.run();
+				bh.startUserTurn();
+				
+				// invokeAll() blocks until all tasks are complete
+				es.invokeAll(callables); 
 				es.invokeAll(userCallables);
-				bh.startAhTurn(); // start AH turn after all user threads are joined
+				
+				bh.startAhTurn();
 			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
 		}

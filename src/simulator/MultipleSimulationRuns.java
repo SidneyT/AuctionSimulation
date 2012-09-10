@@ -3,7 +3,7 @@ package simulator;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.Map;
 
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildUserFeatures;
@@ -47,7 +47,7 @@ public class MultipleSimulationRuns {
 			BuildSimFeatures buildFeatures = new BuildSimFeatures(trim);
 			
 			
-			TreeMap<Integer, UserFeatures> userFeatureMap = buildFeatures.build();
+			Map<Integer, UserFeatures> userFeatureMap = buildFeatures.build();
 			
 			String folder = "synData";
 			for (List<Feature> featureSet : featureSets) {

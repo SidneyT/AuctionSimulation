@@ -38,6 +38,7 @@ public class RecordClusters {
 				int clusterId = Integer.parseInt(sArr[sArr.length - 1].replaceAll("[^0-9]+", ""));
 				clusters.add(clusterId);
 			}
+			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -103,6 +104,7 @@ public class RecordClusters {
 				String line = br.readLine();
 				userIdList.add(Integer.parseInt(line.split(",")[0]));
 			}
+			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

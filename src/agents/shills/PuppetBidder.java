@@ -1,6 +1,5 @@
 package agents.shills;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -12,7 +11,6 @@ import simulator.buffers.PaymentSender;
 import simulator.buffers.ItemSender.ItemSold;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
-import agents.EventListener;
 import agents.SimpleUser;
 
 /**

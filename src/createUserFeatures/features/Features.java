@@ -1,10 +1,12 @@
 package createUserFeatures.features;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
 
-import util.IncrementalAverage;
+import util.IncrementalMean;
 
 import createUserFeatures.UserFeatures;
 
@@ -16,7 +18,7 @@ public enum Features implements Feature {
 	/**
 	 * User Id
 	 */
-	UserId {
+	UserId0 {
 		@Override
 		public double value(UserFeatures uf) {
 			return uf.getUserId();
@@ -104,7 +106,7 @@ public enum Features implements Feature {
 	PropWin5 {
 		@Override
 		public double value(UserFeatures uf) {
-			return ((double) uf.getAuctionsWon())/uf.auctionCount();
+			return ((double) uf.getAuctionsWon())/uf.getAuctionCount();
 		}
 	},
 	/**
@@ -113,7 +115,7 @@ public enum Features implements Feature {
 	BidsPerAuc6 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getBidsPerAuc();
+			return uf.getBidsPerAuc().getAverage();
 		}
 	},
 	/**
@@ -122,7 +124,7 @@ public enum Features implements Feature {
 	BidsPerAuc6Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log1p(uf.getBidsPerAuc());
+			return FastMath.log1p(uf.getBidsPerAuc().getAverage());
 		}
 	},
 	/**
@@ -131,9 +133,9 @@ public enum Features implements Feature {
 	BidTimesElapsed9 {
 		@Override
 		public double value(UserFeatures uf) {
-			IncrementalAverage ia = new IncrementalAverage();
+			IncrementalMean ia = new IncrementalMean();
 			for (double mins : uf.getBidTimesFractionToEnd()) {
-				ia.incrementalAvg(mins);
+				ia.addNext(mins);
 			}
 			return ia.getAverage();
 		}
@@ -144,7 +146,7 @@ public enum Features implements Feature {
 	AvgBidPropMax10 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgBidAmountComparedToMax();
+			return uf.getAvgBidAmountComparedToMax().getAverage();
 		}
 	},
 	/**
@@ -153,7 +155,7 @@ public enum Features implements Feature {
 	AvgBidProp11 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgBidProp();
+			return uf.getAvgBidProp().getAverage();
 		}
 	},
 	/**
@@ -163,9 +165,9 @@ public enum Features implements Feature {
 	BidTimesMinsBeforeEnd12 { 
 		@Override
 		public double value(UserFeatures uf) {
-			IncrementalAverage ia = new IncrementalAverage();
+			IncrementalMean ia = new IncrementalMean();
 			for (long mins : uf.getBidTimesMinsBeforeEnd()) {
-				ia.incrementalAvg(mins);
+				ia.addNext(mins);
 			}
 			return Math.log(ia.getAverage());
 		}
@@ -176,7 +178,7 @@ public enum Features implements Feature {
 	FirstBidTimes13 {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log(uf.getFirstBidTime());
+			return FastMath.log(uf.getFirstBidTime().getAverage());
 		}
 	},
 	/**
@@ -187,7 +189,16 @@ public enum Features implements Feature {
 		public double value(UserFeatures uf) {
 			return uf.getAvgFinalBidComparedToMax();
 		}
-	}
+	},
+	/**
+	 * Proportion of evaluations that are positive.
+	 */
+	PositiveRepProportion15 {
+		@Override
+		public double value(UserFeatures uf) {
+			return (double) uf.getPos() / (uf.getPos() + uf.getNeg());
+		}
+	},
 	;
 	
 	public String label() {
@@ -237,4 +248,18 @@ public enum Features implements Feature {
 	public String toString() {
 		throw new UnsupportedOperationException();
 	}
+	
+	public static final List<Feature> defaultFeatures = Arrays.<Feature>asList(
+			Features.UserId0,
+			Features.AuctionCount1Ln, 
+			Features.Rep2Ln,
+			Features.AvgBid3Ln,
+			Features.AvgBidIncMinusMinInc4Ln,
+			Features.BidsPerAuc6Ln,
+			Features.FirstBidTimes13,
+			Features.BidTimesElapsed9,
+			Features.PropWin5,
+			Features.AvgBidPropMax10,
+			Features.AvgBidProp11
+		);
 }

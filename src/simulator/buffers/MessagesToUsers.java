@@ -7,7 +7,7 @@ import java.util.List;
 
 public class MessagesToUsers {
 
-	private HashMap<Long, List<Message>> map;
+	private final HashMap<Long, List<Message>> map;
 	
 	public MessagesToUsers() {
 		this.map = new HashMap<Long, List<Message>>();
@@ -19,7 +19,6 @@ public class MessagesToUsers {
 	public void startAhTurn() {
 		// make a new map to store new messages to users from the AuctionHouse
 		this.map.clear();
-		assert(this.map.isEmpty());
 	}
 	
 	/**
@@ -37,9 +36,9 @@ public class MessagesToUsers {
 	 * ONLY TO BE CALLED BY AuctionHouse
 	 * 
 	 * synchronized to make sure all values written are seen immediately...
-	 * (is this necessary?)
+	 * (is this necessary?) IT IS NOT.
 	 */
-	public synchronized void putMessages(long userId, Message message) {
+	public void putMessages(long userId, Message message) {
 		List<Message> auctionBids = this.map.get(userId);
 		if (auctionBids == null) {
 			auctionBids = new ArrayList<Message>();

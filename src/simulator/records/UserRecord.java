@@ -11,6 +11,7 @@ import agents.SimpleUser;
 
 /**
  * Keeps track of bidders/sellers in the Auction House.
+ * Event messages are sent to those in the record.
  * 
  * Not thread safe.
  * @author SidTDesktop

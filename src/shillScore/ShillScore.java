@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import util.IncrementalAverage;
+import util.IncrementalMean;
 import util.Util;
 
 public class ShillScore {
@@ -16,19 +16,19 @@ public class ShillScore {
 	int winCount;
 	int lossCount;
 	final Map<Integer, Integer> lossCounts; // number of auctions lost by this bidder for each seller (sellerId, count)
-	final IncrementalAverage bidProportion; // proportion of bids compared to maximum
-	final IncrementalAverage interBidTime; // number of time units since previous bid
-	final IncrementalAverage bidIncrement; // amount increment compared to previous bid
-	final IncrementalAverage firstBidTime; // number of minutes before auction end
+	final IncrementalMean bidProportion; // proportion of bids compared to maximum
+	final IncrementalMean interBidTime; // number of time units since previous bid
+	final IncrementalMean bidIncrement; // amount increment compared to previous bid
+	final IncrementalMean firstBidTime; // number of minutes before auction end
 	
 	ShillScore(int id, String userType) {
 		this.id = id;
 		this.userType = userType;
 		this.lossCounts = new HashMap<>();
-		this.bidProportion = new IncrementalAverage();
-		this.interBidTime = new IncrementalAverage(); 
-		this.bidIncrement = new IncrementalAverage(); 
-		this.firstBidTime = new IncrementalAverage(); 
+		this.bidProportion = new IncrementalMean();
+		this.interBidTime = new IncrementalMean(); 
+		this.bidIncrement = new IncrementalMean(); 
+		this.firstBidTime = new IncrementalMean(); 
 	}
 	
 	public int getId() {

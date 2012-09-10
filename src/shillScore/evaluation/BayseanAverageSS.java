@@ -21,8 +21,7 @@ import shillScore.BuildShillScore;
 import shillScore.ShillScore;
 import shillScore.BuildShillScore.ShillScoreInfo;
 import simulator.AgentAdder;
-import simulator.Main;
-import util.IncrementalAverage;
+import util.IncrementalMean;
 
 
 public class BayseanAverageSS {
@@ -84,16 +83,16 @@ public class BayseanAverageSS {
 //	}
 	
 	public static class BayseanSS {
-		private final IncrementalAverage avgNumLoss = new IncrementalAverage(); 
-		private final IncrementalAverage avgShillScore = new IncrementalAverage();
+		private final IncrementalMean avgNumLoss = new IncrementalMean(); 
+		private final IncrementalMean avgShillScore = new IncrementalMean();
 		
 		private final Map<Integer, Integer> auctionCounts; 
 		public BayseanSS(Collection<ShillScore> shillScores, Map<Integer, Integer> auctionCounts) {
 			for (ShillScore ss : shillScores) {
 				if (ss.getLossCount() == 0)
 					continue;
-				avgNumLoss.incrementalAvg(ss.getLossCount());
-				avgShillScore.incrementalAvg(ss.getShillScore(auctionCounts));
+				avgNumLoss.addNext(ss.getLossCount());
+				avgShillScore.addNext(ss.getShillScore(auctionCounts));
 			}
 			this.auctionCounts = auctionCounts;
 		}

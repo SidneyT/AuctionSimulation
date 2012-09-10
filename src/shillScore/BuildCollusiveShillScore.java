@@ -1,12 +1,5 @@
 package shillScore;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -23,7 +16,6 @@ import java.util.Set;
 import shillScore.BuildShillScore.ShillScoreInfo;
 import shillScore.CollusiveShillScore.ScoreType;
 import shillScore.evaluation.ShillVsNormalSS;
-import shillScore.evaluation.ShillVsNormalSS.TpFpPair;
 import simulator.database.DatabaseConnection;
 import util.CombinationGenerator;
 import util.Util;
@@ -137,13 +129,13 @@ public class BuildCollusiveShillScore {
 					double iBeta = shillScores.get(iId).getBeta();
 //					System.out.println("iId: " + shillScores.get(iId));
 					double bindingFactorB = bindingFactor(iBeta, jBeta);
-					cs.bindingFactorB.incrementalAvg(bindingFactorB);
+					cs.bindingFactorB.addNext(bindingFactorB);
 					
 					// calculate binding factor A
 					double jAlpha = shillScores.get(jId).getAlpha(auctionCounts).maxAlpha;
 					double iAlpha = shillScores.get(iId).getAlpha(auctionCounts).maxAlpha;
 					double bindingFactorA = bindingFactor(iAlpha, jAlpha);
-					cs.bindingFactorA.incrementalAvg(bindingFactorA);
+					cs.bindingFactorA.addNext(bindingFactorA);
 				}
 				
 			}

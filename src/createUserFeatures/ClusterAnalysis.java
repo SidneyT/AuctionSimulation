@@ -13,16 +13,16 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 
-import util.Util;
+import util.IncrementalSD;
 
 import weka.clusterers.RandomizableClusterer;
 import weka.clusterers.SimpleKMeans;
@@ -125,7 +125,7 @@ public class ClusterAnalysis {
 			e.printStackTrace();
 		}
 		
-		TreeMap<Integer, UserFeatures> userFeaturesMap = buf.build();
+		Map<Integer, UserFeatures> userFeaturesMap = buf.build();
 		String filename = "";
 //		if (recluster) {
 //			int clusterId = clusterToRecluster;
@@ -248,7 +248,7 @@ public class ClusterAnalysis {
 	 * @param userClusters
 	 * @return a Map containing entries (cluster assignment, list(user features))
 	 */
-	private static Map<Integer, List<UserFeatures>> sortIntoClusters(TreeMap<Integer, UserFeatures> userFeatures, List<Integer> userClusters) {
+	private static Map<Integer, List<UserFeatures>> sortIntoClusters(Map<Integer, UserFeatures> userFeatures, List<Integer> userClusters) {
 		// Map<clusterId, UserFeature List>
 		Map<Integer, List<UserFeatures>> clusterMap = new HashMap<Integer, List<UserFeatures>>();
 
@@ -276,7 +276,7 @@ public class ClusterAnalysis {
 	 * UserFeatures objects in userFeaturesCol are written to the file filename.
 	 * @param clusteringAssignments 
 	 */
-	private static void writeUserFeaturesWithClustersToFile(List<Feature> featuresToPrint, TreeMap<Integer, UserFeatures> userFeatures, List<Integer> clusteringAssignments, String filename) {
+	private static void writeUserFeaturesWithClustersToFile(List<Feature> featuresToPrint, Map<Integer, UserFeatures> userFeaturesMap, List<Integer> clusteringAssignments, String filename) {
 		try {
 			BufferedWriter w = new BufferedWriter(new FileWriter(filename));
 			
@@ -284,7 +284,7 @@ public class ClusterAnalysis {
 			w.newLine();
 			
 			int i = 0;
-			for (UserFeatures uf : userFeatures.values()) {
+			for (UserFeatures uf : userFeaturesMap.values()) {
 //				if (uf.pos != -1) { // && uf.neg != -1
 					w.append(Features.values(featuresToPrint, uf) + ",c" + clusteringAssignments.get(i++));
 					w.newLine();
@@ -300,23 +300,16 @@ public class ClusterAnalysis {
 		int count = 0;
 
 		ClusterInfo ci = new ClusterInfo();
-		for (UserFeatures userFeatures : userFeaturesCol) {
-			ci.auctionCount(userFeatures.auctionCount(), count);
-			ci.auctionCountLn(userFeatures.numAuctionsBidInLn(), count);
-			ci.repAvg(userFeatures.rep(), count);
-			ci.repAvgLn(userFeatures.repLn(), count);
-			ci.bidAvgAvg(userFeatures.avgBid(), count);
-			ci.avgBidPropMaxAvg(userFeatures.getAvgBidAmountComparedToMax(), count);
-			ci.avgBidIncAvg(userFeatures.avgBidInc(), count);
-			ci.propWinAvg(userFeatures.propWin(), count);
-			ci.avgBidPerAucAvg(userFeatures.getBidsPerAuc(), count);
-			ci.avgBidPropAvg(userFeatures.avgBidProp, count);
-			ci.bidPeriodBegAvg(userFeatures.bidPropBeg(), count);
-			ci.bidPeriodMidAvg(userFeatures.bidPropMid(), count);
-			ci.bidPeriodEndAvg(userFeatures.bidPropEnd(), count);
-			ci.bidTimeUntilEndAvg(userFeatures.bidTimeBeforeEndAvg(), count);
-			ci.auctionsPerCategoryAvg(userFeatures.auctionsPerCat(), count);
+		List<Features> features = Arrays.asList(Features.values());
+		for (Features feature : features) {
+			ci.clusterMap.put(feature, new IncrementalSD());
+		}
 
+		for (UserFeatures uf : userFeaturesCol) {
+			
+			for (Features feature : features) {
+				ci.clusterMap.get(feature).addNext(feature.value(uf));
+			}
 			count++;
 		}
 		ci.size = count;
@@ -328,97 +321,22 @@ public class ClusterAnalysis {
 		private static final String delimiter = ",";
 
 		int size;
-
 		String clusterLabel;
-		double auctionCountAvg = 0;
-		double auctionCountAvgLn = 0;
-		double repAvg = 0;
-		double repAvgLn = 0;
-		double bidAvgAvg = 0;
-		double bidAvgIncAvg = 0;
-		double avgBidPropMaxAvg = 0;
-		double propWinAvg = 0;
-		double avgBidPerAucAvg = 0;
-		double avgBidPropAvg = 0;
-		double bidPeriodBegAvg = 0;
-		double bidPeriodMidAvg = 0;
-		double bidPeriodEndAvg = 0;
-		double bidTimeUntilEndAvg = 0;
-		double auctionsPerCategoryAvg = 0;
-
-
-		public void auctionCount(double newValue, int numElements) {
-			auctionCountAvg = Util.incrementalAvg(auctionCountAvg, numElements, newValue);
-		}
-
-		public void auctionCountLn(double newValue, int numElements) {
-			auctionCountAvgLn = Util.incrementalAvg(auctionCountAvgLn, numElements, newValue);
-		}
+		EnumMap<Features, IncrementalSD> clusterMap = new EnumMap<>(Features.class);
 		
-		public void repAvg(int newValue, int numElements) {
-			repAvg = Util.incrementalAvg(repAvg, numElements, newValue);
-		}
-
-		public void repAvgLn(double newValue, int numElements) {
-			repAvgLn = Util.incrementalAvg(repAvgLn, numElements, newValue);
-		}
-		
-		public void bidAvgAvg(double newValue, int numElements) {
-			bidAvgAvg = Util.incrementalAvg(bidAvgAvg, numElements, newValue);
-		}
-
-		public void avgBidIncAvg(double newValue, int numElements) {
-			bidAvgIncAvg = Util.incrementalAvg(bidAvgIncAvg, numElements, newValue);
-		}
-
-		public void avgBidPropMaxAvg(double newValue, int numElements) {
-			avgBidPropMaxAvg = Util.incrementalAvg(avgBidPropMaxAvg, numElements, newValue);
-		}
-
-		public void propWinAvg(double newValue, int numElements) {
-			propWinAvg = Util.incrementalAvg(propWinAvg, numElements, newValue);
-		}
-
-		public void avgBidPerAucAvg(double newValue, int numElements) {
-			avgBidPerAucAvg = Util.incrementalAvg(avgBidPerAucAvg, numElements, newValue);
-		}
-
-		public void avgBidPropAvg(double newValue, int numElements) {
-			avgBidPropAvg = Util.incrementalAvg(avgBidPropAvg, numElements, newValue);
-		}
-
-		public void bidPeriodBegAvg(double newValue, int numElements) {
-			bidPeriodBegAvg = Util.incrementalAvg(bidPeriodBegAvg, numElements, newValue);
-		}
-
-		public void bidPeriodMidAvg(double newValue, int numElements) {
-			bidPeriodMidAvg = Util.incrementalAvg(bidPeriodMidAvg, numElements, newValue);
-		}
-
-		public void bidPeriodEndAvg(double newValue, int numElements) {
-			bidPeriodEndAvg = Util.incrementalAvg(bidPeriodEndAvg, numElements, newValue);
-		}
-		
-		public void bidTimeUntilEndAvg(double newValue, int numElements) {
-			bidTimeUntilEndAvg = Util.incrementalAvg(bidTimeUntilEndAvg, numElements, newValue);
-		}
-
-		public void auctionsPerCategoryAvg(double newValue, int numElements) {
-			auctionsPerCategoryAvg = Util.incrementalAvg(auctionsPerCategoryAvg, numElements, newValue);
-		}
 
 		public static String headings() {
-			return "clusterLabel, size, auctionCountAvg, auctionCountAvgLn, repAvg, repAvgLn, bidAvgAvg, bidAvgIncAvg, " +
-					"avgBidPropMaxAvg, propWinAvg, bidsPerAucAvg, avgBidPropAvg, bidPeriodBegAvg, bidPeriodMidAvg, " +
-					"bidPeriodEndAvg, bidTimeUntilEndAvg, auctionsPerCategoryAvg";
+			return "clusterLabel, size " + Features.labels(Arrays.<Feature>asList(Features.values()));
 		}
 
 		public String toString() {
-			return clusterLabel + delimiter + size + delimiter + auctionCountAvg + delimiter + auctionCountAvgLn + 
-					delimiter + repAvg + delimiter + repAvgLn + delimiter + bidAvgAvg + delimiter + bidAvgIncAvg + 
-					delimiter + avgBidPropMaxAvg + delimiter + propWinAvg + delimiter + avgBidPerAucAvg + 
-					delimiter + avgBidPropAvg + delimiter + bidPeriodBegAvg + delimiter + bidPeriodMidAvg + 
-					delimiter + bidPeriodEndAvg + delimiter + bidTimeUntilEndAvg + delimiter + auctionsPerCategoryAvg + delimiter;
+			StringBuilder sb = new StringBuilder();
+			sb.append(clusterLabel + delimiter + size + delimiter);
+			for (IncrementalSD sd : clusterMap.values()) {
+				sb.append(sd).append(",");
+			}
+//			sb.deleteCharAt(sb.length() - 1);
+			return sb.toString();
 		}
 	}
 

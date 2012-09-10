@@ -8,22 +8,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
-import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
-
-import createUserFeatures.BuildUserFeatures.BidObject.BidObjectComparator;
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 
 import simulator.database.DatabaseConnection;
-import util.Util;
 
 /**
  *	Builds UserFeature object using scraped TradeMe data.
@@ -54,10 +47,24 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	/**
 	 * calls constructUserFeatures with default query
 	 */
-	public TreeMap<Integer, UserFeatures> build() {
+	public Map<Integer, UserFeatures> build() {
 		// order of bids will be in the order they were made in, (since amount is in ascending order)
-		String query = "SELECT * FROM auctions as a JOIN bids as b ON a.listingId=b.listingId " +
-				"WHERE endTime IS NOT NULL ORDER BY a.listingId, amount ASC;";
+		String query;
+		if (!trim) {
+			query = "SELECT * FROM auctions as a JOIN bids as b ON a.listingId=b.listingId " +
+					"WHERE endTime IS NOT NULL ORDER BY a.listingId, amount ASC;";
+		}
+		else {
+			query = "SELECT a.*, b1.* " + 
+					"FROM bids b1 " +
+					"LEFT OUTER JOIN bids b2 " +
+					"ON (b1.listingId = b2.listingId AND b1.amount < b2.amount) " +
+					"JOIN auctions a " +
+					"ON b1.listingId = a.listingId " +
+					"GROUP BY b1.listingId, b1.amount " +
+					"HAVING COUNT(*) < 20 " +
+					"ORDER BY b1.listingId ASC, b1.amount ASC;";
+		}
 		return constructUserFeatures(query);
 	}
 	
@@ -72,7 +79,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	 * Information is stored in class variable "userFeaturesMap".  Map is in ascending key
 	 * order. Key is the userId.
 	 */
-	public TreeMap<Integer, UserFeatures> constructUserFeatures(String query) {
+	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
 		try {
 			Connection conn = DatabaseConnection.getSimulationConnection();
 			
@@ -89,7 +96,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 				if (lastListingId != currentListingId) { // new auction
 					if (lastListingId != -1) { // if this is not the first auction,
 						// process the stuff from the previous auction
-						processAuction(ao.endTime, ao.winnerId, trim ? trimTo20(bidList) : bidList);
+						processAuction(ao, bidList);
 						// clear the lists
 						bidList.clear();
 					}
@@ -101,7 +108,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 				}
 				bidList.add(new BidObject(bigRS.getInt("bidderId"), bigRS.getInt("amount"), convertTimeunitToTimestamp(bigRS.getLong("time"))));
 			}
-			processAuction(ao.endTime, ao.winnerId, trim ? trimTo20(bidList) : bidList); // process the bidList for the last remaining auction
+			processAuction(ao, bidList); // process the bidList for the last remaining auction
 			
 			userRep(conn);
 			conn.close();

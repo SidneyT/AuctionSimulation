@@ -1,10 +1,9 @@
 package simulator.buffers;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -17,27 +16,25 @@ public class PaymentSender implements Runnable {
 	private static final Logger logger = Logger.getLogger(PaymentSender.class);
 	
 	// Map<Delay finish time, PaymentHolder>
-	private final Map<Long, Set<PaymentHolder>> delayedPayments;
-	private final Map<SimpleUser, Set<Payment>> readyPayments;
+	private final ConcurrentHashMap<Long, Set<PaymentHolder>> delayedPayments;
+	private final ConcurrentHashMap<SimpleUser, Set<Payment>> readyPayments;
 	
 	public PaymentSender() {
 		this.time = 0;
 		
-		this.delayedPayments = Collections.synchronizedMap(new HashMap<Long, Set<PaymentHolder>>());
-		this.readyPayments = Collections.synchronizedMap(new HashMap<SimpleUser, Set<Payment>>());
+		this.delayedPayments = new ConcurrentHashMap<Long, Set<PaymentHolder>>();
+		this.readyPayments = new ConcurrentHashMap<SimpleUser, Set<Payment>>();
 	}
 	
 	public void send(long delay, Auction auction, long amount, SimpleUser sender, SimpleUser recipient) {
 		logger.debug("Payment of " + amount + " received from " + sender + " to " + recipient + " for " + auction + ".");
 		
-		Set<PaymentHolder> paymentHolderSet = this.delayedPayments.get(this.time + delay);
-		synchronized (this.delayedPayments) {
-			if (paymentHolderSet == null ) {
-				paymentHolderSet = Collections.synchronizedSet(new HashSet<PaymentHolder>());
-				this.delayedPayments.put(this.time + delay, paymentHolderSet);
-			}
+		final long target = this.time + delay;
+		if (!this.delayedPayments.containsKey(target)) {
+			Set<PaymentHolder> newPaymentHolderSet = Collections.synchronizedSet(new HashSet<PaymentHolder>());
+			delayedPayments.putIfAbsent(target, newPaymentHolderSet);
 		}
-		paymentHolderSet.add(new PaymentHolder(recipient, new Payment(auction, amount, sender)));
+		this.delayedPayments.get(target).add(new PaymentHolder(recipient, new Payment(auction, amount, sender)));
 	}
 	
 	/**

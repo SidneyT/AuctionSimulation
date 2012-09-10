@@ -14,7 +14,7 @@ import java.sql.CallableStatement;
 import java.util.Date;
 
 import simulator.database.DatabaseConnection;
-import util.IncrementalAverage;
+import util.IncrementalMean;
 
 
 public class ShillWinLossPrice {
@@ -37,19 +37,19 @@ public class ShillWinLossPrice {
 			
 			try {
 				// number of auctions won by the shill, and the price
-				IncrementalAverage shillWinAvg = findShillWinAuctions();
+				IncrementalMean shillWinAvg = findShillWinAuctions();
 				bw.append(shillWinAvg.getNumElements() + "," + shillWinAvg.getAverage() + ",");
 
 				// number of auctions lost by the shill, and the price
-				IncrementalAverage shillLossAvg = findShillLossAuctions();
+				IncrementalMean shillLossAvg = findShillLossAuctions();
 				bw.append(shillLossAvg.getNumElements() + "," + shillLossAvg.getAverage() + ",");
 
 				// number of non-shill auctions lost by the shill, and the price
-				IncrementalAverage nonShillShillWinAvg = findNonShillAuctionsWinByShills();
+				IncrementalMean nonShillShillWinAvg = findNonShillAuctionsWinByShills();
 				bw.append(nonShillShillWinAvg.getNumElements() + "," + nonShillShillWinAvg.getAverage() + ",");
 
 				// number of non-shill auctions won by a non-shill, and the price
-				IncrementalAverage nonShillNonShillWinAvg = findNonShillAuctionsWinsByNonShills();
+				IncrementalMean nonShillNonShillWinAvg = findNonShillAuctionsWinsByNonShills();
 				bw.append(nonShillNonShillWinAvg.getNumElements() + "," + nonShillNonShillWinAvg.getAverage());
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -66,8 +66,8 @@ public class ShillWinLossPrice {
 	 * Find the number of shill auctions won by shills, and the average finalPrice/trueValuation ratio
 	 * for those auctions.
 	 */
-	private static IncrementalAverage findShillWinAuctions() throws SQLException {
-		IncrementalAverage incAvg = new IncrementalAverage();
+	private static IncrementalMean findShillWinAuctions() throws SQLException {
+		IncrementalMean incAvg = new IncrementalMean();
 		Connection conn = DatabaseConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice " +  
 				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +  
@@ -79,7 +79,7 @@ public class ShillWinLossPrice {
 			int trueValuation = rs.getInt("trueValuation");
 			
 			double ratio = (double) finalPrice / trueValuation;
-			incAvg.incrementalAvg(ratio);
+			incAvg.addNext(ratio);
 		}
 		return incAvg;
 	}
@@ -88,8 +88,8 @@ public class ShillWinLossPrice {
 	 * Find the number of shill auctions lost by shills, and the average finalPrice/trueValuation ratio
 	 * for those auctions.
 	 */
-	private static IncrementalAverage findShillLossAuctions() throws SQLException {
-		IncrementalAverage incAvg = new IncrementalAverage();
+	private static IncrementalMean findShillLossAuctions() throws SQLException {
+		IncrementalMean incAvg = new IncrementalMean();
 		Connection conn = DatabaseConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice " +  
 				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +  
@@ -101,13 +101,13 @@ public class ShillWinLossPrice {
 			int trueValuation = rs.getInt("trueValuation");
 			
 			double ratio = (double) finalPrice / trueValuation;
-			incAvg.incrementalAvg(ratio);
+			incAvg.addNext(ratio);
 		}
 		return incAvg;
 	}
 	
-	private static IncrementalAverage findNonShillAuctionsWinByShills() throws SQLException {
-		IncrementalAverage incAvg = new IncrementalAverage();
+	private static IncrementalMean findNonShillAuctionsWinByShills() throws SQLException {
+		IncrementalMean incAvg = new IncrementalMean();
 		Connection conn = DatabaseConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice, seller.userType as sellerType, bidder.userType as winnerType " + 
 				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +
@@ -119,7 +119,7 @@ public class ShillWinLossPrice {
 			int trueValuation = rs.getInt("trueValuation");
 
 			double ratio = (double) finalPrice / trueValuation;
-			incAvg.incrementalAvg(ratio);
+			incAvg.addNext(ratio);
 		}
 		return incAvg;
 	}
@@ -128,8 +128,8 @@ public class ShillWinLossPrice {
 	 * Find the number of non-shill auctions, and the average finalPrice/trueValuation ratio
 	 * for those auctions.
 	 */
-	private static IncrementalAverage findNonShillAuctionsWinsByNonShills() throws SQLException {
-		IncrementalAverage incAvg = new IncrementalAverage();
+	private static IncrementalMean findNonShillAuctionsWinsByNonShills() throws SQLException {
+		IncrementalMean incAvg = new IncrementalMean();
 		Connection conn = DatabaseConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice, seller.userType as sellerType, bidder.userType as winnerType " +
 				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +
@@ -141,7 +141,7 @@ public class ShillWinLossPrice {
 			int trueValuation = rs.getInt("trueValuation");
 
 			double ratio = (double) finalPrice / trueValuation;
-			incAvg.incrementalAvg(ratio);
+			incAvg.addNext(ratio);
 		}
 		return incAvg;
 	}

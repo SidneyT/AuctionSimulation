@@ -80,11 +80,12 @@ public class SingleShillController extends EventListener implements Controller {
 		long currentTime = bh.getTimeMessage().getTime();
 		// look through the shill auctions to see if any require action
 		for (Auction shillAuction : shillAuctions) {
-			// continue if a bid is made; so you don't make 2 bids at once...
+			// test each condition to bid
 			if (ifIsLatePriceTooLowThenBid(shillAuction, 0.8, 0.5))
-				continue;
-			if (ifSomeoneElseJustBidThenBid(shillAuction))
-				continue;
+//				sb.makeBid(shillAuction, shillAuction.minimumBid() + 100);
+				sb.makeBid(shillAuction);
+			else if (ifSomeoneElseJustBidThenBid(shillAuction))
+				sb.makeBid(shillAuction);
 		}
 		
 		// make the bidders follow a normal behaviour pattern?
@@ -108,13 +109,16 @@ public class SingleShillController extends EventListener implements Controller {
 		Collections.sort(auctionTimes, Collections.reverseOrder());
 	}
 	
+	/**
+	 * @param shillAuction
+	 * @param elapsed
+	 * @param proportionOfTrueEvaluation
+	 * @return true if the shill bidder make a bid
+	 */
 	private boolean ifIsLatePriceTooLowThenBid(Auction shillAuction, double elapsed, double proportionOfTrueEvaluation) {
 		if (shillAuction.percentageElapsed(bh.getTimeMessage().getTime()) < elapsed)
 			return false;
 		if (shillAuction.proportionOfTrueValuation() < proportionOfTrueEvaluation) { // if price is less than 60%
-			// current price is too low, so make a bid
-//			sb.makeBid(shillAuction, shillAuction.minimumBid() + 100);
-			sb.makeBid(shillAuction);
 			return true;
 		}
 		return false;
@@ -123,14 +127,14 @@ public class SingleShillController extends EventListener implements Controller {
 	/**
 	 * make a shill bid if someone else just bid, unless the price is > 0.7 of true valuation
 	 * @param shillAuction
-	 * @return true if a bid was made
+	 * @return true if the shill bidder should make a bid
 	 */
 	private boolean ifSomeoneElseJustBidThenBid(Auction shillAuction) {
 		if (shillAuction.proportionOfTrueValuation() < 0.80) {
 			if (shillAuction.getLastBid() != null) {
 				SimpleUser bidder = shillAuction.getLastBid().getBidder();
 				if (bidder != null && bidder != sb) {
-					sb.makeBid(shillAuction);
+//					sb.makeBid(shillAuction);
 					return true;
 				}
 			}

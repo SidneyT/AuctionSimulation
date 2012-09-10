@@ -15,7 +15,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import simulator.database.DatabaseConnection;
-import util.IncrementalAverage;
+import util.IncrementalMean;
 import util.Util;
 
 
@@ -180,7 +180,7 @@ public class BuildShillScore {
 		// calculate average, and store it
 		for (Entry<Integer, Integer> countEntry : bidCounts.entrySet()) {
 //			System.out.println(countEntry.getKey() + " normalised bidProportion: " + countEntry.getValue() / worstCase);
-			shillScores.get(countEntry.getKey()).bidProportion.incrementalAvg(countEntry.getValue() / worstCase);
+			shillScores.get(countEntry.getKey()).bidProportion.addNext(countEntry.getValue() / worstCase);
 		}
 	}
 	
@@ -202,25 +202,25 @@ public class BuildShillScore {
 	
 	// inter bid time
 	private static void deltaOp(Map<Integer, ShillScore> shillScores, List<Bid> bids) {
-		Map<Integer, IncrementalAverage> timeDiffs = new HashMap<>(); // Map<bidderId, avg time diff>
+		Map<Integer, IncrementalMean> timeDiffs = new HashMap<>(); // Map<bidderId, avg time diff>
 		
 		// find the inter-bid times
 		long previousTime = bids.get(0).time; // first bid's time difference is defined as 0
 		for (int i = 0; i < bids.size(); i++) {
 			int bidderId = bids.get(i).user.id;
-			IncrementalAverage incAvg = timeDiffs.get(bidderId);
+			IncrementalMean incAvg = timeDiffs.get(bidderId);
 			if (incAvg == null) {
-				incAvg = new IncrementalAverage();
+				incAvg = new IncrementalMean();
 				timeDiffs.put(bidderId, incAvg);
 			}
 			
-			incAvg.incrementalAvg(bids.get(i).time - previousTime);
+			incAvg.addNext(bids.get(i).time - previousTime);
 			previousTime = bids.get(i).time;
 		}
 		
 		// find the max and min for normalising
 		double max = Double.MIN_VALUE, min = Double.MAX_VALUE;
-		for (IncrementalAverage incAvg : timeDiffs.values()) {
+		for (IncrementalMean incAvg : timeDiffs.values()) {
 			if (incAvg.getAverage() < min)
 				min = incAvg.getAverage();
 			if (incAvg.getAverage() > max)
@@ -228,49 +228,49 @@ public class BuildShillScore {
 		}
 		
 		// remove the winner: definition is that winner is skipped
-		IncrementalAverage removed = timeDiffs.remove(bids.get(bids.size() - 1).user.id);
+		IncrementalMean removed = timeDiffs.remove(bids.get(bids.size() - 1).user.id);
 		assert removed != null;
 		
 		// normalise, then average the interbid times with previous interbid times for the users
-		for (Entry<Integer, IncrementalAverage> timeDiffsEntry : timeDiffs.entrySet()) {
+		for (Entry<Integer, IncrementalMean> timeDiffsEntry : timeDiffs.entrySet()) {
 //			System.out.println(timeDiffsEntry.getKey() + " normalised interBidTime: " + normalise((timeDiffsEntry.getValue().getAverage()), min, max));
-			shillScores.get(timeDiffsEntry.getKey()).interBidTime.incrementalAvg(normalise((timeDiffsEntry.getValue().getAverage()), min, max));
+			shillScores.get(timeDiffsEntry.getKey()).interBidTime.addNext(normalise((timeDiffsEntry.getValue().getAverage()), min, max));
 		}
 	}
 	
 	// inter bid increment
 	private static void epsilonOp(Map<Integer, ShillScore> shillScores, List<Bid> bids) {
-		Map<Integer, IncrementalAverage> increments = new HashMap<>();
+		Map<Integer, IncrementalMean> increments = new HashMap<>();
 		
 		int previousAmount = bids.get(0).amount; // first bid's amount difference is defined as 0
 		for (int i = 0; i < bids.size(); i++) {
 			int bidderId = bids.get(i).user.id;
-			IncrementalAverage incAvg = increments.get(bidderId);
+			IncrementalMean incAvg = increments.get(bidderId);
 			if (incAvg == null) {
-				incAvg = new IncrementalAverage();
+				incAvg = new IncrementalMean();
 				increments.put(bidderId, incAvg);
 			}
 			
-			incAvg.incrementalAvg(bids.get(i).amount - previousAmount);
+			incAvg.addNext(bids.get(i).amount - previousAmount);
 			previousAmount = bids.get(i).amount;
 		}
 		
 		// remove the winner: definition is that winner is skipped
-		IncrementalAverage removed = increments.remove(bids.get(bids.size() - 1).user.id);
+		IncrementalMean removed = increments.remove(bids.get(bids.size() - 1).user.id);
 		assert removed != null;
 		
 		// find the max and min for normalising
 		double max = Double.MIN_VALUE, min = Double.MAX_VALUE;
-		for (IncrementalAverage incAvg : increments.values()) {
+		for (IncrementalMean incAvg : increments.values()) {
 			if (incAvg.getAverage() < min)
 				min = incAvg.getAverage();
 			if (incAvg.getAverage() > max)
 				max = incAvg.getAverage();
 		}
 		
-		for (Entry<Integer, IncrementalAverage> incrementEntry : increments.entrySet()) {
+		for (Entry<Integer, IncrementalMean> incrementEntry : increments.entrySet()) {
 //			System.out.println(incrementEntry.getKey() + " normalised bidIncrement: " + normalise((incrementEntry.getValue().getAverage()), min, max));
-			shillScores.get(incrementEntry.getKey()).bidIncrement.incrementalAvg(normalise((incrementEntry.getValue().getAverage()), min, max));
+			shillScores.get(incrementEntry.getKey()).bidIncrement.addNext(normalise((incrementEntry.getValue().getAverage()), min, max));
 		}
 	}
 	
@@ -299,7 +299,7 @@ public class BuildShillScore {
 		
 		for (Entry<Integer, Long> firstBidTimeEntry : firstBidTimes.entrySet()) {
 //			System.out.println(firstBidTimeEntry.getKey() + " normalised firstBidTime:" + normalise((firstBidTimeEntry.getValue()), min, max));
-			shillScores.get(firstBidTimeEntry.getKey()).firstBidTime.incrementalAvg(Util.normalise((firstBidTimeEntry.getValue()), min, max));
+			shillScores.get(firstBidTimeEntry.getKey()).firstBidTime.addNext(Util.normalise((firstBidTimeEntry.getValue()), min, max));
 		}
 	}
 	

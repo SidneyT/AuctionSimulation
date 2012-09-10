@@ -5,7 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import util.Util;
+import createUserFeatures.features.Features;
+
+import util.IncrementalMean;
+import util.IncrementalSD;
 
 /**
  * Object storing information about a user's bidding information. Contains methods to convert that information into
@@ -29,29 +32,29 @@ public class UserFeatures {
 		return delimiter;
 	}
 
-	double avgBidInc; // average bid increment
+	IncrementalSD avgBidInc = new IncrementalSD();
+//	double avgBidInc; // average bid increment
 	double avgBidIncMinusMinInc = Double.NaN; // average bid increment minus minimum increment; initialise to NaN to know when it has not been used
 
 	int auctionCount; // number of auctions as a bidder
 	private int auctionsWon; // number of auctions won
-	double bidsPerAuc; // average number of bids made in all auctions
-	// double bidCountVar; // variance in the number of bids made in an auction
+	private final IncrementalSD bidsPerAuc = new IncrementalSD(); // average number of bids made in all auctions
 	final double[] bidPeriods;
 	final double[] bidPeriodsLogBins;
-	double firstBidTime; // average number of minutes from the end of the auction the FIRST bid in the auction by this user was made
-	double lastBidTime; // average number of minutes from the end of the auction the LAST bid in the auction by this user was made
-	double selfBidInterval; // average bid interval
-	double anyBidInterval; // average bid interval
-	final List<Double> bidTimesFractionToEnd; // bid time as fraction of auction time elapsed
-	final List<Long> bidTimesMinsBeforeEnd;// number of minutes before the end of the auction
+	private final IncrementalSD firstBidTime = new IncrementalSD(); // average number of minutes from the end of the auction the FIRST bid in the auction by this user was made
+	private final IncrementalSD lastBidTime = new IncrementalSD(); // average number of minutes from the end of the auction the LAST bid in the auction by this user was made
+	private final IncrementalSD selfBidInterval = new IncrementalSD(); // average bid interval
+	private final IncrementalSD anyBidInterval = new IncrementalSD(); // average bid interval
+	private final List<Double> bidTimesFractionToEnd; // bid time as fraction of auction time elapsed
+	private final List<Long> bidTimesMinsBeforeEnd;// number of minutes before the end of the auction
 
 	double avgNumCategory; // number of categories per auction the user is in
 	Set<String> categories;
 
-	double avgBidAmountComparedToMax; // average of the bid amounts as fractions of the maximum bid in the same auction
+	private final IncrementalSD avgBidAmountComparedToMax = new IncrementalSD(); // average of the bid amounts as fractions of the maximum bid in the same auction
 	double avgFinalBidComparedToMax; // average of the last bid as fraction of the maximum
-	double avgBidProp;
-
+	private final IncrementalSD avgBidProp = new IncrementalSD();
+	
 	public UserFeatures() {
 		this.bidPeriods = new double[4];
 		this.bidPeriodsLogBins = new double[11];
@@ -82,39 +85,6 @@ public class UserFeatures {
 		this.neg = neg;
 	}
 
-	/**
-	 * 
-	 * Adds this new bid to the list of bids made by the user. If <code>previousBid < 0</code>, this bid is the first in
-	 * the auction, and therefore has no increment or minIncrement.
-	 * 
-	 * @param bid
-	 *            value of the bid
-	 * @param previousBid
-	 *            value of the previous bid
-	 * @param maximumBid
-	 *            the value of the last/highest bid in the auction
-	 */
-	public void addBid(int bid, int previousBid, int maximumBid) {
-		if (previousBid > 0) { // test whether there's a previous bid
-			int increment = bid - previousBid; // find the difference between this and the previous bid amount
-			avgBidInc = Util.incrementalAvg(avgBidInc, bidIncCount, increment);
-
-			int incMinusMin = increment - Util.minIncrement(previousBid);
-			if (incMinusMin < 0)
-				incMinusMin = 0;
-			if (Double.isNaN(avgBidIncMinusMinInc))
-				avgBidIncMinusMinInc = 0;
-			avgBidIncMinusMinInc = Util.incrementalAvg(avgBidIncMinusMinInc(), bidIncCount, incMinusMin);
-			bidIncCount++;
-		}
-		// update average bid value
-		avgBid = Util.incrementalAvg(avgBid, bidCount, bid);
-		// update avgBidComparedToFinal
-		double fractionOfMax = ((double) bid) / maximumBid;
-		avgBidAmountComparedToMax = Util.incrementalAvg(avgBidAmountComparedToMax, bidCount, fractionOfMax);
-		bidCount++;
-	}
-
 	public int getUserId() {
 		return userId;
 	}
@@ -139,10 +109,6 @@ public class UserFeatures {
 		return bidIncCount;
 	}
 
-	public double getAvgBidInc() {
-		return avgBidInc;
-	}
-
 	/**
 	 * @return Double.NaN if no value for this user exists (i.e., never bid after another bidder).
 	 */
@@ -150,11 +116,11 @@ public class UserFeatures {
 		return avgBidIncMinusMinInc;
 	}
 
-	public double getBidsPerAuc() {
+	public IncrementalSD getBidsPerAuc() {
 		return bidsPerAuc;
 	}
 
-	public double getLastBidTime() {
+	public IncrementalSD getLastBidTime() {
 		return lastBidTime;
 	}
 
@@ -166,15 +132,15 @@ public class UserFeatures {
 		return bidPeriodsLogBins;
 	}
 
-	public double getFirstBidTime() {
+	public IncrementalSD getFirstBidTime() {
 		return firstBidTime;
 	}
 
-	public double getSelfBidInterval() {
+	public IncrementalSD getSelfBidInterval() {
 		return selfBidInterval;
 	}
 
-	public double getAnyBidInterval() {
+	public IncrementalSD getAnyBidInterval() {
 		return anyBidInterval;
 	}
 
@@ -190,11 +156,11 @@ public class UserFeatures {
 		return categories;
 	}
 
-	public double getAvgBidAmountComparedToMax() {
+	public IncrementalSD getAvgBidAmountComparedToMax() {
 		return avgBidAmountComparedToMax;
 	}
 
-	public double getAvgBidProp() {
+	public IncrementalSD getAvgBidProp() {
 		return avgBidProp;
 	}
 
@@ -204,24 +170,6 @@ public class UserFeatures {
 
 	public boolean isComplete() {
 		return pos != -1; // && neg != -1
-	}
-
-	public void addWonAuction() {
-		auctionsWon++;
-		assert propWin() <= 1 : "propWin > 1";
-	}
-
-//	public void addAuction(String category) {
-//		categories.add(category);
-//		auctionCount++;
-//	}
-
-	public int id() {
-		return userId;
-	}
-
-	public int auctionCount() {
-		return auctionCount;
 	}
 
 	public double numAuctionsBidInLn() {
@@ -266,8 +214,8 @@ public class UserFeatures {
 			return 3;
 	}
 
-	public double avgBidInc() {
-		assert avgBidInc >= 0;
+	public IncrementalMean getAvgBidInc() {
+		assert avgBidInc.getAverage() >= 0;
 		return avgBidInc;
 	}
 
@@ -285,184 +233,22 @@ public class UserFeatures {
 	}
 
 	public int propWinOrdinal() {
-		return discritiseEvenBins(3, propWin());
-	}
-
-	public double bidsPerAucLn() {
-		return Math.log(bidsPerAuc);
+		return discritiseEvenBins(3, Features.PropWin5.value(this));
 	}
 
 	public int avgBidPerAucOrdinal() {
-		if (bidsPerAuc == 1)
+		if (bidsPerAuc.getAverage() == 1)
 			return 1;
-		else if (bidsPerAuc <= 4)
+		else if (bidsPerAuc.getAverage() <= 4)
 			return 2;
 		else
 			return 3;
-	}
-
-	public double avgMinsToEnd() {
-		return lastBidTime;
-	}
-
-	public double avgCatPerAuc() {
-		return avgNumCategory;
 	}
 
 	public boolean hasBids() {
 		return bidCount != 0 && auctionCount != 0;
 	}
 
-//	public static String headings(FeaturesToUse ufs) {
-//		StringBuilder sb = new StringBuilder();
-//		if (ufs.userId0)
-//			sb.append("0userId").append(delimiter);
-//		if (ufs.auctionCount1)
-//			sb.append("1AuctionCount").append(delimiter);
-//		if (ufs.auctionCount1Ln)
-//			sb.append("1lnAuctionCount").append(delimiter);
-//		if (ufs.rep2)
-//			sb.append("2Rep").append(delimiter);
-//		if (ufs.rep2Ln)
-//			sb.append("2lnRep").append(delimiter);
-//		if (ufs.avgBid3)
-//			sb.append("3AvgBidAmount").append(delimiter);
-//		if (ufs.avgBid3Ln)
-//			sb.append("3lnAvgBidAmount").append(delimiter);
-//		if (ufs.bidInc4)
-//			sb.append("4AvgBidInc").append(delimiter);
-//		if (ufs.bidInc4Ln)
-//			sb.append("4lnAvgBidInc").append(delimiter);
-//		if (ufs.bidsPer6Auc)
-//			sb.append("6BidsPerAuc").append(delimiter);
-//		if (ufs.bidsPerAuc6Ln)
-//			sb.append("6lnBidsPerAuc").append(delimiter);
-//		if (ufs.firstBidTimes13)
-//			sb.append("13FirstBidTimes").append(delimiter);
-//		if (ufs.bidTimesUntilEnd9)
-//			sb.append("9AvgBidTimesUntilEnd").append(delimiter);
-//		if (ufs.propWin5)
-//			sb.append("5PropWin").append(delimiter);
-//		if (ufs.avgBidPropMax10)
-//			sb.append("10AvgBidPropMax").append(delimiter);
-//		if (ufs.avgBidProp11)
-//			sb.append("11AvgBidProp").append(delimiter);
-//		if (ufs.bidPeriod7) {
-//			sb.append("7BidBeg").append(delimiter);
-//			sb.append("7BidMid").append(delimiter);
-//			sb.append("7BidEnd").append(delimiter);
-//		}
-//		if (ufs.bidMinsBeforeEnd12)
-//			sb.append("12BidMinsBeforeEnd").append(delimiter);
-//		if (ufs.aucPerCat8)
-//			sb.append("8AuctionsPerCat").append(delimiter);
-//		if (ufs.selfBidInterval14)
-//			sb.append("14SelfBidInterval").append(delimiter);
-//		if (ufs.anyBidInterval15)
-//			sb.append("15AnyBidInterval").append(delimiter);
-//
-//		sb.deleteCharAt(sb.length() - delimiter.length());
-//		return sb.toString();
-//	}
-
-//	@Override
-//	public String toString() {
-//		StringBuilder sb = new StringBuilder();
-//
-//		FeaturesToUse featuresToPrint = this.fpWrapper.getFeaturesToUse();
-//		if (featuresToPrint.userId0) {
-//			sb.append(userId);
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.auctionCount1) {
-//			sb.append(auctionCount());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.auctionCount1Ln) {
-//			sb.append(numAuctionsBidInLn());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.rep2) {
-//			if (pos == -1)
-//				throw new RuntimeException("Rep not present for " + userId + ".");
-//			sb.append(rep());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.rep2Ln) {
-//			sb.append(repLn());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.avgBid3) {
-//			sb.append(avgBid());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.avgBid3Ln) {
-//			sb.append(avgBidLn());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.bidInc4) {
-//			if (bidIncCount != 0) {
-//				// sb.append(avgBidInc());
-//				sb.append(avgBidIncMinusMinInc());
-//			}
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.bidInc4Ln) {
-//			if (bidIncCount != 0)
-//				sb.append(avgBidIncMinusMinIncLn());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.bidsPer6Auc) {
-//			sb.append(getBidsPerAuc());
-//			// sb.append(avgBidPerAucOrdinal());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.bidsPerAuc6Ln) {
-//			sb.append(bidsPerAucLn());
-//			// sb.append(avgBidPerAucOrdinal());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.firstBidTimes13) {
-//			sb.append(Math.log(firstBidTimes));
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.bidTimesUntilEnd9) {
-//			sb.append(bidTimeBeforeEndAvg());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.propWin5) {
-//			sb.append(propWin());
-//			// sb.append(propWinOrdinal());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.avgBidPropMax10) {
-//			sb.append(getAvgBidAmountComparedToMax());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.bidPeriod7) {
-//			// sb.append(avgMinsToEnd());
-//			// sb.append(delimiter);
-//			sb.append(bidPropBeg()); // beg
-//			sb.append(delimiter);
-//			sb.append(bidPropMid()); // mid
-//			sb.append(delimiter);
-//			sb.append(bidPropEnd()); // end
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.avgBidProp11) {
-//			sb.append(avgBidProp);
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.bidMinsBeforeEnd12) {
-//			sb.append(bidMinsBeforeEnd());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.aucPerCat8) {
-//			// sb.append(auctionsPerCat());
-//			sb.append(auctionsPerCatLn());
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.selfBidInterval14) {
 //			if (selfBidInterval != 0)
 //				sb.append(Math.log1p(selfBidInterval));
 //			// sb.append(selfBidInterval);
@@ -521,16 +307,6 @@ public class UserFeatures {
 		return bidPeriods[2] >= bidPeriods[1] && bidPeriods[2] >= bidPeriods[0];
 	}
 
-	public double bidTimeBeforeEndAvg() {
-		double result = 0;
-		int count = 0;
-		for (int i = 0; i < bidTimesFractionToEnd.size(); i++) {
-			result = Util.incrementalAvg(result, count, bidTimesFractionToEnd.get(i));
-			count++;
-		}
-		return result;
-	}
-
 	private BidPeriod mostBidPeriod() {
 		if (bidPeriods[2] >= bidPeriods[1]) {
 			if (bidPeriods[2] >= bidPeriods[0])
@@ -543,17 +319,6 @@ public class UserFeatures {
 			else
 				return BidPeriod.BEGINNING;
 		}
-	}
-
-	public double bidMinsBeforeEnd() {
-		double result = 0;
-		int count = 0;
-		for (int i = 0; i < bidTimesMinsBeforeEnd.size(); i++) {
-			// result = Util.incrementalAvg(result, count, Math.log1p(bidMinsBeforeEnd.get(i)));
-			result = Util.incrementalAvg(result, count, bidTimesMinsBeforeEnd.get(i));
-			count++;
-		}
-		return Math.log(result);
 	}
 
 	// returns values 0-9

@@ -6,11 +6,11 @@ public class CrashOnAssertionErrorRunnable implements Runnable {
 		mActualRunnable = pActualRunnable;
 	}
 	public void run() {
-		try {
+//		try {
 			mActualRunnable.run();
-		} catch (Throwable e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
+//		} catch (Throwable e) {
+//			e.printStackTrace();
+//			System.exit(1);
+//		}
 	}
 }

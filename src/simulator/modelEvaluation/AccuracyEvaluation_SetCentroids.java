@@ -12,10 +12,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import weka.clusterers.SimpleKMeans_Modified;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;

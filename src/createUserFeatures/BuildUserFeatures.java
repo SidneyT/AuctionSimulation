@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -20,10 +19,6 @@ import java.util.TreeMap;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
-
-import createUserFeatures.BuildUserFeatures.BidObject.BidObjectComparator;
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 
@@ -36,116 +31,33 @@ public abstract class BuildUserFeatures {
 	protected static final double BEG_MID_BOUNDARY = 0.5;
 	protected static final double MID_END_BOUNDARY = 0.95;
 
-	protected TreeMap<Integer, UserFeatures> userFeaturesMap;
+	protected Map<Integer, UserFeatures> userFeaturesMap;
 	public boolean trim; // trim auction bid list lengths to 20
 
 	public BuildUserFeatures() {
 		this.userFeaturesMap = new TreeMap<Integer, UserFeatures>();
-		trim = false;
+//		this.userFeaturesMap = new HashMap<Integer, UserFeatures>();
+		this.trim = false;
 	}
 
 	public boolean trim() {
-		return trim;
+		return this.trim;
 	}
 
-	public static void writeToFile(Collection<UserFeatures> userFeaturesCol, List<Feature> featuresToPrint, Path path) {
-		try (BufferedWriter bw = Files.newBufferedWriter(path, Charset.defaultCharset(), StandardOpenOption.CREATE,
-				StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
-			writeToFile(userFeaturesCol, featuresToPrint, bw);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static void writeToFile(Collection<UserFeatures> userFeaturesCollection, List<Feature> featuresToPrint,
-			BufferedWriter w) throws IOException {
-
-		// print headings
-		w.append(Features.labels(featuresToPrint));
-		w.newLine();
-
-		for (UserFeatures uf : userFeaturesCollection) { // for each set of user features
-			if (uf.isComplete()) {
-				w.append(Features.values(featuresToPrint, uf));
-				w.newLine();
-			}
-		}
-		w.newLine();
-		w.close();
-	}
-
-	/**
-	 * POJO
-	 */
-	protected class TMAuctionObject {
-		final int auctionId;
-		final String category;
-		final Date endTime;
-		final int winnerId;
-
-		public TMAuctionObject(int auctionId, String category, Date endTime, int winnerId) {
-			this.auctionId = auctionId;
-			this.category = category;
-			this.endTime = endTime;
-			this.winnerId = winnerId;
-		}
-
-		@Override
-		public String toString() {
-			return "(" + auctionId + ", " + category + ", " + endTime + ")";
-		}
-	}
-
-	/**
-	 * POJO
-	 */
-	protected class SimAuctionObject {
-		final int auctionId;
-		final int itemTypeId;
-		final Date endTime;
-		final int winnerId;
-
-		public SimAuctionObject(int auctionId, int itemTypeId, Date endTime, int winnerId) {
-			this.auctionId = auctionId;
-			this.itemTypeId = itemTypeId;
-			this.endTime = endTime;
-			this.winnerId = winnerId;
-		}
-
-		@Override
-		public String toString() {
-			return "(" + auctionId + ", " + itemTypeId + ", " + endTime + ")";
-		}
-	}
-
-	/**
-	 * POJO
-	 */
-	protected static class BidObject {
-		final int bidderId;
-		final int amount;
-		final Date time;
-
-		public BidObject(int bidderId, int amount, Date time) {
-			this.bidderId = bidderId;
-			this.amount = amount;
-			this.time = time;
-		}
-
-		@Override
-		public String toString() {
-			return "(" + bidderId + ", " + amount + ", " + time + ")";
-		}
-		
-		public enum BidObjectComparator implements Comparator<BidObject> {
-			PRICE_SORT_ASC {
-				@Override
-				public int compare(BidObject o1, BidObject o2) {
-					if (o1.amount == o2.amount)
-						throw new AssertionError("Can't be used to sort lists with bids with equal amounts.");
-					return o1.amount - o2.amount;
+	public static void writeToFile(Collection<UserFeatures> userFeaturesCollection, List<Feature> featuresToPrint, Path path) {
+		try (BufferedWriter w = Files.newBufferedWriter(path, Charset.defaultCharset())) {
+			// print headings
+			w.append(Features.labels(featuresToPrint));
+			w.newLine();
+	
+			for (UserFeatures uf : userFeaturesCollection) { // for each set of user features
+				if (uf.isComplete()) {
+					w.append(Features.values(featuresToPrint, uf));
+					w.newLine();
 				}
 			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -162,61 +74,116 @@ public abstract class BuildUserFeatures {
 	}
 
 	/**
+	 * @param auction
+	 * @param bidList list of bids for this auction in ascending price order
+	 */
+	protected void processAuction(AuctionObject auction, List<BidObject> bidList) {
+		// convert bidList into a multimap
+		ArrayListMultimap<Integer, BidObject> bidsByUser = ArrayListMultimap.create();
+		for (BidObject bo : bidList) {
+			boolean unique = bidsByUser.put(bo.bidderId, bo);
+			if (!unique)
+				throw new AssertionError("Every bidObject's price should be different.");
+		}
+		
+		// create a new UserFeatures the bidder if there is no UserFeatures object for them yet
+		for (int bidderId : bidsByUser.keySet()) {
+			if (!userFeaturesMap.containsKey(bidderId)) {
+				UserFeatures uf = new UserFeatures();
+				uf.setUserId(bidderId);
+				userFeaturesMap.put(bidderId, uf);
+			}
+		}
+		
+		// record when bids are made
+		recordBidPeriods(auction.endTime, bidsByUser);
+		recordUserBidPeriods(auction.endTime, bidList);
+		updateSelfBidInterval(bidsByUser);
+		updateAnyBidInterval(bidList);
+		
+		recordBidProportions(bidsByUser);
+		
+		// record bid counts, amounts and increments
+		recordBidAmounts(bidList);
+		recordLastBidAmountProportionOfMax(bidList.get(bidList.size() - 1).amount, bidsByUser);
+
+		// record who won the auction
+		if (userFeaturesMap.containsKey(auction.winnerId))
+			userFeaturesMap.get(auction.winnerId).auctionCount++;
+		
+		for (int bidderId : bidsByUser.keySet()) {
+			UserFeatures uf = userFeaturesMap.get(bidderId);
+			uf.categories.add(null); // TODO: fix the null category, because sim auctions have an item type, which has a category, but doesn't have a direct category..., in contrast to TMAuctionObject
+			uf.auctionCount++; // *** should be last in this method because of auctionCount increment *** 
+		}
+	}
+	
+	/**
 	 * record bid counts, amounts and increments
 	 * @param bidList
 	 */
 	protected void recordBidAmounts(List<BidObject> bidList) {
 		BidObject firstBid = bidList.get(0);
 		BidObject lastBid = bidList.get(bidList.size() - 1);
-		userFeaturesMap.get(firstBid.bidderId).addBid(firstBid.amount, -1, lastBid.amount);
+		addBid(userFeaturesMap.get(firstBid.bidderId), firstBid.amount, -1, lastBid.amount);
 		if (bidList.size() >= 1) {
 			// record bid increments
 			for (int i = 1; i < bidList.size(); i++) {
 				BidObject bo = bidList.get(i);
-				userFeaturesMap.get(bo.bidderId).addBid(bo.amount, bidList.get(i - 1).amount, lastBid.amount);
+				addBid(userFeaturesMap.get(bo.bidderId), bo.amount, bidList.get(i - 1).amount, lastBid.amount);
 			}
 		}
+	}
+	
+	/**
+	 * 
+	 * Adds this new bid to the list of bids made by the user. If <code>previousBid < 0</code>, this bid is the first in
+	 * the auction, and therefore has no increment or minIncrement.
+	 * 
+	 * @param uf the user to update
+	 * @param bid value of the bid
+	 * @param previousBid value of the previous bid
+	 * @param maximumBid the value of the last/highest bid in the auction
+	 */
+	public void addBid(UserFeatures uf, int bid, int previousBid, int maximumBid) {
+		if (previousBid > 0) { // test whether there's a previous bid
+			int increment = bid - previousBid; // find the difference between this and the previous bid amount
+//			uf.avgBidInc = Util.incrementalAvg(uf.avgBidInc, uf.bidIncCount, increment);
+			uf.avgBidInc.addNext(increment);
+			
+
+			int incMinusMin = increment - Util.minIncrement(previousBid);
+			if (incMinusMin < 0)
+				incMinusMin = 0;
+			if (Double.isNaN(uf.avgBidIncMinusMinInc))
+				uf.avgBidIncMinusMinInc = 0;
+			uf.avgBidIncMinusMinInc = Util.incrementalAvg(uf.avgBidIncMinusMinInc(), uf.bidIncCount, incMinusMin);
+			uf.bidIncCount++;
+		}
+		// update average bid value
+		uf.avgBid = Util.incrementalAvg(uf.avgBid, uf.bidCount, bid);
+		// update avgBidComparedToFinal
+		double fractionOfMax = ((double) bid) / maximumBid;
+		uf.getAvgBidAmountComparedToMax().addNext(fractionOfMax);
+		uf.bidCount++;
 	}
 
 	/**
 	 * calculate & record the interval of time between bids made by anyone
 	 * 
 	 * @param bidList
-	 * @param bidListsByUser
 	 */
-	private void updateAnyBidInterval(List<BidObject> bidList, ArrayListMultimap<Integer, BidObject> bidListsByUser) {
+	private void updateAnyBidInterval(List<BidObject> bidList) {
 		// if there's only 1 bid in the auction, there is no interval.
-		if (bidList.size() > 1) {
-			// Map<bidderId, average>
-			Map<Integer, Integer> intervalTotal = new HashMap<>();
-			for (int bidderId : bidListsByUser.keySet()) { // initialise map with all bidders from the auction
-				intervalTotal.put(bidderId, (int) 0);
-			}
-
-			for (int i = 1; i < bidList.size(); i++) {
-				int bidderId = bidList.get(i).bidderId;
-				long interval = Util.timeDiffInMin(bidList.get(i).time, bidList.get(i - 1).time);
-				assert (interval >= 0);
-				intervalTotal.put(bidderId, (int) (intervalTotal.get(bidderId) + interval));
-			}
-
-			// update userFeature objects with intervalAverage and weights
-			int firstBidder = bidList.get(0).bidderId;
-			for (int bidderId : bidListsByUser.keySet()) {
-				UserFeatures user = userFeaturesMap.get(bidderId);
-				int numberOfIntervals;
-				// the bidder who bid first does not have a bid interval for that bid, since there is no preceeding bid
-				if (bidderId == firstBidder) {
-					numberOfIntervals = bidListsByUser.get(bidderId).size() - 1;
-				} else {
-					numberOfIntervals = bidListsByUser.get(bidderId).size();
-				}
-
-				if (numberOfIntervals >= 1) // if the only bid made was the first bid for the auction, there is no bid
-											// interval for this user
-					user.anyBidInterval = Util.incrementalAvg(user.anyBidInterval, user.bidCount,
-							(double) intervalTotal.get(bidderId) / numberOfIntervals, numberOfIntervals);
-			}
+		if (bidList.size() <= 1)
+			return;
+		
+		for (int i = 1; i < bidList.size(); i++) {
+			int bidderId = bidList.get(i).bidderId;
+			long interval = Util.timeDiffInMin(bidList.get(i).time, bidList.get(i - 1).time);
+			assert (interval >= 0);
+			UserFeatures user = userFeaturesMap.get(bidderId);
+			user.getAnyBidInterval().addNext(interval);
 		}
 	}
 
@@ -229,18 +196,11 @@ public abstract class BuildUserFeatures {
 		for (int bidderId : bidsByUser.keySet()) {
 			List<BidObject> userBidList = bidsByUser.get(bidderId);
 			// if there is only 1 bid in the list, there is no interval.
-			if (userBidList.size() > 1) {
-				long intervalTotal = 0;
-				UserFeatures user = userFeaturesMap.get(bidderId);
-				for (int i = 1; i < userBidList.size(); i++) {
-					long interval = Util.timeDiffInMin(userBidList.get(i).time, userBidList.get(i - 1).time);
-					intervalTotal += interval;
-					assert (interval >= 0);
-				}
-
-				user.selfBidInterval = Util.incrementalAvg(user.selfBidInterval, user.bidCount, (double) intervalTotal
-						/ (userBidList.size() - 1), userBidList.size() - 1);
-				// System.out.println("selfBidInterval: " + user.selfBidInterval);
+			UserFeatures user = userFeaturesMap.get(bidderId);
+			for (int i = 1; i < userBidList.size(); i++) {
+				long interval = Util.timeDiffInMin(userBidList.get(i).time, userBidList.get(i - 1).time);
+				assert (interval >= 0);
+				user.getSelfBidInterval().addNext(interval);
 			}
 		}
 	}
@@ -263,12 +223,12 @@ public abstract class BuildUserFeatures {
 			// long bidMinsBeforeEnd = timeDiffInMin(bidList.get(bidList.size() - 1).time, bo.time);
 			long bidMinsBeforeEnd = Util.timeDiffInMin(auctionEnd, bo.time);
 			assert bidMinsBeforeEnd >= 0;
-			userFeaturesMap.get(bo.bidderId).bidTimesMinsBeforeEnd.add(bidMinsBeforeEnd);
+			userFeaturesMap.get(bo.bidderId).getBidTimesMinsBeforeEnd().add(bidMinsBeforeEnd);
 
 			// time of bid as a fraction from the time of the first bid in the auction to the end time
 			double fractionElapsed = ((double) Util.timeDiffInMin(bo.time, bidList.get(0).time)) / length;
 			assert fractionElapsed <= 1;
-			userFeaturesMap.get(bo.bidderId).bidTimesFractionToEnd.add(fractionElapsed);
+			userFeaturesMap.get(bo.bidderId).getBidTimesFractionToEnd().add(fractionElapsed);
 
 			// store the bidPeriod this fractionToEnd corresponds to
 			double[] userDist = dist.get(bo.bidderId);
@@ -296,51 +256,6 @@ public abstract class BuildUserFeatures {
 		return dist;
 	}
 
-	/**
-	 * @param ao
-	 * @param bidList list of bids for this auction in ascending price order
-	 */
-	protected void processAuction(Date auctionEndtime, int winnerId, List<BidObject> bidList) {
-		ArrayListMultimap<Integer, BidObject> bidsByUser = ArrayListMultimap.create();
-		for (BidObject bo : bidList) {
-			boolean unique = bidsByUser.put(bo.bidderId, bo);
-			if (!unique)
-				throw new AssertionError("Every bidObject's price should be different.");
-		}
-		
-		// create a new UserFeatures the bidder if there is no UserFeatures object for them yet
-		for (int bidderId : bidsByUser.keySet()) {
-			if (!userFeaturesMap.containsKey(bidderId)) {
-				UserFeatures uf = new UserFeatures();
-				uf.setUserId(bidderId);
-				userFeaturesMap.put(bidderId, uf);
-			}
-		}
-		
-		// record when bids are made
-		recordBidPeriods(auctionEndtime, bidsByUser);
-		recordUserBidPeriods(auctionEndtime, bidList);
-		updateSelfBidInterval(bidsByUser);
-		updateAnyBidInterval(bidList, bidsByUser);
-		
-
-		recordLastBidAmountProportionOfMax(bidList.get(bidList.size() - 1).amount, bidsByUser);
-		recordBidProportions(bidsByUser);
-		
-		// record bid counts, amounts and increments
-		recordBidAmounts(bidList);
-
-		// record who won the auction
-		if (userFeaturesMap.containsKey(winnerId))
-			userFeaturesMap.get(winnerId).addWonAuction();
-		
-		for (int bidderId : bidsByUser.keySet()) {
-			UserFeatures uf = userFeaturesMap.get(bidderId);
-			uf.categories.add(null); // TODO: fix the null category, because sim auctions have an item type, which has a category, but doesn't have a direct category..., in contrast to TMAuctionObject
-			uf.auctionCount++; // *** should be last in this method because of auctionCount increment *** 
-		}
-	}
-	
 	private void recordLastBidAmountProportionOfMax(int finalPrice, ArrayListMultimap<Integer, BidObject> bidsByUser) {
 		for (int bidderId : bidsByUser.keySet()) {
 			UserFeatures uf = userFeaturesMap.get(bidderId);
@@ -354,9 +269,8 @@ public abstract class BuildUserFeatures {
 		for (int bidderId : bidsByUser.keySet()) {
 			UserFeatures uf = userFeaturesMap.get(bidderId);
 			double bidProp = ((double) bidsByUser.get(bidderId).size() / bidsByUser.size());
-			uf.avgBidProp = Util.incrementalAvg(uf.avgBidProp, uf.getAuctionCount(), bidProp);
-			uf.bidsPerAuc = Util.incrementalAvg(uf.bidsPerAuc, uf.getAuctionCount(), bidsByUser.get(bidderId).size());
-			
+			uf.getAvgBidProp().addNext(bidProp);
+			uf.getBidsPerAuc().addNext(bidsByUser.get(bidderId).size());
 		}
 	}
 	
@@ -365,11 +279,11 @@ public abstract class BuildUserFeatures {
 			UserFeatures user = userFeaturesMap.get(bidderId);
 			// record how many minutes before the end of the auction the FIRST bid was made by each user
 			long firstBidTime = Util.timeDiffInMin(auctionEnd, bidsByUser.get(bidderId).get(0).time);
-			user.firstBidTime = Util.incrementalAvg(user.firstBidTime, user.getAuctionCount(), firstBidTime);
+			user.getFirstBidTime().addNext(firstBidTime);
 			
 			// record how many minutes before the end of the auction the LAST bid was made by each user
 			long lastBidTime = Util.timeDiffInMin(auctionEnd, bidsByUser.get(bidderId).get(bidsByUser.get(bidderId).size() - 1).time);
-			user.lastBidTime = Util.incrementalAvg(user.lastBidTime, user.getAuctionCount(), lastBidTime);
+			user.getLastBidTime().addNext(lastBidTime);
 			
 			// System.out.println("firstBidTimes: " + user.firstBidTimes);
 		}
@@ -422,9 +336,86 @@ public abstract class BuildUserFeatures {
 		}
 	}
 
-	public abstract TreeMap<Integer, UserFeatures> build();
+	public abstract Map<Integer, UserFeatures> build();
 
-	public TreeMap<Integer, UserFeatures> reclustering_build(int clusterId) {
+	public Map<Integer, UserFeatures> reclustering_build(int clusterId) {
 		throw new UnsupportedOperationException();
+	}
+	
+	protected abstract class AuctionObject {
+		final int auctionId;
+		final Date endTime;
+		final int winnerId;
+
+		public AuctionObject(int auctionId, Date endTime, int winnerId) {
+			this.auctionId = auctionId;
+			this.endTime = endTime;
+			this.winnerId = winnerId;
+		}
+	}
+	
+	/**
+	 * POJO
+	 */
+	protected class TMAuctionObject extends AuctionObject{
+		final String category;
+
+		public TMAuctionObject(int auctionId, String category, Date endTime, int winnerId) {
+			super(auctionId, endTime, winnerId);
+			this.category = category;
+		}
+
+		@Override
+		public String toString() {
+			return "(" + auctionId + ", " + category + ", " + endTime + ")";
+		}
+	}
+
+	/**
+	 * POJO
+	 */
+	protected class SimAuctionObject extends AuctionObject{
+		final int itemTypeId;
+
+		public SimAuctionObject(int auctionId, int itemTypeId, Date endTime, int winnerId) {
+			super(auctionId, endTime, winnerId);
+			this.itemTypeId = itemTypeId;
+		}
+
+		@Override
+		public String toString() {
+			return "(" + auctionId + ", " + itemTypeId + ", " + endTime + ")";
+		}
+	}
+
+	/**
+	 * POJO
+	 */
+	protected static class BidObject {
+		final int bidderId;
+		final int amount;
+		final Date time;
+
+		public BidObject(int bidderId, int amount, Date time) {
+			this.bidderId = bidderId;
+			this.amount = amount;
+			this.time = time;
+		}
+
+		@Override
+		public String toString() {
+			return "(" + bidderId + ", " + amount + ", " + time + ")";
+		}
+		
+		public enum BidObjectComparator implements Comparator<BidObject> {
+			PRICE_SORT_ASC {
+				@Override
+				public int compare(BidObject o1, BidObject o2) {
+					if (o1.amount == o2.amount)
+						throw new AssertionError("Can't be used to sort lists with bids with equal amounts.");
+					return o1.amount - o2.amount;
+				}
+			}
+		}
 	}
 }
