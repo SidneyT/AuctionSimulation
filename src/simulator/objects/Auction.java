@@ -46,7 +46,9 @@ public class Auction {
 	public Auction(SimpleUser seller, Item item, long duration, long startPrice,
 			long reservePrice, double popluarity) {
 
-		assert (argumentsValid(seller, item, duration, startPrice, reservePrice));
+		if (!argumentsValid(seller, item, duration, startPrice, reservePrice)) {
+			throw new IllegalArgumentException();
+		}
 
 		this.id = -1;
 		this.startTime = -1;

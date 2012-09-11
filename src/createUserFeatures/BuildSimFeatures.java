@@ -5,17 +5,21 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math3.util.Pair;
 import org.apache.log4j.Logger;
 
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 
+import shillScore.BuildShillScore.BidObject;
 import simulator.database.DatabaseConnection;
 
 /**
@@ -44,33 +48,9 @@ public class BuildSimFeatures extends BuildUserFeatures{
 		this.trim = trim;
 	}
 	
-	/**
-	 * calls constructUserFeatures with default query
-	 */
-	public Map<Integer, UserFeatures> build() {
-		// order of bids will be in the order they were made in, (since amount is in ascending order)
-		String query;
-		if (!trim) {
-			query = "SELECT * FROM auctions as a JOIN bids as b ON a.listingId=b.listingId " +
-					"WHERE endTime IS NOT NULL ORDER BY a.listingId, amount ASC;";
-		}
-		else {
-			query = "SELECT a.*, b1.* " + 
-					"FROM bids b1 " +
-					"LEFT OUTER JOIN bids b2 " +
-					"ON (b1.listingId = b2.listingId AND b1.amount < b2.amount) " +
-					"JOIN auctions a " +
-					"ON b1.listingId = a.listingId " +
-					"GROUP BY b1.listingId, b1.amount " +
-					"HAVING COUNT(*) < 20 " +
-					"ORDER BY b1.listingId ASC, b1.amount ASC;";
-		}
-		return constructUserFeatures(query);
-	}
-	
 	private static final long zeroTime = (long) 946684800 * 1000; // time since epoch at year 1/1/2000
 	private static final long timeUnitMillis = 5 * 60 * 1000;
-	private Date convertTimeunitToTimestamp(long timeUnit) {
+	public static Date convertTimeunitToTimestamp(long timeUnit) {
 		return new Date(zeroTime + timeUnit * timeUnitMillis);
 	}
 	
@@ -79,36 +59,16 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	 * Information is stored in class variable "userFeaturesMap".  Map is in ascending key
 	 * order. Key is the userId.
 	 */
-	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
+	public Map<Integer, UserFeatures> build() {
 		try {
 			Connection conn = DatabaseConnection.getSimulationConnection();
 			
-			PreparedStatement bigQuery = conn.prepareStatement(query);
-			ResultSet bigRS = bigQuery.executeQuery();
-
-			int lastListingId = -1;
-			SimAuctionObject ao = null;
-			
-			// split group the bids by auctions, and put them into a list
-			List<BidObject> bidList = new ArrayList<BidObject>();
-			while (bigRS.next()) {
-				int currentListingId = bigRS.getInt("listingId");
-				if (lastListingId != currentListingId) { // new auction
-					if (lastListingId != -1) { // if this is not the first auction,
-						// process the stuff from the previous auction
-						processAuction(ao, bidList);
-						// clear the lists
-						bidList.clear();
-					}
-
-					lastListingId = currentListingId; // remember id of the new auction
-
-					// record the auction information for the new row
-					ao = new SimAuctionObject(currentListingId, bigRS.getInt("itemTypeId"), convertTimeunitToTimestamp(bigRS.getLong("endTime")), bigRS.getInt("winnerId"));
-				}
-				bidList.add(new BidObject(bigRS.getInt("bidderId"), bigRS.getInt("amount"), convertTimeunitToTimestamp(bigRS.getLong("time"))));
+			Iterator<Pair<SimAuction, List<shillScore.BuildShillScore.BidObject>>> it = new SimAuctionGroupIterator(conn, trim).iterator();
+			while (it.hasNext()) {
+				Pair<SimAuction, List<shillScore.BuildShillScore.BidObject>> pair = it.next();
+//				System.out.println("auction: " + pair.getKey() + ", bids: " + pair.getValue());
+				processAuction(pair.getKey(), pair.getValue());
 			}
-			processAuction(ao, bidList); // process the bidList for the last remaining auction
 			
 			userRep(conn);
 			conn.close();
@@ -119,13 +79,98 @@ public class BuildSimFeatures extends BuildUserFeatures{
 		return this.userFeaturesMap;
 	}
 	
-	private static List<BidObject> trimTo20(List<BidObject> bidList) {
-		if (bidList.size() > 20)
-			return new ArrayList<>(bidList.subList(bidList.size() - 20, bidList.size())); 
-		else
-			return bidList;
+	public static class SimAuctionGroupIterator {
+		private int listingId = -1; // id of the current one being processed
+		private final ResultSet rs;
+		private boolean hasNext = true;
+		public SimAuctionGroupIterator(Connection conn, boolean trim) {
+			try {
+				Statement stmt = conn.createStatement();
+				if (!trim)
+					rs = stmt.executeQuery(
+									"SELECT a.listingId, a.itemTypeId, a.sellerId, a.winnerId " +
+		//							", u2.userType as sellerType" +
+									", a.endTime, b.time as bidTime, b.amount as bidAmount, b.bidderId " +
+//									", u1.userType as bidderType " +
+									"FROM auctions as a " +
+									"JOIN bids as b ON a.listingId=b.listingId " + 
+//									"JOIN users as u1 ON b.bidderId=u1.userId " +
+//									"JOIN users as u2 ON a.sellerId=u2.userId " +
+									"WHERE endTime IS NOT NULL ORDER BY a.listingId, time ASC;"
+							);
+				else
+					rs = stmt.executeQuery(
+									"SELECT a.listingId, a.itemTypeId, a.sellerId, a.winnerId " +
+//									", u2.userType sellerType, " +
+									", a.endTime, b.time bidTime, b.amount as bidAmount, b.bidderId " +
+//									", u1.userType as bidderType " +  
+									"FROM bids b " +
+									"JOIN auctions a ON a.listingId=b.listingId " +   
+//									"JOIN users u1 ON b.bidderId=u1.userId " +
+//									"JOIN users u2 ON a.sellerId=u2.userId " +
+									"LEFT OUTER JOIN bids b2 ON (b.listingId = b2.listingId AND b.amount < b2.amount) " +
+									"WHERE endTime IS NOT NULL " +
+									"GROUP BY b.listingId, b.amount " + 
+									"HAVING COUNT(*) < 20 " +
+									"ORDER BY b.listingId ASC, b.amount ASC;"
+							);
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		private List<BidObject> bids = new ArrayList<>();
+		private SimAuction auction = null;
+		public Iterator<Pair<SimAuction, List<BidObject>>> iterator() {
+			return new Iterator<Pair<SimAuction,List<BidObject>>>() {
+				@Override
+				public boolean hasNext() {
+					return hasNext;
+				}
+
+				@Override
+				public Pair<SimAuction, List<BidObject>> next() {
+					try {
+						while (rs.next()) {
+							int nextId = rs.getInt("listingId");
+							if (listingId != nextId) {
+								if (listingId == -1) {
+									listingId = nextId;
+									auction = new SimAuction(rs.getInt("listingId"), rs.getInt("winnerId"), rs.getInt("sellerId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("endTime")), rs.getInt("itemTypeId"));
+									bids = new ArrayList<>();
+								} else {
+									listingId = nextId;
+									Pair<SimAuction, List<BidObject>> resultPair = new Pair<>(auction, bids); 
+									auction = new SimAuction(rs.getInt("listingId"), rs.getInt("winnerId"), rs.getInt("sellerId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("endTime")), rs.getInt("itemTypeId"));
+									bids = new ArrayList<>();
+									BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), rs.getInt("bidAmount"));
+									bids.add(bid);
+									return resultPair;
+								}
+							} 
+							// still going through bids from the same auction
+							BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), rs.getInt("bidAmount"));
+							bids.add(bid);
+						}
+						hasNext = false;
+						if (auction == null) {
+							throw new RuntimeException();
+						}
+						return new Pair<>(auction, bids);
+						
+					} catch (SQLException e) {
+						throw new RuntimeException(e);
+					}
+				}
+
+				@Override
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
 	}
-	
+
 	/**
 	 * Finds the POS, NEU and NEG reputation for a user. Records those values
 	 * into UserFeatures objects with the same userId.  If userFeaturesMap does

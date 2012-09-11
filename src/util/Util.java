@@ -68,6 +68,8 @@ public class Util {
 	 * d1 - d2
 	 */
 	public static long timeDiffInMin(Date d1, Date d2) {
+//		System.out.println(d1.getTime() + ", " + d2.getTime());
+//		System.out.println("result: " + (d1.getTime() - d2.getTime() + 30000)/60000);
 		return (d1.getTime() - d2.getTime() + 30000)/60000;
 	}
 	

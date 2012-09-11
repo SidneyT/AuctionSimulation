@@ -53,7 +53,7 @@ public class GenerateShillData {
 		
 		AgentAdder nonAltHybridA = NonAltHybrid.getAgentAdder(5, travethanStrategy, 4);
 
-		int numberOfRuns = 200;
+		int numberOfRuns = 1000;
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new int[]{1,1,1,1,1,1});
 		run(simplePairAdderA, numberOfRuns);
@@ -68,7 +68,8 @@ public class GenerateShillData {
 	}
 	
 	private static void run(AgentAdder adder, int numberOfRuns, int[]... weightSets) {
-		for (int runNumber = 100; runNumber < numberOfRuns; runNumber++) {
+		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
+			System.out.println("starting run " + runNumber);
 			// run the simulator with the adder
 			Main.run(adder);
 
@@ -89,39 +90,34 @@ public class GenerateShillData {
 	 * @param weightSets
 	 */
 	private static void writeSSandPercentiles(AgentAdder adder, int runNumber, int[]... weightSets) {
-//		for (int i = 999; i < 1000; i++) {
-			System.out.println("starting run " + runNumber);
-			
-			
-			String runLabel = adder.toString() + "." + runNumber;
+		String runLabel = adder.toString() + "." + runNumber;
 
-			// build shillScores
-			ShillScoreInfo ssi = BuildShillScore.build();
-			
-			// write out shill scores
-			WriteScores.writeShillScores(ssi.shillScores, ssi.auctionCounts, runLabel, weightSets);
-			
-			// write out how many wins/losses by shills, and the normalised final price compared to non-shill auctions
-			ShillWinLossPrice.writeToFile(runLabel);
-			
-			List<List<Double>> ssPercentiless = new ArrayList<List<Double>>();
-			ssPercentiless.add(splitAndCalculatePercentiles(ssi.shillScores.values(), ssi.auctionCounts, ShillScore.DEFAULT_WEIGHTS));
-			for (int[] weights : weightSets) {// calculate the percentiles for the other weight sets
-				ssPercentiless.add(splitAndCalculatePercentiles(ssi.shillScores.values(), ssi.auctionCounts, weights));
-			}
-			String ssPercentilesRunLabel = runLabel;
-			for (int[] weights : weightSets) {
-				ssPercentilesRunLabel += "." + Arrays.toString(weights).replaceAll(", " , "");
-			}
-			
-			// write out percentiles
-			ShillVsNormalSS.writePercentiles(Paths.get("shillingResults", "comparisons", "ssPercentiles.csv"), ssPercentilesRunLabel, ssPercentiless);
-			
-			// write out the number of shill auctions for which the shill had the highest (or not highest) SS
-			ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, Paths.get("shillingResults", "comparisons", "rank.csv"), runLabel, weightSets);
-			
-//			WriteScores.writeShillScoresForAuctions(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, runLabel);
-			
+		// build shillScores
+		ShillScoreInfo ssi = BuildShillScore.build();
+		
+		// write out shill scores
+		WriteScores.writeShillScores(ssi.shillScores, ssi.auctionCounts, runLabel, weightSets);
+		
+		// write out how many wins/losses by shills, and the normalised final price compared to non-shill auctions
+		ShillWinLossPrice.writeToFile(runLabel);
+		
+		List<List<Double>> ssPercentiless = new ArrayList<List<Double>>();
+		ssPercentiless.add(splitAndCalculatePercentiles(ssi.shillScores.values(), ssi.auctionCounts, ShillScore.DEFAULT_WEIGHTS));
+		for (int[] weights : weightSets) {// calculate the percentiles for the other weight sets
+			ssPercentiless.add(splitAndCalculatePercentiles(ssi.shillScores.values(), ssi.auctionCounts, weights));
+		}
+		String ssPercentilesRunLabel = runLabel;
+		for (int[] weights : weightSets) {
+			ssPercentilesRunLabel += "." + Arrays.toString(weights).replaceAll(", " , "");
+		}
+		
+		// write out percentiles
+		ShillVsNormalSS.writePercentiles(Paths.get("shillingResults", "comparisons", "ssPercentiles.csv"), ssPercentilesRunLabel, ssPercentiless);
+		
+		// write out the number of shill auctions for which the shill had the highest (or not highest) SS
+		ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, Paths.get("shillingResults", "comparisons", "rank.csv"), runLabel, weightSets);
+		
+//		WriteScores.writeShillScoresForAuctions(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, runLabel);
 	}
 
 	public static List<Double> splitAndCalculatePercentiles(Collection<ShillScore> sss, Map<Integer, Integer> auctionCounts, int[] weights) {
@@ -129,7 +125,8 @@ public class GenerateShillData {
 		List<Double> normalSS = new ArrayList<>();
 		
 		for (ShillScore ss : sss) { // sort SS for shills and normals into different lists
-			if (ss.userType.toLowerCase().contains("puppet")) {
+//			if (ss.userType.toLowerCase().contains("puppet")) { // TODO:
+			if (ss.getId() > 5000) { // TODO:
 				shillSS.add(ss.getShillScore(auctionCounts, weights));
 			} else {
 				normalSS.add(ss.getShillScore(auctionCounts, weights));

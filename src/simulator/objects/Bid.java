@@ -7,7 +7,7 @@ import agents.SimpleUser;
 /**
  * Bid object. Comparator sorts list from lowest to highest.
  */
-public class Bid implements Comparable<Bid>{
+public class Bid implements Comparable<Bid> {
 	
 	Logger logger = Logger.getLogger(Bid.class);
 	

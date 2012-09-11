@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-
-import simulator.database.SaveObjects;
 import simulator.objects.Auction;
 import util.Util;
 
@@ -27,7 +25,7 @@ public class AuctionRecord {
 	
 	// the set of auctions that are running
 	private final Set<Auction> currentSet;
-
+	
 	public AuctionRecord() {
 //		this.submissions = new HashMap<Integer, Set<Auction>>();
 		this.currentAuctions = new HashMap<Long, Set<Auction>>();
@@ -51,7 +49,7 @@ public class AuctionRecord {
 		long expiryTime = auction.getDuration() + time;
 		Util.mapSetAdd(this.currentAuctions, expiryTime, auction);
 
-		SaveObjects.saveAuction(auction);
+//		SaveToDatabase.saveAuction(auction);
 		
 		assert(auction.idAndStartTimeSet()); // auction id & startTime must be set
 	}

@@ -1,8 +1,6 @@
 package createUserFeatures;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import createUserFeatures.features.Features;
@@ -18,8 +16,6 @@ import util.IncrementalSD;
  * 
  */
 public class UserFeatures {
-	private static String delimiter = ",";
-
 	int userId;
 	int pos, neg; // reputation
 
@@ -28,40 +24,33 @@ public class UserFeatures {
 
 	int bidIncCount; // number of bidIncrements made (does not count as incrementing a bid if user is first to bid)
 
-	public static String getDelimiter() {
-		return delimiter;
-	}
-
 	IncrementalSD avgBidInc = new IncrementalSD();
 //	double avgBidInc; // average bid increment
 	double avgBidIncMinusMinInc = Double.NaN; // average bid increment minus minimum increment; initialise to NaN to know when it has not been used
 
 	int auctionCount; // number of auctions as a bidder
-	private int auctionsWon; // number of auctions won
+	int auctionsWon; // number of auctions won
 	private final IncrementalSD bidsPerAuc = new IncrementalSD(); // average number of bids made in all auctions
-	final double[] bidPeriods;
-	final double[] bidPeriodsLogBins;
 	private final IncrementalSD firstBidTime = new IncrementalSD(); // average number of minutes from the end of the auction the FIRST bid in the auction by this user was made
 	private final IncrementalSD lastBidTime = new IncrementalSD(); // average number of minutes from the end of the auction the LAST bid in the auction by this user was made
 	private final IncrementalSD selfBidInterval = new IncrementalSD(); // average bid interval
 	private final IncrementalSD anyBidInterval = new IncrementalSD(); // average bid interval
-	private final List<Double> bidTimesFractionToEnd; // bid time as fraction of auction time elapsed
-	private final List<Long> bidTimesMinsBeforeEnd;// number of minutes before the end of the auction
+	private final IncrementalSD bidTimesFractionToEnd = new IncrementalSD(); // bid time as fraction of auction time elapsed
+	private final IncrementalSD bidTimesMinsBeforeEnd = new IncrementalSD();// number of minutes before the end of the auction
 
+	final double[] bidPeriods;
+	final double[] bidPeriodsLogBins;
 	double avgNumCategory; // number of categories per auction the user is in
 	Set<String> categories;
 
 	private final IncrementalSD avgBidAmountComparedToMax = new IncrementalSD(); // average of the bid amounts as fractions of the maximum bid in the same auction
-	double avgFinalBidComparedToMax; // average of the last bid as fraction of the maximum
+	private final IncrementalSD avgFinalBidComparedToMax = new IncrementalSD(); // average of the last bid as fraction of the maximum
 	private final IncrementalSD avgBidProp = new IncrementalSD();
 	
 	public UserFeatures() {
 		this.bidPeriods = new double[4];
 		this.bidPeriodsLogBins = new double[11];
 		this.categories = new HashSet<>();
-
-		this.bidTimesFractionToEnd = new ArrayList<>();
-		this.bidTimesMinsBeforeEnd = new ArrayList<>();
 
 		// uninitilised values. used to find which users do not have a feedback page, and so have no reputation
 		pos = -1;
@@ -144,7 +133,7 @@ public class UserFeatures {
 		return anyBidInterval;
 	}
 
-	public List<Double> getBidTimesFractionToEnd() {
+	public IncrementalSD getBidTimesFractionToEnd() {
 		return bidTimesFractionToEnd;
 	}
 
@@ -268,7 +257,7 @@ public class UserFeatures {
 		return bidPeriods[0];
 	}
 
-	public List<Long> getBidTimesMinsBeforeEnd() {
+	public IncrementalSD getBidTimesMinsBeforeEnd() {
 		return bidTimesMinsBeforeEnd;
 	}
 
@@ -278,14 +267,6 @@ public class UserFeatures {
 
 	public double bidPropEnd() {
 		return bidPeriods[2];
-	}
-
-	public double auctionsPerCat() {
-		return (double) auctionCount / categories.size();
-	}
-
-	private double auctionsPerCatLn() {
-		return Math.log(auctionsPerCat());
 	}
 
 	// boolean attributes for whether a user bids in beg, mid or end of an auction
@@ -333,7 +314,7 @@ public class UserFeatures {
 		return (int) (value * numberOfBins) + 1;
 	}
 
-	public double getAvgFinalBidComparedToMax() {
+	public IncrementalSD getAvgFinalBidComparedToMax() {
 		return avgFinalBidComparedToMax;
 	}
 

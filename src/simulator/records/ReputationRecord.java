@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-
-import simulator.database.SaveObjects;
 import simulator.objects.Feedback;
 
 /**
@@ -17,7 +15,7 @@ public class ReputationRecord {
 //	private long reputation;
 	private int pos, posUnique, neu, neg, negUnique;
 //	private List<Feedback> repHistory;
-	private final Set<Integer> receivedFeedback;
+	private final Set<Integer> receivedFeedback; // for keeping track of unique positive or negative reputations
 	
 	public ReputationRecord() {
 		this.receivedFeedback = new HashSet<Integer>();
@@ -77,7 +75,6 @@ public class ReputationRecord {
 				break;
 		}
 		
-		SaveObjects.saveFeedback(feedback);
 	}
 	
 	public static void generateRep(ReputationRecord rr, Random r) {

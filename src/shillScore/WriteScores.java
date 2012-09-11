@@ -10,9 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import shillScore.BuildShillScore.Auction;
-import shillScore.BuildShillScore.User;
-
+import createUserFeatures.BuildUserFeatures;
 
 public class WriteScores {
 
@@ -88,27 +86,29 @@ public class WriteScores {
 	 * @param suffix
 	 */
 	public static void writeShillScoresForAuctions(Map<Integer, ShillScore> shillScores,
-			Map<Auction, List<User>> auctionBidders, Map<Integer, Integer> auctionCounts, String suffix) {
+			Map<BuildUserFeatures.Auction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, String suffix) {
 		
 		try (BufferedWriter bw1 = Files.newBufferedWriter(Paths.get("shillingResults/AuctionShillScoresForShillers_" + suffix + ".csv"), Charset.defaultCharset());
 				BufferedWriter bw2 = Files.newBufferedWriter(Paths.get("shillingResults/AuctionShillScoresForNormal_" + suffix + ".csv"), Charset.defaultCharset())) {
 			
-			for (Entry<Auction, List<User>> auctionBidderEntry : auctionBidders.entrySet()) {
-				Auction auction = auctionBidderEntry.getKey();
-				List<User> bidders = auctionBidderEntry.getValue();
+			for (Entry<BuildUserFeatures.Auction, List<Integer>> auctionBidderEntry : auctionBidders.entrySet()) {
+				BuildUserFeatures.Auction auction = auctionBidderEntry.getKey();
+				List<Integer> bidders = auctionBidderEntry.getValue();
 				
-				if (auction.seller.userType.toLowerCase().contains("shill")) {
-					bw1.append(auction.seller.id + "");
-					bw2.append(auction.seller.id + "");
-					for (User bidder : bidders) {
-						if (bidder.userType.toLowerCase().contains("shill")) { // bidder is a shill
-							bw1.append("," + bidder.id);
+//				if (auction.sellerId.userType.toLowerCase().contains("shill")) {
+				if (auction.sellerId >= 5000) {// TODO:
+					bw1.append(auction.sellerId + "");
+					bw2.append(auction.sellerId + "");
+					for (int bidder : bidders) {
+//						if (bidder.userType.toLowerCase().contains("shill")) { // bidder is a shill
+						if (auction.sellerId >= 5000) {// TODO:
+							bw1.append("," + bidder);
 							bw1.append(":");
-							bw1.append(shillScores.get(bidder.id).getShillScore(auctionCounts, auction.seller.id) + "");
+							bw1.append(shillScores.get(bidder).getShillScore(auctionCounts, auction.sellerId) + "");
 						} else { // bidder is not a shill
-							bw2.append("," + bidder.id);
+							bw2.append("," + bidder);
 							bw2.append(":");
-							bw2.append(shillScores.get(bidder.id).getShillScore(auctionCounts, auction.seller.id) + "");
+							bw2.append(shillScores.get(bidder).getShillScore(auctionCounts, auction.sellerId) + "");
 						}
 					}
 					bw1.newLine();

@@ -10,8 +10,6 @@ import org.apache.log4j.Logger;
 
 import agents.SimpleUser;
 
-
-import simulator.database.SaveObjects;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import util.Util;
@@ -28,7 +26,7 @@ public class BidRecord {
 		r = new Random();
 	}
 	
-	public void processAuctionBids(Auction auction, List<Bid> auctionBids, long time) {
+	public Bid processAuctionBids(Auction auction, List<Bid> auctionBids, long time) {
 		List<Bid> highestBids = sortBidsAndReturnHighest(auctionBids);
 		
 		// assert that all bids are higher than the minimum increment by testing the lowest in the ordered list
@@ -50,8 +48,7 @@ public class BidRecord {
 		// update the state of the auction with the winning bid
 		auction.addBid(winningBid);
 		
-		// save to database
-		SaveObjects.saveBid(auction, winningBid);
+		return winningBid;
 	}
 
 	/**

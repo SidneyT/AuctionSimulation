@@ -23,9 +23,10 @@ import java.util.Set;
 
 import org.apache.commons.math3.stat.Frequency;
 
+import createUserFeatures.BuildUserFeatures;
+import createUserFeatures.BuildUserFeatures.SimAuction;
+
 import shillScore.ShillScore;
-import shillScore.BuildShillScore.Auction;
-import shillScore.BuildShillScore.User;
 import shillScore.evaluation.BayseanAverageSS.BayseanSS;
 
 
@@ -189,7 +190,7 @@ public class ShillVsNormalSS {
 	 * @param auctionCounts
 	 * @param path
 	 */
-	public static void ssRankForShills(Map<Integer, ShillScore> shillScores, Map<Auction, List<User>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, int[]... reweights) {
+	public static void ssRankForShills(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, int[]... reweights) {
 		
 		writeRanks(shillScores, auctionBidders, auctionCounts, path, label, ShillScore.DEFAULT_WEIGHTS);
 		for (int i = 0; i < reweights.length; i++) {
@@ -203,10 +204,10 @@ public class ShillVsNormalSS {
 	
 	private static class ScoreBidderPair implements Comparable<ScoreBidderPair> {
 		final double ss;
-		final User bidder;
-		ScoreBidderPair(double ss, User bidder) {
+		final int bidderId;
+		ScoreBidderPair(double ss, int bidder) {
 			this.ss = ss;
-			this.bidder = bidder;
+			this.bidderId = bidder;
 		}
 		@Override
 		public int compareTo(ScoreBidderPair o) {
@@ -214,33 +215,34 @@ public class ShillVsNormalSS {
 		}
 		@Override
 		public String toString() {
-			return "(" + ss + ":" + bidder + ")";
+			return "(" + ss + ":" + bidderId + ")";
 		}
 	}
 
-	private static void writeRanks(Map<Integer, ShillScore> shillScores, Map<Auction, List<User>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, int[] weights) {
+	private static void writeRanks(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, int[] weights) {
 		int shillFirstCount = 0;
 		int normalFirstCount = 0;
 		
-		for (Entry<Auction, List<User>> auctionBidderEntry : auctionBidders.entrySet()) {
-			Auction auction = auctionBidderEntry.getKey();
-			List<User> bidders = auctionBidderEntry.getValue();
+		for (Entry<SimAuction, List<Integer>> auctionBidderEntry : auctionBidders.entrySet()) {
+			SimAuction auction = auctionBidderEntry.getKey();
+			List<Integer> bidders = auctionBidderEntry.getValue();
 			
-			if (auction.seller.userType.toLowerCase().contains("puppet")) {
+//			if (auction.sellerId.userType.toLowerCase().contains("puppet")) {// TODO:
+			if (auction.sellerId >= 5000) {// TODO:
 				Set<Integer> seen = new HashSet<>();
 				List<ScoreBidderPair> pairs = new ArrayList<>();
-				for (User bidder : bidders) {
+				for (int bidder : bidders) {
 					{ // for ignoring duplicates
-						if (seen.contains(bidder.id))
+						if (seen.contains(bidder))
 							continue;
-						seen.add(bidder.id);
+						seen.add(bidder);
 					}
 					{ // for removing the winner
-						if (bidder.id == auction.winnerId)
+						if (bidder == auction.winnerId)
 							continue;
 					}
 					
-					ScoreBidderPair pair = new ScoreBidderPair(shillScores.get(bidder.id).getShillScore(auctionCounts, auction.seller.id, weights), bidder);
+					ScoreBidderPair pair = new ScoreBidderPair(shillScores.get(bidder).getShillScore(auctionCounts, auction.sellerId, weights), bidder);
 					pairs.add(pair);
 				}
 				Collections.sort(pairs, Collections.reverseOrder());
@@ -250,7 +252,8 @@ public class ShillVsNormalSS {
 //					System.out.print("[");
 //					for (ScoreBidderPair pair : pairs) {
 						ScoreBidderPair pair = pairs.get(0);
-						if (pair.bidder.userType.toLowerCase().contains("puppet")) {
+//						if (pair.bidderId.userType.toLowerCase().contains("puppet")) {// TODO:
+						if (auction.sellerId >= 5000) {// TODO:
 //							System.out.print("1,");
 							shillFirstCount++;
 						} else {
@@ -287,29 +290,30 @@ public class ShillVsNormalSS {
 	 * @param path
 	 * @param label
 	 */
-	public static void writeRanks(Map<Integer, ShillScore> shillScores, BayseanSS bayseanSS, Map<Auction, List<User>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label) {
+	public static void writeRanks(Map<Integer, ShillScore> shillScores, BayseanSS bayseanSS, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label) {
 		int shillFirstCount = 0;
 		int normalFirstCount = 0;
 		
-		for (Entry<Auction, List<User>> auctionBidderEntry : auctionBidders.entrySet()) {
-			Auction auction = auctionBidderEntry.getKey();
-			List<User> bidders = auctionBidderEntry.getValue();
+		for (Entry<SimAuction, List<Integer>> auctionBidderEntry : auctionBidders.entrySet()) {
+			SimAuction auction = auctionBidderEntry.getKey();
+			List<Integer> bidders = auctionBidderEntry.getValue();
 			
-			if (auction.seller.userType.toLowerCase().contains("puppet")) {
+//			if (auction.sellerId.userType.toLowerCase().contains("puppet")) {// TODO:
+			if (auction.sellerId >= 5000) {// TODO:
 				Set<Integer> seen = new HashSet<>();
 				List<ScoreBidderPair> pairs = new ArrayList<>();
-				for (User bidder : bidders) {
+				for (int bidder : bidders) {
 					{ // for ignoring duplicates
-						if (seen.contains(bidder.id))
+						if (seen.contains(bidder))
 							continue;
-						seen.add(bidder.id);
+						seen.add(bidder);
 					}
 					{ // for removing the winner
-						if (bidder.id == auction.winnerId)
+						if (bidder == auction.winnerId)
 							continue;
 					}
 					
-					ScoreBidderPair pair = new ScoreBidderPair(bayseanSS.bss(shillScores.get(bidder.id), auction.seller.id), bidder);
+					ScoreBidderPair pair = new ScoreBidderPair(bayseanSS.bss(shillScores.get(bidder), auction.sellerId), bidder);
 					pairs.add(pair);
 				}
 				Collections.sort(pairs, Collections.reverseOrder());
@@ -319,7 +323,8 @@ public class ShillVsNormalSS {
 //					System.out.print("[");
 //					for (ScoreBidderPair pair : pairs) {
 						ScoreBidderPair pair = pairs.get(0);
-						if (pair.bidder.userType.toLowerCase().contains("puppet")) {
+//						if (pair.bidderId.userType.toLowerCase().contains("puppet")) {// TODO:
+						if (auction.sellerId >= 5000) { // TODO:
 //							System.out.print("1,");
 							shillFirstCount++;
 						} else {

@@ -22,7 +22,7 @@ public class UserRecord {
 	
 	// Set<User> - keeps track of users
 	private final List<SimpleUser> users;
-	
+
 	public UserRecord() {
 		this.users  = Collections.synchronizedList(new ArrayList<SimpleUser>());
 	}
@@ -34,12 +34,6 @@ public class UserRecord {
 	public void addUser(SimpleUser user) {
 		boolean isNew = this.users.add(user);
 		assert isNew ;
-	}
-	
-	public void saveAllUsers() {
-		for (SimpleUser user : users) {
-			SaveObjects.saveUser(user);
-		}
 	}
 	
 	public List<SimpleUser> getUsers() {

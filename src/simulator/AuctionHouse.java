@@ -17,6 +17,7 @@ import simulator.buffers.Message;
 import simulator.buffers.MessageType;
 import simulator.buffers.MessagesToUsers;
 import simulator.database.SaveObjects;
+import simulator.database.SaveToDatabase;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.objects.Feedback;
@@ -52,20 +53,25 @@ public class AuctionHouse implements Runnable {
 
 	private final BufferHolder buffers;
 
-	public AuctionHouse(UserRecord userRecord, BufferHolder buffers
+	private final SaveObjects saveObjects;
+	
+	public AuctionHouse(UserRecord userRecord, BufferHolder buffers,
 	// , CategoryRecord categoryRecord
+			SaveObjects saveObjects
 	) {
 		time = -1;
 		this.userRecord = userRecord;
 		this.buffers = buffers;
 		// this.categoryRecord = categoryRecord;
 		this.auctionRecord = new AuctionRecord();
-		this.bidRecord = new BidRecord();
+		this.bidRecord = new BidRecord(); //TODO
 		this.interestRecord = new AuctionInterestRecord();
 
 		snipingRecord = Collections.newSetFromMap(new ConcurrentHashMap<EventListener, Boolean>());
 
 		eventListeners = new HashSet<>();
+		
+		this.saveObjects = saveObjects;
 	}
 
 	public boolean addEventListener(EventListener eventListener) {
@@ -105,6 +111,7 @@ public class AuctionHouse implements Runnable {
 
 			feedback.setTime(this.time);
 			user.addFeedback(feedback);
+			saveObjects.saveFeedback(feedback);
 		}
 
 	}
@@ -162,8 +169,9 @@ public class AuctionHouse implements Runnable {
 
 			// find winner for this round for this auction
 			// all runner up bids are discarded and ignored
-			this.bidRecord.processAuctionBids(auction, allBids.get(auction), this.time);
-
+			Bid winningBid = this.bidRecord.processAuctionBids(auction, allBids.get(auction), this.time);
+			saveObjects.saveBid(auction, winningBid);
+			
 			// notify users of new bid
 			Set<EventListener> interestedUsers = interestRecord.getInterested(auction);
 			// assert interestedUsers != null : "Error. There were no interested users for auction: " + auction + " at "
@@ -259,13 +267,14 @@ public class AuctionHouse implements Runnable {
 				msgToUsers.putMessages(expired.getSeller().getId(), new Message(MessageType.EXPIRED, expired));
 			}
 
-			SaveObjects.saveExpiredAuction(expired, winner != null);
+			saveObjects.saveExpiredAuction(expired, winner != null);
 		}
-
 	}
 
 	public void saveUsers() {
-		this.userRecord.saveAllUsers();
+		for (SimpleUser user : userRecord.getUsers()) {
+			saveObjects.saveUser(user);
+		}
 	}
 
 	// @Override

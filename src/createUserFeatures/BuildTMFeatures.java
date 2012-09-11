@@ -5,16 +5,21 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.math3.util.Pair;
+
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 
+import shillScore.BuildShillScore.BidObject;
 import simulator.database.DatabaseConnection;
 
 /**
@@ -131,7 +136,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 			ResultSet bigRS = bigQuery.executeQuery();
 
 			int lastListingId = -1;
-			TMAuctionObject ao = null;
+			TMAuction ao = null;
 			
 			// split group the bids by auctions, and put them into a list
 			List<BidObject> bidList = new ArrayList<BidObject>();
@@ -145,9 +150,9 @@ public class BuildTMFeatures extends BuildUserFeatures{
 					}
 					lastListingId = currentListingId;
 					// record the auction information for the new row
-					ao = new TMAuctionObject(currentListingId, this.simpleCategory(bigRS.getString("category")), bigRS.getTimestamp("endTime"), bigRS.getInt("winnerId"));
+					ao = new TMAuction(currentListingId, bigRS.getInt("winnerId"), bigRS.getInt("sellerId"), bigRS.getTimestamp("endTime"), simpleCategory(bigRS.getString("category")));
 				}
-				bidList.add(new BidObject(bigRS.getInt("bidderId"), bigRS.getInt("amount"), bigRS.getTimestamp("time")));
+				bidList.add(new BidObject(bigRS.getInt("bidderId"), currentListingId, bigRS.getTimestamp("time"), bigRS.getInt("amount")));
 			}
 			processAuction(ao, bidList); // process the bidList for the last remaining auction
 			
@@ -160,6 +165,72 @@ public class BuildTMFeatures extends BuildUserFeatures{
 		return this.userFeaturesMap;
 	}
 	
+	public static class SimAuctionGroupIterator {
+		private int listingId = -1; // id of the current one being processed
+		private final ResultSet rs;
+		private boolean hasNext = true;
+		public SimAuctionGroupIterator(Connection conn) {
+			try {
+				Statement stmt = conn.createStatement();
+				rs = stmt.executeQuery(
+						"SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time " +
+							"FROM auctions AS a " +
+							"JOIN bids AS b ON a.listingId=b.listingId " +
+							"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
+							"ORDER BY a.listingId ASC, amount ASC;"
+						);
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		public Iterator<Pair<TMAuction, List<BidObject>>> iterator() {
+			return new Iterator<Pair<TMAuction,List<BidObject>>>() {
+				@Override
+				public boolean hasNext() {
+					return hasNext;
+				}
+
+				@Override
+				public Pair<TMAuction, List<BidObject>> next() {
+					try {
+						List<BidObject> bids = new ArrayList<>();
+						TMAuction auction = null;
+							while (rs.next()) {
+								int nextId = rs.getInt("listingId");
+								if (listingId != nextId) {
+									listingId = nextId;
+									return new Pair<>(auction, bids);
+								} else { // still going through bids from the same auction
+									auction = new TMAuction(rs.getInt("listingId"), 
+											rs.getInt("winnerId"), 
+											rs.getInt("sellerId"), 
+											BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("endTime")), 
+											BuildTMFeatures.simpleCategory(rs.getString("category"))
+										);
+								}
+								BidObject bid = new BidObject(rs.getInt("bidderId"), 
+										rs.getInt("listingId"), 
+										BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), 
+										rs.getInt("bidAmount"));
+								bids.add(bid);
+							}
+						hasNext = false;
+						return new Pair<>(auction, bids);
+						
+					} catch (SQLException e) {
+						throw new RuntimeException(e);
+					}
+				}
+
+				@Override
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
+	}
+
 	/**
 	 * Finds the POS, NEU and NEG reputation for a user. Records those values
 	 * into UserFeatures objects with the same userId.  If userFeaturesMap does
@@ -182,7 +253,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 		}
 	}
 	
-	private String simpleCategory(String category) {
+	public static String simpleCategory(String category) {
 		return category.split("/")[1];
 	}
 	

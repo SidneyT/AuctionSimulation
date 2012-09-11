@@ -42,8 +42,4 @@ public class IncrementalSD extends IncrementalMean {
 //		System.out.println(sd.average);
 	}
 
-	public double value() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 }

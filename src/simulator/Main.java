@@ -15,9 +15,6 @@ import com.google.common.collect.ImmutableList.Builder;
 
 import createUserFeatures.ClusterAnalysis;
 
-
-
-
 import simulator.buffers.BidsToAh;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
@@ -28,8 +25,9 @@ import simulator.buffers.TimeMessage;
 import simulator.categories.CategoryRecord;
 import simulator.categories.ItemType;
 import simulator.categories.MockCategories;
-import simulator.database.SaveObjects;
 import simulator.database.DatabaseConnection;
+import simulator.database.SaveToDatabase;
+import simulator.database.SaveObjects;
 import simulator.objects.Auction;
 import simulator.objects.Feedback;
 import simulator.records.UserRecord;
@@ -83,7 +81,6 @@ public class Main {
 	}
 
 	private static void go(AgentAdder... agentAdder) throws InterruptedException {
-		final UserRecord userRecord = new UserRecord();
 
 		// create buffers
 		final TimeMessage timeMessage = new TimeMessage();
@@ -97,13 +94,16 @@ public class Main {
 		final PaymentSender ps = new PaymentSender();
 		final ItemSender is = new ItemSender();
 
+		SaveObjects saveObjects = new SaveToDatabase();
+		
 		// create item types
 		final CategoryRecord cr = MockCategories.createCategories();
-		SaveObjects.saveCategory(cr.getCategories());
+		saveObjects.saveCategories(cr.getCategories());
 		ArrayList<ItemType> types = ItemType.createItems(20, cr.getCategories());
-		SaveObjects.saveItemTypes(types);
+		saveObjects.saveItemTypes(types);
 
-		final AuctionHouse ah = new AuctionHouse(userRecord, bh);
+		final UserRecord userRecord = new UserRecord();
+		final AuctionHouse ah = new AuctionHouse(userRecord, bh, saveObjects);
 
 		// parameters of simulator
 		final int numClusterBidder = 4000;
@@ -196,7 +196,7 @@ public class Main {
 		// clean up
 		ah.saveUsers();
 		es.shutdown();
-		SaveObjects.flush();
+		saveObjects.cleanup();
 
 //		System.out.println("debugAuctionCounter: " + ah.debugAuctionCounter);
 		

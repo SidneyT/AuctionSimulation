@@ -133,11 +133,7 @@ public enum Features implements Feature {
 	BidTimesElapsed9 {
 		@Override
 		public double value(UserFeatures uf) {
-			IncrementalMean ia = new IncrementalMean();
-			for (double mins : uf.getBidTimesFractionToEnd()) {
-				ia.addNext(mins);
-			}
-			return ia.getAverage();
+			return uf.getBidTimesFractionToEnd().getAverage();
 		}
 	},
 	/**
@@ -165,11 +161,7 @@ public enum Features implements Feature {
 	BidTimesMinsBeforeEnd12 { 
 		@Override
 		public double value(UserFeatures uf) {
-			IncrementalMean ia = new IncrementalMean();
-			for (long mins : uf.getBidTimesMinsBeforeEnd()) {
-				ia.addNext(mins);
-			}
-			return Math.log(ia.getAverage());
+			return uf.getBidTimesMinsBeforeEnd().getAverage();
 		}
 	},
 	/**
@@ -187,7 +179,7 @@ public enum Features implements Feature {
 	AvgFinalBidAmountPropMax14 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgFinalBidComparedToMax();
+			return uf.getAvgFinalBidComparedToMax().getAverage();
 		}
 	},
 	/**
