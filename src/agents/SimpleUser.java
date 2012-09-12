@@ -122,7 +122,7 @@ public class SimpleUser extends EventListener {
 		}
 	}
 
-	public void submitBid(Auction auction, long amount) {
+	public void submitBid(Auction auction, int amount) {
 		this.bh.getBidMessageToAh().put(auction, new Bid(this, amount));
 	}
 

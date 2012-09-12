@@ -33,7 +33,7 @@ public class PuppetBidder extends SimpleUser {
 	 * @param auction
 	 * @param bidPrice
 	 */
-	public void makeBid(Auction auction, long bidPrice) {
+	public void makeBid(Auction auction, int bidPrice) {
 		ah.registerForAuction(this, auction);
 		this.bh.getBidMessageToAh().put(auction, new Bid(this, bidPrice));
 	}

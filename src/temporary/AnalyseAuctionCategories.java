@@ -14,7 +14,7 @@ import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.primitives.Doubles;
 
-import simulator.database.DatabaseConnection;
+import simulator.database.DBConnection;
 import util.Util;
 
 public class AnalyseAuctionCategories {
@@ -23,7 +23,7 @@ public class AnalyseAuctionCategories {
 	}
 	
 	public void run() throws SQLException {
-		Connection conn = DatabaseConnection.getTrademeConnection();
+		Connection conn = DBConnection.getTrademeConnection();
 		
 		ArrayListMultimap<String, Integer> map = ArrayListMultimap.create();
 		Statement stmt = conn.createStatement();

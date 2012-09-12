@@ -17,7 +17,7 @@ import java.util.Set;
 import shillScore.BuildShillScore.ShillScoreInfo;
 import shillScore.CollusiveShillScore.ScoreType;
 import shillScore.evaluation.ShillVsNormalSS;
-import simulator.database.DatabaseConnection;
+import simulator.database.DBConnection;
 import util.CombinationGenerator;
 import util.Util;
 
@@ -146,7 +146,7 @@ public class BuildCollusiveShillScore {
 	
 	private static int[][] buildCollusionGraph(Mapping mapping){
 		try {
-			Connection conn = DatabaseConnection.getSimulationConnection();
+			Connection conn = DBConnection.getSimulationConnection();
 			
 			// make a collusion graph of the right size
 			CallableStatement stmt1;

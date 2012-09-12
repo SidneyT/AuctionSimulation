@@ -8,20 +8,25 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.math3.util.Pair;
 import org.apache.log4j.Logger;
 
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildUserFeatures;
+import createUserFeatures.BuildUserFeatures.BidObject;
+import createUserFeatures.SimAuctionDBIterator;
+import createUserFeatures.SimAuctionIterator;
 import createUserFeatures.BuildUserFeatures.SimAuction;
 
 
 import shillScore.ShillScore;
-import simulator.database.DatabaseConnection;
+import simulator.database.DBConnection;
 import util.IncrementalMean;
 import util.Util;
 
@@ -43,12 +48,31 @@ public class BuildShillScore {
 		}
 	}
 	
+	public static ShillScoreInfo build(SimAuctionIterator simAuctionIterator) {
+		
+		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.iterator();
+
+		Map<Integer, ShillScore> shillScores = new HashMap<>();
+		Map<SimAuction, List<Integer>> auctionBidders = new HashMap<>(); // Map(seller, bidderlist)
+		Map<Integer, Integer> auctionCounts = new HashMap<>();
+		while (it.hasNext()) {
+			Pair<SimAuction, List<BidObject>> pair = it.next();
+			processBids(shillScores, auctionBidders, auctionCounts, pair.getKey(), pair.getValue());
+		}
+		
+		return new ShillScoreInfo(shillScores, auctionBidders, auctionCounts);
+	}
+	
+	public static ShillScoreInfo build() {
+		return build(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true));
+	}
+	
 	/**
 	 * Calculates the shill score for users.
 	 */
-	public static ShillScoreInfo build() {
+	public static ShillScoreInfo build_old() {
 		try {
-			Connection conn = DatabaseConnection.getSimulationConnection();
+			Connection conn = DBConnection.getSimulationConnection();
 			// for streaming results back 1 row at a time
 //			Statement stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 //			stmt.setFetchSize(Integer.MIN_VALUE);
@@ -63,12 +87,13 @@ public class BuildShillScore {
 			);
 
 			int listingId = -1;
-			List<BidObject> bids = new ArrayList<>();
+			SimAuction auction = null;
+			List<BuildUserFeatures.BidObject> bids = new ArrayList<>();
+
 			Map<Integer, ShillScore> shillScores = new HashMap<>();
 			Map<SimAuction, List<Integer>> auctionBidders = new HashMap<>(); // Map(seller, bidderlist)
 			Map<Integer, Integer> auctionCounts = new HashMap<>();
 
-			SimAuction auction = null;
 			while (br.next()) {
 				int newListingId = br.getInt("listingId");
 				if (listingId != newListingId) {
@@ -80,7 +105,7 @@ public class BuildShillScore {
 					auction = new SimAuction(br.getInt("listingId"), br.getInt("winnerId"), br.getInt("sellerId"), BuildSimFeatures.convertTimeunitToTimestamp(br.getLong("endTime")), br.getInt("itemTypeId"));
 				}
 
-				BidObject bid = new BidObject(br.getInt("bidderId"), br.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(br.getLong("bidTime")), br.getInt("bidAmount"));
+				BuildUserFeatures.BidObject bid = new BuildUserFeatures.BidObject(br.getInt("bidderId"), br.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(br.getLong("bidTime")), br.getInt("bidAmount"));
 				bids.add(bid);
 			}
 
@@ -101,13 +126,13 @@ public class BuildShillScore {
 	 * @param auction the auction associated with the bids being processed
 	 * @param bids bids of the same auction ordered by ascending time (or amount)
 	 */
-	static void processBids(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, SimAuction auction, List<BidObject> bids) {
+	static void processBids(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, SimAuction auction, List<BuildUserFeatures.BidObject> bids) {
 		if (bids.isEmpty()) {
 			logger.warn("bids list is empty in processBids. It shouldn't be.");
 			return;
 		}
 		
-		for (BidObject bid : bids) {
+		for (BuildUserFeatures.BidObject bid : bids) {
 			int bidder = bid.bidderId;
 //			String bidderType = bid.bidderId.userType;
 			String bidderType = "";
@@ -124,7 +149,7 @@ public class BuildShillScore {
 		
 		// record the bidders for each auction
 		Set<Integer> bidders = new HashSet<>();
-		for (BidObject bid : bids) {
+		for (BuildUserFeatures.BidObject bid : bids) {
 			bidders.add(bid.bidderId);
 		}
 		auctionBidders.put(auction, new ArrayList<Integer>(bidders));
@@ -154,11 +179,11 @@ public class BuildShillScore {
 	
 	// Record the number of losses by the bidder for each seller.
 	// Alpha is different for each bidder/seller pair.
-	private static void alphaOp(Map<Integer, ShillScore> shillScores, int sellerId, List<BidObject> bids) {
+	private static void alphaOp(Map<Integer, ShillScore> shillScores, int sellerId, List<BuildUserFeatures.BidObject> bids) {
 		Set<Integer> seen = new HashSet<>();
 		seen.add(bids.get(bids.size() - 1).bidderId); // add the winner to the seen list, so it won't get a value for this auction
 		for (int i = 0; i < bids.size(); i++) {
-			BidObject bid = bids.get(i);
+			BuildUserFeatures.BidObject bid = bids.get(i);
 			if (!seen.add(bid.bidderId)) // already seen this user
 				continue;
 			ShillScore ss = shillScores.get(bid.bidderId);
@@ -172,10 +197,10 @@ public class BuildShillScore {
 	}
 	
 	// bid proportion
-	private static void betaOp(Map<Integer, ShillScore> shillScores, int sellerId, List<BidObject> bids) {
+	private static void betaOp(Map<Integer, ShillScore> shillScores, int sellerId, List<BuildUserFeatures.BidObject> bids) {
 		// count the number of bids by each bidder
 		Map<Integer, Integer> bidCounts = new HashMap<>(); // Map<bidderId, count>
-		for (BidObject bid : bids) {
+		for (BuildUserFeatures.BidObject bid : bids) {
 			Integer count = bidCounts.get(bid.bidderId);
 			if (count == null)
 				bidCounts.put(bid.bidderId, 1);
@@ -197,9 +222,9 @@ public class BuildShillScore {
 	}
 	
 	// win-loss counts
-	private static void gammaOp(Map<Integer, ShillScore> shillScores, List<BidObject> bids) {
+	private static void gammaOp(Map<Integer, ShillScore> shillScores, List<BuildUserFeatures.BidObject> bids) {
 		Set<Integer> seen = new HashSet<>();
-		for (BidObject bid : bids) {
+		for (BuildUserFeatures.BidObject bid : bids) {
 			seen.add(bid.bidderId);
 		}
 		int winnerId = bids.get(bids.size() - 1).bidderId;
@@ -213,7 +238,7 @@ public class BuildShillScore {
 	}
 	
 	// inter bid time
-	private static void deltaOp(Map<Integer, ShillScore> shillScores, List<BidObject> bids) {
+	private static void deltaOp(Map<Integer, ShillScore> shillScores, List<BuildUserFeatures.BidObject> bids) {
 		Map<Integer, IncrementalMean> timeDiffs = new HashMap<>(); // Map<bidderId, avg time diff>
 		
 		// find the inter-bid times
@@ -251,7 +276,7 @@ public class BuildShillScore {
 	}
 	
 	// inter bid increment
-	private static void epsilonOp(Map<Integer, ShillScore> shillScores, List<BidObject> bids) {
+	private static void epsilonOp(Map<Integer, ShillScore> shillScores, List<BuildUserFeatures.BidObject> bids) {
 		Map<Integer, IncrementalMean> increments = new HashMap<>();
 		
 		int previousAmount = bids.get(0).amount; // first bid's amount difference is defined as 0
@@ -287,12 +312,12 @@ public class BuildShillScore {
 	}
 	
 	// first bid time
-	private static void zetaOp(Map<Integer, ShillScore> shillScores, Date endTime, List<BidObject> bids) {
+	private static void zetaOp(Map<Integer, ShillScore> shillScores, Date endTime, List<BuildUserFeatures.BidObject> bids) {
 		Map<Integer, Long> firstBidTimes = new HashMap<>();
 		
 		// traverse bids in reverse order. firstBidTimes will store the oldest, i.e., first bids for each user.
 		for (int i = bids.size() - 1; i >= 0; i--) {
-			BidObject bid = bids.get(i);
+			BuildUserFeatures.BidObject bid = bids.get(i);
 			firstBidTimes.put(bid.bidderId, endTime.getTime() - bid.time.getTime());
 		}
 		
@@ -319,24 +344,6 @@ public class BuildShillScore {
 		if (value == min && min == max)
 			return 0;
 		return (value - min)/(max - min);
-	}
-	
-	public static class BidObject {
-		public final int bidderId;
-		public final int listingId;
-		public final Date time;
-		public final int amount;
-		public BidObject(int bidderId, int listingId, Date time, int amount) {
-			this.bidderId = bidderId;
-			this.listingId = listingId;
-			this.time = time;
-			this.amount = amount;
-		}
-		
-		@Override
-		public String toString() {
-			return "(user:" + bidderId + ", listingId: " + listingId + ", time: " + time + ", amount: " + amount + ")";
-		}
 	}
 	
 //	public static class User {

@@ -23,6 +23,6 @@ public interface Strategy {
 	 * @param auction
 	 * @return
 	 */
-	long bidAmount(Auction auction);
+	int bidAmount(Auction auction);
 	
 }

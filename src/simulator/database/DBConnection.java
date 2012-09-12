@@ -4,10 +4,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class DatabaseConnection {
+public class DBConnection {
 
-	public static Connection getConnection(String database) throws SQLException {
-		Connection connection = null;
+	public static Connection getConnection(String database) {
 		try {
 			// Load the JDBC driver
 			String driverName = "com.mysql.jdbc.Driver"; // MySQL MM JDBC driver
@@ -18,19 +17,21 @@ public class DatabaseConnection {
 			String url = "jdbc:mysql://" + serverName + "/" + database; // a JDBC url
 			String username = "root";
 			String password = "triangle";
-			connection = DriverManager.getConnection(url, username, password);
+			Connection connection = DriverManager.getConnection(url, username, password);
+			return connection;
 
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
-		return connection;
 	}
 
-	public static Connection getTrademeConnection() throws SQLException {
+	public static Connection getTrademeConnection() {
 		return getConnection("trademe");
 	}
 
-	public static Connection getSimulationConnection() throws SQLException {
+	public static Connection getSimulationConnection() {
 		return getConnection("auction_simulation");
 	}
 

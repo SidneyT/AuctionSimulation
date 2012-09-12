@@ -3,6 +3,7 @@ package simulator.database;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,13 +20,23 @@ public class SaveToDatabase implements SaveObjects {
 
 	private final Connection conn;
 	public SaveToDatabase() {
-		final Connection tempConn;
+		conn = DBConnection.getSimulationConnection();
+
+		emptyTables(conn); // first empty everything else.
+	}
+	
+	private void emptyTables(Connection conn) {
 		try {
-			tempConn = DatabaseConnection.getSimulationConnection();
+			Statement stmt = conn.createStatement();
+			stmt.execute("TRUNCATE feedback;");
+			stmt.execute("TRUNCATE bids;");
+			stmt.execute("TRUNCATE auctions;");
+			stmt.execute("TRUNCATE users;");
+			stmt.execute("TRUNCATE itemtypes;");
+			stmt.execute("TRUNCATE categories;");
 		} catch (SQLException e) {
-			throw new RuntimeException("Can't get connection", e);
+			e.printStackTrace();
 		}
-		conn = tempConn;
 	}
 	
 	PreparedStatement saveBidPstmt(Connection conn) throws SQLException {

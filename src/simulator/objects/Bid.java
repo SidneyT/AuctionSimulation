@@ -14,9 +14,9 @@ public class Bid implements Comparable<Bid> {
 	private int id;
 	private long time;
 	private final SimpleUser bidder;
-	private final long price;
+	private final int price;
 	
-	public Bid(SimpleUser bidder, long price) {
+	public Bid(SimpleUser bidder, int price) {
 		this.id = -1;
 		this.bidder = bidder;
 		this.price = price;
@@ -43,7 +43,7 @@ public class Bid implements Comparable<Bid> {
 		return bidder;
 	}
 
-	public long getPrice() {
+	public int getPrice() {
 		return price;
 	}
 

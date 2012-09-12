@@ -22,7 +22,7 @@ public class Auction {
 	private final SimpleUser seller;
 	private final long startPrice;
 	private final long reservePrice;
-	private long currentPrice;
+	private int currentPrice;
 	private final long duration;
 	private final Item item;
 	private final List<Bid> bidHistory;
@@ -43,7 +43,7 @@ public class Auction {
 //		this(seller, category, item, duration, startPrice, reservePrice, 1);
 //	}
 
-	public Auction(SimpleUser seller, Item item, long duration, long startPrice,
+	public Auction(SimpleUser seller, Item item, long duration, int startPrice,
 			long reservePrice, double popluarity) {
 
 		if (!argumentsValid(seller, item, duration, startPrice, reservePrice)) {
@@ -243,7 +243,7 @@ public class Auction {
 		return (double)(currentTime - this.getStartTime()) / (this.getEndTime() - this.getStartTime());
 	}
 	
-	public long minimumBid() {
+	public int minimumBid() {
 		if (this.bidCount == 0)
 			return this.currentPrice;
 		else 

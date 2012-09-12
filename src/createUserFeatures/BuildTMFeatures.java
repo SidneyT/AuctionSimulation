@@ -16,11 +16,11 @@ import java.util.Set;
 
 import org.apache.commons.math3.util.Pair;
 
+import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.features.Feature;
 import createUserFeatures.features.Features;
 
-import shillScore.BuildShillScore.BidObject;
-import simulator.database.DatabaseConnection;
+import simulator.database.DBConnection;
 
 /**
  *	Builds UserFeature object using scraped TradeMe data. 
@@ -94,7 +94,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 		
 		Set<Integer> idsInCluster = new HashSet<Integer>();
 		try {
-			Connection conn = DatabaseConnection.getTrademeConnection();
+			Connection conn = DBConnection.getTrademeConnection();
 			PreparedStatement pstmt = conn.prepareStatement("SELECT userId FROM cluster WHERE cluster=? AND algorithm='SimpleKMeans'");
 			pstmt.setInt(1, clusterId);
 			ResultSet rs = pstmt.executeQuery();
@@ -130,7 +130,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 	 */
 	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
 		try {
-			Connection conn = DatabaseConnection.getTrademeConnection();
+			Connection conn = DBConnection.getTrademeConnection();
 			
 			PreparedStatement bigQuery = conn.prepareStatement(query);
 			ResultSet bigRS = bigQuery.executeQuery();
@@ -139,7 +139,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 			TMAuction ao = null;
 			
 			// split group the bids by auctions, and put them into a list
-			List<BidObject> bidList = new ArrayList<BidObject>();
+			List<BuildUserFeatures.BidObject> bidList = new ArrayList<BuildUserFeatures.BidObject>();
 			while (bigRS.next()) {
 				int currentListingId = bigRS.getInt("listingId");
 				if (lastListingId != currentListingId) { // new auction
@@ -152,7 +152,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 					// record the auction information for the new row
 					ao = new TMAuction(currentListingId, bigRS.getInt("winnerId"), bigRS.getInt("sellerId"), bigRS.getTimestamp("endTime"), simpleCategory(bigRS.getString("category")));
 				}
-				bidList.add(new BidObject(bigRS.getInt("bidderId"), currentListingId, bigRS.getTimestamp("time"), bigRS.getInt("amount")));
+				bidList.add(new BuildUserFeatures.BidObject(bigRS.getInt("bidderId"), currentListingId, bigRS.getTimestamp("time"), bigRS.getInt("amount")));
 			}
 			processAuction(ao, bidList); // process the bidList for the last remaining auction
 			
@@ -184,17 +184,17 @@ public class BuildTMFeatures extends BuildUserFeatures{
 			}
 		}
 		
-		public Iterator<Pair<TMAuction, List<BidObject>>> iterator() {
-			return new Iterator<Pair<TMAuction,List<BidObject>>>() {
+		public Iterator<Pair<TMAuction, List<BuildUserFeatures.BidObject>>> iterator() {
+			return new Iterator<Pair<TMAuction,List<BuildUserFeatures.BidObject>>>() {
 				@Override
 				public boolean hasNext() {
 					return hasNext;
 				}
 
 				@Override
-				public Pair<TMAuction, List<BidObject>> next() {
+				public Pair<TMAuction, List<BuildUserFeatures.BidObject>> next() {
 					try {
-						List<BidObject> bids = new ArrayList<>();
+						List<BuildUserFeatures.BidObject> bids = new ArrayList<>();
 						TMAuction auction = null;
 							while (rs.next()) {
 								int nextId = rs.getInt("listingId");
@@ -209,7 +209,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 											BuildTMFeatures.simpleCategory(rs.getString("category"))
 										);
 								}
-								BidObject bid = new BidObject(rs.getInt("bidderId"), 
+								BuildUserFeatures.BidObject bid = new BuildUserFeatures.BidObject(rs.getInt("bidderId"), 
 										rs.getInt("listingId"), 
 										BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), 
 										rs.getInt("bidAmount"));

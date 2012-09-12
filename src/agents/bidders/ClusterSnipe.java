@@ -60,7 +60,7 @@ public class ClusterSnipe extends ClusterBidder {
 				if (!alreadyBidOn.contains(auction)) {
 					// if item is under 50% value, made a bid greater than the minimum
 					if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.6) {
-						long bidAmount = (long) (auction.trueValue() * 0.80);
+						int bidAmount = (int) (auction.trueValue() * 0.80);
 						if (bidAmount < auction.minimumBid())
 							bidAmount = auction.minimumBid();
 						makeBid(auction, bidAmount);
@@ -106,7 +106,7 @@ public class ClusterSnipe extends ClusterBidder {
 //		if (makeRebidAuctions.contains(auction) && auction.getWinner() != this) {
 //			makeRebidAuctions.remove(auction);
 //			if (r.nextDouble() < likelihoodToRebid(auction.getBidCount())) {
-			long bidAmount = calculateBidAmount(auction);
+			int bidAmount = calculateBidAmount(auction);
 			
 //			if (r.nextDouble() < likelihoodOfRebid * valuationEffect(bidAmount, privateValuationProportion)) {
 			double maximumBid = privateValuationProportion * auction.getItem().getType().getTrueValuation();
@@ -175,8 +175,8 @@ public class ClusterSnipe extends ClusterBidder {
 	}
 
 	@Override
-	protected long calculateBidAmount(Auction auction) {
-		long bidAmount = auction.minimumBid();
+	protected int calculateBidAmount(Auction auction) {
+		int bidAmount = auction.minimumBid();
 		
 		if (r.nextDouble() < pIncreaseIncrement) {
 //			bidAmount += Util.minIncrement(auction.getCurrentPrice()) * 3;

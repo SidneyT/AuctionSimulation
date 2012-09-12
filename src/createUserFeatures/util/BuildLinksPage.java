@@ -8,7 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import simulator.database.DatabaseConnection;
+import simulator.database.DBConnection;
 
 
 
@@ -19,7 +19,7 @@ public class BuildLinksPage {
 	
 	private void buildFeedbackPageLinks() {
 		try {
-			Connection conn = DatabaseConnection.getTrademeConnection();
+			Connection conn = DBConnection.getTrademeConnection();
 			PreparedStatement pstmt = conn.prepareStatement("SELECT DISTINCT bidderId FROM bids WHERE NOT EXISTS (SELECT userId FROM users WHERE bidderId=userId);");
 			ResultSet rs = pstmt.executeQuery();
 			BufferedWriter bw = new BufferedWriter(new FileWriter("C:/links.html"));

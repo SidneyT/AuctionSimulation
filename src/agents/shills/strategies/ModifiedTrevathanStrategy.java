@@ -52,8 +52,8 @@ public class ModifiedTrevathanStrategy implements Strategy {
 	/**
 	 * Bid the minimum amount possible.
 	 */
-	public long bidAmount(Auction auction) {
-		long amount = (long) ((1 - auction.proportionOfTrueValuation()/0.7) * 0.1 * auction.trueValue());
+	public int bidAmount(Auction auction) {
+		int amount = (int) ((1 - auction.proportionOfTrueValuation()/0.7) * 0.1 * auction.trueValue());
 		return Math.max(auction.minimumBid(), amount);
 	}
 	

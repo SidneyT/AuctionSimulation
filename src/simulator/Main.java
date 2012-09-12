@@ -1,8 +1,5 @@
 package simulator;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +22,6 @@ import simulator.buffers.TimeMessage;
 import simulator.categories.CategoryRecord;
 import simulator.categories.ItemType;
 import simulator.categories.MockCategories;
-import simulator.database.DatabaseConnection;
 import simulator.database.SaveToDatabase;
 import simulator.database.SaveObjects;
 import simulator.objects.Auction;
@@ -56,31 +52,19 @@ public class Main {
 	 * Runs the simulator
 	 */
 	public static void run(AgentAdder... userAdder) {
-		emptyTables();
+		run(new SaveToDatabase(), userAdder);
+	}
+
+	public static void run(SaveObjects saveObjects, AgentAdder... userAdder) {
 		try {
-			go(userAdder);
+			go(saveObjects, userAdder);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 //		CalculateStats.calculateStats();
 	}
 
-	public static void emptyTables() {
-		try {
-			Connection conn = DatabaseConnection.getSimulationConnection();
-			Statement stmt = conn.createStatement();
-			stmt.execute("TRUNCATE feedback;");
-			stmt.execute("TRUNCATE bids;");
-			stmt.execute("TRUNCATE auctions;");
-			stmt.execute("TRUNCATE users;");
-			stmt.execute("TRUNCATE itemtypes;");
-			stmt.execute("TRUNCATE categories;");
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private static void go(AgentAdder... agentAdder) throws InterruptedException {
+	private static void go(SaveObjects saveObjects, AgentAdder... agentAdder) throws InterruptedException {
 
 		// create buffers
 		final TimeMessage timeMessage = new TimeMessage();
@@ -94,8 +78,6 @@ public class Main {
 		final PaymentSender ps = new PaymentSender();
 		final ItemSender is = new ItemSender();
 
-		SaveObjects saveObjects = new SaveToDatabase();
-		
 		// create item types
 		final CategoryRecord cr = MockCategories.createCategories();
 		saveObjects.saveCategories(cr.getCategories());

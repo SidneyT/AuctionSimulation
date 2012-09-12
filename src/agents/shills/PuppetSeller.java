@@ -38,7 +38,7 @@ public class PuppetSeller extends SimpleUser {
 
 	protected Auction submitAuction() {
 		Item item = new Item(ItemType.pickType(items, r.nextDouble()), "item" + (int) (r.nextDouble() * 100000));
-		Auction auction = new Auction(this, item, AuctionLength.SEVEN_DAYS.timeUnits(), (long) getPrice(), 0, 1);
+		Auction auction = new Auction(this, item, AuctionLength.SEVEN_DAYS.timeUnits(), (int) getPrice(), 0, 1);
 		this.bh.getAuctionMessagesToAh().put(auction);
 		
 		logger.info(this + " submitting shill auction " + auction + " at " + bh.getTimeMessage().getTime());

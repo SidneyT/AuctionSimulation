@@ -312,7 +312,7 @@ public abstract class ClusterBidder extends SimpleUser {
 //		assert(newAuctionsUnprocessed.contains(auction) == false);
 	}
 	
-	protected void makeBid(Auction auction, long bidAmount) {
+	protected void makeBid(Auction auction, int bidAmount) {
 		if (auction.getEndTime() < this.bh.getTimeMessage().getTime()) // don't bid if auction finished
 			return;
 		if (auction.getWinner() == this) // don't bid if already winning
@@ -331,8 +331,8 @@ public abstract class ClusterBidder extends SimpleUser {
 		logger.debug(this + " is making bid now at time " + this.bh.getTimeMessage().getTime() + " for " + auction + ".");
 	}
 
-	protected long calculateBidAmount(Auction auction) {
-		long bidAmount = auction.minimumBid();
+	protected int calculateBidAmount(Auction auction) {
+		int bidAmount = auction.minimumBid();
 		
 		if (r.nextDouble() < pIncreaseIncrement) {
 //			bidAmount += Util.minIncrement(auction.getCurrentPrice()) * 3;
@@ -353,8 +353,8 @@ public abstract class ClusterBidder extends SimpleUser {
 //		
 //		return new Bid(this, bidAmount);
 //	}
-	private Bid createBid(Auction auction, long amount) {
-		long min = auction.minimumBid();
+	private Bid createBid(Auction auction, int amount) {
+		int min = auction.minimumBid();
 		if (amount < min) {
 			logger.warn("The bid of " + amount + " by " + this + " is less than the minimum allowed for " + auction + ". Increasing to minimum.", new Throwable());
 			amount = min;

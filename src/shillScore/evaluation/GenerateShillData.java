@@ -1,6 +1,7 @@
 package shillScore.evaluation;
 
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 
 import createUserFeatures.BuildSimFeatures;
+import createUserFeatures.SimAuctionDBIterator;
+import createUserFeatures.SimAuctionIterator;
+import createUserFeatures.SimAuctionMemoryIterator;
 import createUserFeatures.UserFeatures;
 import createUserFeatures.features.Features;
 
@@ -32,6 +36,8 @@ import shillScore.BuildShillScore.ShillScoreInfo;
 import shillScore.CollusiveShillScore.ScoreType;
 import simulator.AgentAdder;
 import simulator.Main;
+import simulator.database.DBConnection;
+import simulator.database.KeepObjectsInMemory;
 
 public class GenerateShillData {
 
@@ -68,16 +74,19 @@ public class GenerateShillData {
 	}
 	
 	private static void run(AgentAdder adder, int numberOfRuns, int[]... weightSets) {
-		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
+		for (int runNumber = 443; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("starting run " + runNumber);
-			// run the simulator with the adder
-			Main.run(adder);
 
-			writeSSandPercentiles(adder, runNumber, weightSets);
-			
-			// write out user features too.
 			BuildSimFeatures buildFeatures = new BuildSimFeatures(true);
-			Map<Integer, UserFeatures> features = buildFeatures.build();
+			KeepObjectsInMemory objInMem = new KeepObjectsInMemory();
+			Main.run(objInMem, adder);
+			Map<Integer, UserFeatures> features = buildFeatures.build(new SimAuctionMemoryIterator(objInMem, true));
+			
+//			BuildSimFeatures buildFeatures = new BuildSimFeatures(true);
+//			Main.run(adder);
+//			writeSSandPercentiles(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true), adder, runNumber, weightSets);
+//			Map<Integer, UserFeatures> features = buildFeatures.build(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true));
+
 			BuildSimFeatures.writeToFile(features.values(), Features.defaultFeatures, Paths.get("single_feature_shillvsnormal", "synUserFeatures_" + Features.fileLabels(Features.defaultFeatures) + "_" + runNumber + ".csv"));
 		}
 	}
@@ -89,11 +98,11 @@ public class GenerateShillData {
 	 * @param runNumber
 	 * @param weightSets
 	 */
-	private static void writeSSandPercentiles(AgentAdder adder, int runNumber, int[]... weightSets) {
+	private static void writeSSandPercentiles(SimAuctionIterator simAuctionIterator, AgentAdder adder, int runNumber, int[]... weightSets) {
 		String runLabel = adder.toString() + "." + runNumber;
 
 		// build shillScores
-		ShillScoreInfo ssi = BuildShillScore.build();
+		ShillScoreInfo ssi = BuildShillScore.build(simAuctionIterator);
 		
 		// write out shill scores
 		WriteScores.writeShillScores(ssi.shillScores, ssi.auctionCounts, runLabel, weightSets);

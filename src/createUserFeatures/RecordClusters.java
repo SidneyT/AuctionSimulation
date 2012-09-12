@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import simulator.database.DatabaseConnection;
+import simulator.database.DBConnection;
 
 
 public class RecordClusters {
@@ -47,7 +47,7 @@ public class RecordClusters {
 
 	Connection conn;
 	private void record(File idFile, File clusterFile, String algName) throws SQLException {
-		conn = DatabaseConnection.getTrademeConnection();
+		conn = DBConnection.getTrademeConnection();
 		List<Integer> userId = getUserIds(idFile);
 		List<Integer> clusters = getClusters(clusterFile);
 		
@@ -64,7 +64,7 @@ public class RecordClusters {
 	}
 	
 	private void recordReclustering(File idFile, File clusterFile, String algName, int bigCluster) throws SQLException {
-		conn = DatabaseConnection.getTrademeConnection();
+		conn = DBConnection.getTrademeConnection();
 		List<Integer> userId = getUserIds(idFile);
 		List<Integer> clusters = getClusters(clusterFile);
 		

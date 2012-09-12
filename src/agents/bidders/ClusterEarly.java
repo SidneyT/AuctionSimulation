@@ -60,7 +60,7 @@ public class ClusterEarly extends ClusterBidder {
 					if (r.nextDouble() < valuationEffect(auction.getCurrentPrice(), privateValuationProportion * auction.getCurrentPrice())) {
 						// if item is under 50% value, made a bid greater than the minimum
 						if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.7) {
-							long bidAmount = (long) (auction.trueValue() * 0.6);
+							int bidAmount = (int) (auction.trueValue() * 0.6);
 							if (bidAmount < auction.minimumBid())
 								bidAmount = auction.minimumBid();
 							makeBid(auction, bidAmount);
@@ -97,7 +97,7 @@ public class ClusterEarly extends ClusterBidder {
 //		if (makeRebidAuctions.contains(auction) && auction.getWinner() != this) {
 //			makeRebidAuctions.remove(auction);
 //			if (r.nextDouble() < likelihoodToRebid(auction.getBidCount())) {
-			long bidAmount = calculateBidAmount(auction);
+			int bidAmount = calculateBidAmount(auction);
 			
 //			if (r.nextDouble() < likelihoodOfRebid * valuationEffect(bidAmount, privateValuationProportion)) {
 			double maximumBid = privateValuationProportion * auction.trueValue();

@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import simulator.database.DatabaseConnection;
+import simulator.database.DBConnection;
 
 
 public class PrintQueryResults {
@@ -22,7 +22,7 @@ public class PrintQueryResults {
 	
 	private static void printColumn(String query, Path path) {
 		try {
-			Connection conn = DatabaseConnection.getTrademeConnection();
+			Connection conn = DBConnection.getTrademeConnection();
 			
 			Statement stmt = conn.createStatement();
 			

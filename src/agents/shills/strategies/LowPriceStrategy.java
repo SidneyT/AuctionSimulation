@@ -23,7 +23,7 @@ public class LowPriceStrategy implements Strategy {
 	}
 	
 	@Override
-	public long bidAmount(Auction auction) {
+	public int bidAmount(Auction auction) {
 		return auction.minimumBid();
 	}
 

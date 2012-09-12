@@ -105,7 +105,7 @@ public class TimedSeller extends SimpleUser {
 			popularity = 0.7;
 		else
 			popularity = 1;
-		Auction auction = new Auction(this, newItem, 2016, (long) getPrice(), 0, popularity);
+		Auction auction = new Auction(this, newItem, 2016, (int) getPrice(), 0, popularity);
 		logger.debug(this + " submitting auction " + auction + " at " + this.bh.getTimeMessage().getTime() + ".");
 		this.bh.getAuctionMessagesToAh().put(auction);
 	}

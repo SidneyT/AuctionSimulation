@@ -18,6 +18,7 @@ import util.IncrementalSD;
 public class UserFeatures {
 	int userId;
 	int pos, neg; // reputation
+	String userType;
 
 	int bidCount = 0; // number of bids made
 	double avgBid; // average value of bids

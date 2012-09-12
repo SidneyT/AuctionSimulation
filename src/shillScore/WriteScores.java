@@ -86,13 +86,13 @@ public class WriteScores {
 	 * @param suffix
 	 */
 	public static void writeShillScoresForAuctions(Map<Integer, ShillScore> shillScores,
-			Map<BuildUserFeatures.Auction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, String suffix) {
+			Map<BuildUserFeatures.AuctionObject, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, String suffix) {
 		
 		try (BufferedWriter bw1 = Files.newBufferedWriter(Paths.get("shillingResults/AuctionShillScoresForShillers_" + suffix + ".csv"), Charset.defaultCharset());
 				BufferedWriter bw2 = Files.newBufferedWriter(Paths.get("shillingResults/AuctionShillScoresForNormal_" + suffix + ".csv"), Charset.defaultCharset())) {
 			
-			for (Entry<BuildUserFeatures.Auction, List<Integer>> auctionBidderEntry : auctionBidders.entrySet()) {
-				BuildUserFeatures.Auction auction = auctionBidderEntry.getKey();
+			for (Entry<BuildUserFeatures.AuctionObject, List<Integer>> auctionBidderEntry : auctionBidders.entrySet()) {
+				BuildUserFeatures.AuctionObject auction = auctionBidderEntry.getKey();
 				List<Integer> bidders = auctionBidderEntry.getValue();
 				
 //				if (auction.sellerId.userType.toLowerCase().contains("shill")) {

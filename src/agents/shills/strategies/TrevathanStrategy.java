@@ -45,7 +45,7 @@ public class TrevathanStrategy implements Strategy {
 	/**
 	 * Bid the minimum amount possible.
 	 */
-	public long bidAmount(Auction auction) {
+	public int bidAmount(Auction auction) {
 		return auction.minimumBid();
 	}
 	

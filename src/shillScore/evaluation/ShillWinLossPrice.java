@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.sql.CallableStatement;
 import java.util.Date;
 
-import simulator.database.DatabaseConnection;
+import simulator.database.DBConnection;
 import util.IncrementalMean;
 
 
@@ -68,7 +68,7 @@ public class ShillWinLossPrice {
 	 */
 	private static IncrementalMean findShillWinAuctions() throws SQLException {
 		IncrementalMean incAvg = new IncrementalMean();
-		Connection conn = DatabaseConnection.getSimulationConnection();
+		Connection conn = DBConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice " +  
 				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +  
 				"WHERE seller.userType LIKE '%Puppet%' AND bidder.userType LIKE '%Puppet%' GROUP BY a.listingId;");
@@ -90,7 +90,7 @@ public class ShillWinLossPrice {
 	 */
 	private static IncrementalMean findShillLossAuctions() throws SQLException {
 		IncrementalMean incAvg = new IncrementalMean();
-		Connection conn = DatabaseConnection.getSimulationConnection();
+		Connection conn = DBConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice " +  
 				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +  
 				"WHERE seller.userType LIKE '%Puppet%' AND bidder.userType NOT LIKE '%Puppet%' GROUP BY a.listingId;");
@@ -108,7 +108,7 @@ public class ShillWinLossPrice {
 	
 	private static IncrementalMean findNonShillAuctionsWinByShills() throws SQLException {
 		IncrementalMean incAvg = new IncrementalMean();
-		Connection conn = DatabaseConnection.getSimulationConnection();
+		Connection conn = DBConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice, seller.userType as sellerType, bidder.userType as winnerType " + 
 				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +
 				"WHERE seller.userType NOT LIKE '%Puppet%' AND bidder.userType LIKE '%Puppet%' GROUP BY a.listingId;");
@@ -130,7 +130,7 @@ public class ShillWinLossPrice {
 	 */
 	private static IncrementalMean findNonShillAuctionsWinsByNonShills() throws SQLException {
 		IncrementalMean incAvg = new IncrementalMean();
-		Connection conn = DatabaseConnection.getSimulationConnection();
+		Connection conn = DBConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice, seller.userType as sellerType, bidder.userType as winnerType " +
 				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +
 				"WHERE seller.userType NOT LIKE '%Puppet%' AND bidder.userType NOT LIKE '%Puppet%' GROUP BY a.listingId;");

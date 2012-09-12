@@ -2,7 +2,11 @@ package simulator.database;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import com.google.common.collect.ArrayListMultimap;
 
 import simulator.categories.CategoryNode;
 import simulator.categories.ItemType;
@@ -11,7 +15,7 @@ import simulator.objects.Bid;
 import simulator.objects.Feedback;
 import agents.SimpleUser;
 
-public class KeepObjectsInMemory implements SaveObjects {
+public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
 	public KeepObjectsInMemory() {
 	}
 
@@ -30,14 +34,14 @@ public class KeepObjectsInMemory implements SaveObjects {
 		this.types = types;
 	}
 
-	private List<Auction> expiredStore = new ArrayList<Auction>();
+	private Set<Auction> expiredStore = new HashSet<Auction>();
 	public void saveExpiredAuction(Auction auction, boolean sold) {
 		expiredStore.add(auction);
 	}
 
-	private  List<Object[]> bidStore = new ArrayList<Object[]>();
+	private ArrayListMultimap<Auction, Bid> bidStore = ArrayListMultimap.create();
 	public void saveBid(Auction auction, Bid bid) {
-		bidStore.add(new Object[] { auction, bid });
+		bidStore.put(auction, bid);
 	}
 
 	private List<Feedback> feedbackStore = new ArrayList<>();
@@ -48,26 +52,50 @@ public class KeepObjectsInMemory implements SaveObjects {
 	public void cleanup() {
 	}
 
+	/* (non-Javadoc)
+	 * @see simulator.database.SavedObjects#getUserStore()
+	 */
+	@Override
 	public List<SimpleUser> getUserStore() {
 		return userStore;
 	}
 
+	/* (non-Javadoc)
+	 * @see simulator.database.SavedObjects#getCategories()
+	 */
+	@Override
 	public Collection<CategoryNode> getCategories() {
 		return categories;
 	}
 
+	/* (non-Javadoc)
+	 * @see simulator.database.SavedObjects#getTypes()
+	 */
+	@Override
 	public Collection<ItemType> getTypes() {
 		return types;
 	}
 
-	public List<Auction> getExpiredStore() {
+	/* (non-Javadoc)
+	 * @see simulator.database.SavedObjects#getExpiredStore()
+	 */
+	@Override
+	public Set<Auction> getExpiredStore() {
 		return expiredStore;
 	}
 
-	public List<Object[]> getBidStore() {
+	/* (non-Javadoc)
+	 * @see simulator.database.SavedObjects#getBidStore()
+	 */
+	@Override
+	public ArrayListMultimap<Auction, Bid> getBidStore() {
 		return bidStore;
 	}
 
+	/* (non-Javadoc)
+	 * @see simulator.database.SavedObjects#getFeedbackStore()
+	 */
+	@Override
 	public List<Feedback> getFeedbackStore() {
 		return feedbackStore;
 	}
