@@ -1,6 +1,4 @@
-package createUserFeatures.features;
-
-import createUserFeatures.UserFeatures;
+package createUserFeatures;
 
 public interface Feature {
 	/**

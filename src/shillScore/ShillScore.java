@@ -131,8 +131,8 @@ public class ShillScore {
 	 * Get the shill score. The alpha score used is the highest one for all
 	 * bidder/seller pairs, given this bidder.
 	 */
-	public static final int[] DEFAULT_WEIGHTS = {9, 2, 5, 2, 2, 2}; //22
-	public double getShillScore(Map<Integer, Integer> auctionCounts, int[] weights) {
+	public static final double[] DEFAULT_WEIGHTS = {9, 2, 5, 2, 2, 2}; //22
+	public double getShillScore(Map<Integer, Integer> auctionCounts, double[] weights) {
 		double score = 0;
 		score += this.getAlpha(auctionCounts).maxAlpha * weights[0];
 		score += this.getBeta() * weights[1];
@@ -141,7 +141,7 @@ public class ShillScore {
 		score += this.getEpsilon() * weights[4];
 		score += this.getZeta() * weights[5];
 
-		int weightSum = 0;
+		double weightSum = 0;
 		for (int i = 0; i < weights.length; i++) {
 			weightSum += weights[i];
 		}
@@ -152,7 +152,7 @@ public class ShillScore {
 	 * Get the shill score. The alpha score used is the one calculated for
 	 * the sellerId given.
 	 */
-	public double getShillScore(Map<Integer, Integer> auctionCounts, int sellerId, int[] weights) {
+	public double getShillScore(Map<Integer, Integer> auctionCounts, int sellerId, double[] weights) {
 		double score = 0;
 		score += this.getAlpha(auctionCounts, sellerId) * weights[0];
 		score += this.getBeta() * weights[1];

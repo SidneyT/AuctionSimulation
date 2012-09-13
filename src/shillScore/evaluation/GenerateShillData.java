@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 import createUserFeatures.BuildSimFeatures;
+import createUserFeatures.Features;
 import createUserFeatures.SimAuctionDBIterator;
 import createUserFeatures.SimAuctionIterator;
 import createUserFeatures.SimAuctionMemoryIterator;
 import createUserFeatures.UserFeatures;
-import createUserFeatures.features.Features;
 
 import agents.shills.Hybrid;
 import agents.shills.LowBidShillPair;
@@ -61,8 +61,9 @@ public class GenerateShillData {
 
 		int numberOfRuns = 1000;
 		
-//		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new int[]{1,1,1,1,1,1});
-		run(simplePairAdderA, numberOfRuns);
+//		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
+//		run(simplePairAdderA, numberOfRuns);
+		run(simplePairAdderA, numberOfRuns, new double[]{0.0820,0.0049,-0.0319,0.5041,0.2407,0.2003});
 //		writeSSandPercentiles(simplePairAdderB, numberOfRuns);
 //		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
 		
@@ -73,21 +74,25 @@ public class GenerateShillData {
 //		collusiveShillPairMultipleRuns(nonAltHybridA, numberOfRuns);
 	}
 	
-	private static void run(AgentAdder adder, int numberOfRuns, int[]... weightSets) {
-		for (int runNumber = 443; runNumber < numberOfRuns; runNumber++) {
+	private static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
+		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("starting run " + runNumber);
 
-			BuildSimFeatures buildFeatures = new BuildSimFeatures(true);
-			KeepObjectsInMemory objInMem = new KeepObjectsInMemory();
-			Main.run(objInMem, adder);
-			Map<Integer, UserFeatures> features = buildFeatures.build(new SimAuctionMemoryIterator(objInMem, true));
+//			KeepObjectsInMemory objInMem = new KeepObjectsInMemory();
+//			Main.run(objInMem, adder); // run simulator
+////			Map<Integer, UserFeatures> features = new BuildSimFeatures(true).build(new SimAuctionMemoryIterator(objInMem, true)); // build features
+////			BuildSimFeatures.writeToFile(features.values(), // write features
+////					Features.defaultFeatures, 
+////					Paths.get("single_feature_shillvsnormal", "synUserFeatures_" + Features.fileLabels(Features.defaultFeatures) + "_" + runNumber + ".csv")
+////					);
+//			writeSSandPercentiles(new SimAuctionMemoryIterator(objInMem, true), adder, runNumber, weightSets); // build and write shill scores
 			
 //			BuildSimFeatures buildFeatures = new BuildSimFeatures(true);
 //			Main.run(adder);
-//			writeSSandPercentiles(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true), adder, runNumber, weightSets);
+			writeSSandPercentiles(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true), adder, runNumber, weightSets);
 //			Map<Integer, UserFeatures> features = buildFeatures.build(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true));
-
-			BuildSimFeatures.writeToFile(features.values(), Features.defaultFeatures, Paths.get("single_feature_shillvsnormal", "synUserFeatures_" + Features.fileLabels(Features.defaultFeatures) + "_" + runNumber + ".csv"));
+			
+			return;
 		}
 	}
 	
@@ -98,7 +103,7 @@ public class GenerateShillData {
 	 * @param runNumber
 	 * @param weightSets
 	 */
-	private static void writeSSandPercentiles(SimAuctionIterator simAuctionIterator, AgentAdder adder, int runNumber, int[]... weightSets) {
+	private static void writeSSandPercentiles(SimAuctionIterator simAuctionIterator, AgentAdder adder, int runNumber, double[]... weightSets) {
 		String runLabel = adder.toString() + "." + runNumber;
 
 		// build shillScores
@@ -112,11 +117,11 @@ public class GenerateShillData {
 		
 		List<List<Double>> ssPercentiless = new ArrayList<List<Double>>();
 		ssPercentiless.add(splitAndCalculatePercentiles(ssi.shillScores.values(), ssi.auctionCounts, ShillScore.DEFAULT_WEIGHTS));
-		for (int[] weights : weightSets) {// calculate the percentiles for the other weight sets
+		for (double[] weights : weightSets) {// calculate the percentiles for the other weight sets
 			ssPercentiless.add(splitAndCalculatePercentiles(ssi.shillScores.values(), ssi.auctionCounts, weights));
 		}
 		String ssPercentilesRunLabel = runLabel;
-		for (int[] weights : weightSets) {
+		for (double[] weights : weightSets) {
 			ssPercentilesRunLabel += "." + Arrays.toString(weights).replaceAll(", " , "");
 		}
 		
@@ -129,7 +134,7 @@ public class GenerateShillData {
 //		WriteScores.writeShillScoresForAuctions(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, runLabel);
 	}
 
-	public static List<Double> splitAndCalculatePercentiles(Collection<ShillScore> sss, Map<Integer, Integer> auctionCounts, int[] weights) {
+	public static List<Double> splitAndCalculatePercentiles(Collection<ShillScore> sss, Map<Integer, Integer> auctionCounts, double[] weights) {
 		List<Double> shillSS = new ArrayList<>();
 		List<Double> normalSS = new ArrayList<>();
 		

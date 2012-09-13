@@ -7,7 +7,7 @@ import java.util.List;
 
 public class MessagesToUsers {
 
-	private final HashMap<Long, List<Message>> map;
+	private HashMap<Long, List<Message>> map;
 	
 	public MessagesToUsers() {
 		this.map = new HashMap<Long, List<Message>>();

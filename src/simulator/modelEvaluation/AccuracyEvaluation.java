@@ -20,7 +20,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
-import createUserFeatures.features.Feature;
+import createUserFeatures.Feature;
 
 /**
  * Runs a modified version of the evaluation described in Stability-based Clustering Evaluation by Lange et al.

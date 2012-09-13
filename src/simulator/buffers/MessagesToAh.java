@@ -15,7 +15,6 @@ public class MessagesToAh<T> {
 	public void startUsersTurn() {
 		// make a new list to store new messages to AuctionHouse from users	
 		this.synchronizedList.clear();
-		assert(synchronizedList.isEmpty());
 	}
 	
 	public void startAhTurn() {

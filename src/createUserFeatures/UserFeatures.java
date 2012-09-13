@@ -3,7 +3,6 @@ package createUserFeatures;
 import java.util.HashSet;
 import java.util.Set;
 
-import createUserFeatures.features.Features;
 
 import util.IncrementalMean;
 import util.IncrementalSD;
@@ -21,7 +20,6 @@ public class UserFeatures {
 	String userType;
 
 	int bidCount = 0; // number of bids made
-	double avgBid; // average value of bids
 
 	int bidIncCount; // number of bidIncrements made (does not count as incrementing a bid if user is first to bid)
 
@@ -31,6 +29,7 @@ public class UserFeatures {
 
 	int auctionCount; // number of auctions as a bidder
 	int auctionsWon; // number of auctions won
+	private final IncrementalSD avgBid = new IncrementalSD(); // average value of bids
 	private final IncrementalSD bidsPerAuc = new IncrementalSD(); // average number of bids made in all auctions
 	private final IncrementalSD firstBidTime = new IncrementalSD(); // average number of minutes from the end of the auction the FIRST bid in the auction by this user was made
 	private final IncrementalSD lastBidTime = new IncrementalSD(); // average number of minutes from the end of the auction the LAST bid in the auction by this user was made
@@ -91,7 +90,7 @@ public class UserFeatures {
 		return bidCount;
 	}
 
-	public double getAvgBid() {
+	public IncrementalSD getAvgBid() {
 		return avgBid;
 	}
 
@@ -112,14 +111,6 @@ public class UserFeatures {
 
 	public IncrementalSD getLastBidTime() {
 		return lastBidTime;
-	}
-
-	public double[] getBidPeriods() {
-		return bidPeriods;
-	}
-
-	public double[] getBidPeriodsLogBins() {
-		return bidPeriodsLogBins;
 	}
 
 	public IncrementalSD getFirstBidTime() {
@@ -154,54 +145,12 @@ public class UserFeatures {
 		return avgBidProp;
 	}
 
-	public static double getBidinthreshold() {
-		return bidInThreshold;
-	}
-
 	public boolean isComplete() {
 		return pos != -1; // && neg != -1
 	}
 
 	public double numAuctionsBidInLn() {
 		return Math.log(auctionCount);
-	}
-
-	public int rep() {
-		return pos - neg;
-	}
-
-	public double repLn() {
-		if (rep() < 0)
-			return -Math.log1p(-rep());
-		else
-			return Math.log1p(rep());
-		// return Math.log1p(pos) - Math.log1p(neg);
-	}
-
-	public String repOrdinal() {
-		if (neg > pos)
-			return "NEG";
-		else if (pos - neg < 5)
-			return "NEU";
-		else
-			return "POS";
-	}
-
-	public double avgBid() {
-		return avgBid;
-	}
-
-	public double avgBidLn() {
-		return Math.log(avgBid);
-	}
-
-	public double bidAvgOrdinal() {
-		if (avgBid < 800)
-			return 1;
-		else if (avgBid < 2500)
-			return 2;
-		else
-			return 3;
 	}
 
 	public IncrementalMean getAvgBidInc() {
@@ -218,101 +167,8 @@ public class UserFeatures {
 		return Math.log1p(avgBidIncMinusMinInc());
 	}
 
-	public double propWin() {
-		return ((double) auctionsWon) / auctionCount;
-	}
-
-	public int propWinOrdinal() {
-		return discritiseEvenBins(3, Features.PropWin5.value(this));
-	}
-
-	public int avgBidPerAucOrdinal() {
-		if (bidsPerAuc.getAverage() == 1)
-			return 1;
-		else if (bidsPerAuc.getAverage() <= 4)
-			return 2;
-		else
-			return 3;
-	}
-
-	public boolean hasBids() {
-		return bidCount != 0 && auctionCount != 0;
-	}
-
-//			if (selfBidInterval != 0)
-//				sb.append(Math.log1p(selfBidInterval));
-//			// sb.append(selfBidInterval);
-//			sb.append(delimiter);
-//		}
-//		if (featuresToPrint.anyBidInterval15) {
-//			if (anyBidInterval != 0)
-//				sb.append(Math.log1p(anyBidInterval));
-//			// sb.append(anyBidInterval);
-//			sb.append(delimiter);
-//		}
-//		sb.deleteCharAt(sb.length() - delimiter.length());
-//		return sb.toString();
-//	}
-
-	public double bidPropBeg() {
-		return bidPeriods[0];
-	}
-
 	public IncrementalSD getBidTimesMinsBeforeEnd() {
 		return bidTimesMinsBeforeEnd;
-	}
-
-	public double bidPropMid() {
-		return bidPeriods[1];
-	}
-
-	public double bidPropEnd() {
-		return bidPeriods[2];
-	}
-
-	// boolean attributes for whether a user bids in beg, mid or end of an auction
-	private static final double bidInThreshold = 0.3;
-
-	private boolean bidsInBeginning() {
-		return bidPeriods[0] > bidInThreshold;
-	}
-
-	private boolean bidsInMiddle() {
-		return bidPeriods[1] > bidInThreshold;
-	}
-
-	private boolean bidsInEnd() {
-		return bidPeriods[2] > bidInThreshold;
-	}
-
-	private boolean bidAtEnd() {
-		return bidPeriods[2] >= bidPeriods[1] && bidPeriods[2] >= bidPeriods[0];
-	}
-
-	private BidPeriod mostBidPeriod() {
-		if (bidPeriods[2] >= bidPeriods[1]) {
-			if (bidPeriods[2] >= bidPeriods[0])
-				return BidPeriod.END;
-			else
-				return BidPeriod.BEGINNING;
-		} else {
-			if (bidPeriods[1] >= bidPeriods[0])
-				return BidPeriod.MIDDLE;
-			else
-				return BidPeriod.BEGINNING;
-		}
-	}
-
-	// returns values 0-9
-	private int bidTimeBin(double fractionToEnd) {
-		return (int) Math.pow(10, fractionToEnd) - 1;
-	}
-
-	/**
-	 * Returns the bin number the value should be in. Value must be between [0-1).
-	 */
-	private int discritiseEvenBins(int numberOfBins, double value) {
-		return (int) (value * numberOfBins) + 1;
 	}
 
 	public IncrementalSD getAvgFinalBidComparedToMax() {

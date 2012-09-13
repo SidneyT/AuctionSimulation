@@ -17,8 +17,6 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.log4j.Logger;
 
 import createUserFeatures.BuildUserFeatures.BidObject;
-import createUserFeatures.features.Feature;
-import createUserFeatures.features.Features;
 
 import simulator.database.DBConnection;
 

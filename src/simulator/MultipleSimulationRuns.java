@@ -7,9 +7,9 @@ import java.util.Map;
 
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildUserFeatures;
+import createUserFeatures.Feature;
+import createUserFeatures.Features;
 import createUserFeatures.UserFeatures;
-import createUserFeatures.features.Feature;
-import createUserFeatures.features.Features;
 
 /**
  * Runs the simulator multiple times with each run giving multiple files with different feature sets.

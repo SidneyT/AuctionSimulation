@@ -190,8 +190,7 @@ public class ShillVsNormalSS {
 	 * @param auctionCounts
 	 * @param path
 	 */
-	public static void ssRankForShills(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, int[]... reweights) {
-		
+	public static void ssRankForShills(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, double[]... reweights) {		
 		writeRanks(shillScores, auctionBidders, auctionCounts, path, label, ShillScore.DEFAULT_WEIGHTS);
 		for (int i = 0; i < reweights.length; i++) {
 			String weightString = Arrays.toString(reweights[i]).replace(", ", "");
@@ -219,7 +218,7 @@ public class ShillVsNormalSS {
 		}
 	}
 
-	private static void writeRanks(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, int[] weights) {
+	private static void writeRanks(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, double[] weights) {
 		int shillFirstCount = 0;
 		int normalFirstCount = 0;
 		

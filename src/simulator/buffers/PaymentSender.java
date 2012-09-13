@@ -1,7 +1,10 @@
 package simulator.buffers;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,13 +20,13 @@ public class PaymentSender implements Runnable {
 	
 	// Map<Delay finish time, PaymentHolder>
 	private final ConcurrentHashMap<Long, Set<PaymentHolder>> delayedPayments;
-	private final ConcurrentHashMap<SimpleUser, Set<Payment>> readyPayments;
+	private final ConcurrentHashMap<SimpleUser, List<Payment>> readyPayments;
 	
 	public PaymentSender() {
 		this.time = 0;
 		
 		this.delayedPayments = new ConcurrentHashMap<Long, Set<PaymentHolder>>();
-		this.readyPayments = new ConcurrentHashMap<SimpleUser, Set<Payment>>();
+		this.readyPayments = new ConcurrentHashMap<SimpleUser, List<Payment>>();
 	}
 	
 	public void send(long delay, Auction auction, long amount, SimpleUser sender, SimpleUser recipient) {
@@ -40,7 +43,7 @@ public class PaymentSender implements Runnable {
 	/**
 	 * Returns synchronised set of payments made to the user.
 	 */
-	public Set<Payment> receive(SimpleUser recipient) {
+	public Collection<Payment> receive(SimpleUser recipient) {
 		return this.readyPayments.remove(recipient);
 	}
 	
@@ -53,15 +56,16 @@ public class PaymentSender implements Runnable {
 		if (paymentHolderSet != null && !paymentHolderSet.isEmpty()) {
 //			synchronized(paymentHolderSet) {
 				for (PaymentHolder ph : paymentHolderSet) {
-					Set<Payment> paymentSet;
+					List<Payment> payments;
 //					synchronized (this.readyPayments) {
-						paymentSet = this.readyPayments.get(ph.getRecipient());
-						if (paymentSet == null ) {
-							paymentSet = Collections.synchronizedSet(new HashSet<Payment>());
-							this.readyPayments.put(ph.getRecipient(), paymentSet);
+						payments = this.readyPayments.get(ph.getRecipient());
+						if (payments == null ) {
+//							paymentSet = Collections.synchronizedSet(new HashSet<Payment>());
+							payments = new ArrayList<Payment>();
+							this.readyPayments.put(ph.getRecipient(), payments);
 						}
 //					}
-					paymentSet.add(ph.getPayment());
+					payments.add(ph.getPayment());
 				}
 //			}
 		}

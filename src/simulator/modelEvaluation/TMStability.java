@@ -19,8 +19,8 @@ import org.apache.log4j.Logger;
 
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
-import createUserFeatures.features.Feature;
-import createUserFeatures.features.Features;
+import createUserFeatures.Feature;
+import createUserFeatures.Features;
 
 import util.HungarianAlgorithm;
 import weka.classifiers.Classifier;

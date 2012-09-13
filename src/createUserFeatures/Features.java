@@ -1,4 +1,4 @@
-package createUserFeatures.features;
+package createUserFeatures;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -6,9 +6,6 @@ import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
 
-import util.IncrementalMean;
-
-import createUserFeatures.UserFeatures;
 
 /**
  * Per-user features of bidders 
@@ -70,7 +67,7 @@ public enum Features implements Feature {
 	AvgBid3 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgBid();
+			return uf.getAvgBid().getAverage();
 		}
 	},
 	/**
@@ -79,7 +76,13 @@ public enum Features implements Feature {
 	AvgBid3Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log(uf.getAvgBid());
+			return FastMath.log(uf.getAvgBid().getAverage());
+		}
+	},
+	AvgBid3SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return FastMath.log(uf.getAvgBid().getSD());
 		}
 	},
 	/**
@@ -127,6 +130,12 @@ public enum Features implements Feature {
 			return FastMath.log1p(uf.getBidsPerAuc().getAverage());
 		}
 	},
+	BidsPerAuc6SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return FastMath.log1p(uf.getBidsPerAuc().getSD());
+		}
+	},
 	/**
 	 * Fraction of auction time elapsed when auction bids were made, averaged over all bids
 	 */
@@ -134,6 +143,12 @@ public enum Features implements Feature {
 		@Override
 		public double value(UserFeatures uf) {
 			return uf.getBidTimesFractionToEnd().getAverage();
+		}
+	},
+	BidTimesElapsed9SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getBidTimesFractionToEnd().getSD();
 		}
 	},
 	/**
@@ -145,13 +160,24 @@ public enum Features implements Feature {
 			return uf.getAvgBidAmountComparedToMax().getAverage();
 		}
 	},
-	/**
+	AvgBidPropMax10SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getAvgBidAmountComparedToMax().getSD();
+		}
+	},	/**
 	 * Number of bids in auctions as a proportion of the total, averaged over all auctions.
 	 */
 	AvgBidProp11 {
 		@Override
 		public double value(UserFeatures uf) {
 			return uf.getAvgBidProp().getAverage();
+		}
+	},
+	AvgBidProp11SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getAvgBidProp().getSD();
 		}
 	},
 	/**
@@ -164,6 +190,12 @@ public enum Features implements Feature {
 			return uf.getBidTimesMinsBeforeEnd().getAverage();
 		}
 	},
+	BidTimesMinsBeforeEnd12SD { 
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getBidTimesMinsBeforeEnd().getSD();
+		}
+	},
 	/**
 	 * Minutes before the end of the auction the FIRST bid was made, averaged over all auctions, ln-ed.
 	 */
@@ -173,6 +205,12 @@ public enum Features implements Feature {
 			return FastMath.log(uf.getFirstBidTime().getAverage());
 		}
 	},
+	FirstBidTimes13SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return FastMath.log(uf.getFirstBidTime().getSD());
+		}
+	},
 	/**
 	 * Amount of the last bid submitted as a proportion of the highest bid, averaged across all auctions. 
 	 */
@@ -180,6 +218,12 @@ public enum Features implements Feature {
 		@Override
 		public double value(UserFeatures uf) {
 			return uf.getAvgFinalBidComparedToMax().getAverage();
+		}
+	},
+	AvgFinalBidAmountPropMax14SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getAvgFinalBidComparedToMax().getSD();
 		}
 	},
 	/**

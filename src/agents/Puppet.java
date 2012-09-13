@@ -1,5 +1,6 @@
 package agents;
 
+import java.util.Collection;
 import java.util.Set;
 
 
@@ -55,7 +56,7 @@ public class Puppet extends SimpleUser {
 	}
 	
 	@Override
-	protected void gotPaidAction(Set<Payment> paymentSet) {
+	protected void gotPaidAction(Collection<Payment> paymentSet) {
 		master.gotPaidAction(this, paymentSet);
 	}
 

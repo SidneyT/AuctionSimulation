@@ -19,8 +19,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import createUserFeatures.features.Feature;
-import createUserFeatures.features.Features;
 
 import util.IncrementalSD;
 
@@ -88,7 +86,7 @@ public class ClusterAnalysis {
 		clusterToFile(new BuildTMFeatures(), 1356, featureList, featureList, numberOfClusters, suffix);
 	}
 	
-	public static String generateFilename(Class clazz, boolean trim, int seed, List<Feature> featuresToPrintString, int numberOfClusters, String suffix) {
+	public static String generateFilename(Class<? extends BuildUserFeatures> clazz, boolean trim, int seed, List<Feature> featuresToPrintString, int numberOfClusters, String suffix) {
 		String delimiter = "_";
 		if (trim)
 			return clazz.getSimpleName() + delimiter + Features.labels(featuresToPrintString) + delimiter + "t" + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;

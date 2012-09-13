@@ -20,8 +20,6 @@ import agents.SimpleUser;
 
 import com.google.common.collect.ArrayListMultimap;
 
-import createUserFeatures.features.Feature;
-import createUserFeatures.features.Features;
 
 import simulator.objects.Auction;
 import simulator.objects.Bid;
@@ -164,7 +162,7 @@ public abstract class BuildUserFeatures {
 			uf.bidIncCount++;
 		}
 		// update average bid value
-		uf.avgBid = Util.incrementalAvg(uf.avgBid, uf.bidCount, bid);
+		uf.getAvgBid().addNext(bid);
 		// update avgBidComparedToFinal
 		double fractionOfMax = ((double) bid) / maximumBid;
 		uf.getAvgBidAmountComparedToMax().addNext(fractionOfMax);
@@ -331,6 +329,19 @@ public abstract class BuildUserFeatures {
 		}
 	}
 
+	public enum BidPeriod {
+		BEGINNING(0),
+		MIDDLE(1),
+		END(2);
+		private final int i;
+		private BidPeriod(int i) {
+			this.i = i;
+		}
+		public int getI() {
+			return this.i;
+		}
+	}
+	
 	protected static void removeIncompleteUserFeatures(Map<Integer, UserFeatures> userFeatures) {
 		Iterator<UserFeatures> it = userFeatures.values().iterator();
 		while (it.hasNext()) {

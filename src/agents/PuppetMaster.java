@@ -1,5 +1,6 @@
 package agents;
 
+import java.util.Collection;
 import java.util.Set;
 
 import simulator.buffers.ItemSender.ItemSold;
@@ -20,7 +21,7 @@ public interface PuppetMaster {
 
 	void soldAuction(Puppet puppet, Auction auction);
 
-	void gotPaidAction(Puppet puppet, Set<Payment> paymentSet);
+	void gotPaidAction(Puppet puppet, Collection<Payment> paymentSet);
 
 	void itemReceivedAction(Puppet puppet, Set<ItemSold> itemSet);
 

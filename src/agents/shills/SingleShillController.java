@@ -1,6 +1,7 @@
 package agents.shills;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -191,7 +192,7 @@ public class SingleShillController extends EventListener implements Controller {
 
 	@Override
 	// acts for the shill bidder. copied from simpleUser, replacing "this" with ss
-	protected void gotPaidAction(Set<Payment> paymentSet) {
+	protected void gotPaidAction(Collection<Payment> paymentSet) {
 		super.gotPaidAction(paymentSet);
 		
 		for (Payment payment : paymentSet) {

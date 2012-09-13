@@ -23,7 +23,7 @@ public class WriteScores {
 	 * @param auctionCounts map containing sellerIds mapped to number of auctions they submitted
 	 * @param suffix string added to the end of the filename
 	 */
-	public static void writeShillScores(Map<Integer, ShillScore> shillScores, Map<Integer, Integer> auctionCounts, String suffix, int[]... reweights) {
+	public static void writeShillScores(Map<Integer, ShillScore> shillScores, Map<Integer, Integer> auctionCounts, String suffix, double[]... reweights) {
 		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("shillingResults/ShillScores_" + suffix + ".csv"), Charset.defaultCharset())) {
 			bw.append(shillScoreHeadings(reweights));
 			bw.newLine();
@@ -42,7 +42,7 @@ public class WriteScores {
 		}
 	}
 
-	private static StringBuilder SSRatingsString(ShillScore ss, Map<Integer, Integer> auctionCounts, int[]... reweights) {
+	private static StringBuilder SSRatingsString(ShillScore ss, Map<Integer, Integer> auctionCounts, double[]... reweights) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(ss.getWinCount()).append(delimiter);
 		sb.append(ss.getLossCount()).append(delimiter);
@@ -60,7 +60,7 @@ public class WriteScores {
 		return sb;
 	}
 
-	private static String shillScoreHeadings(int[]... reweights) {
+	private static String shillScoreHeadings(double[]... reweights) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("bidderId,");
 		sb.append("wins,");

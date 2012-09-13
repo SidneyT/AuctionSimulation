@@ -21,8 +21,8 @@ import weka.core.Instances;
 
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
-import createUserFeatures.features.Feature;
-import createUserFeatures.features.Features;
+import createUserFeatures.Feature;
+import createUserFeatures.Features;
 
 /**
  * Measures Accuracy.

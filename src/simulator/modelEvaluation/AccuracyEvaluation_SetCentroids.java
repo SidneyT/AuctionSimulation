@@ -18,8 +18,8 @@ import weka.core.converters.ConverterUtils.DataSource;
 
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
-import createUserFeatures.features.Feature;
-import createUserFeatures.features.Features;
+import createUserFeatures.Feature;
+import createUserFeatures.Features;
 
 /**
  * Similar to MultipleEvaluation_SetCentroids except centroids are not randomly picked using

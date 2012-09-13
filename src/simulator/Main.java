@@ -65,7 +65,6 @@ public class Main {
 	}
 
 	private static void go(SaveObjects saveObjects, AgentAdder... agentAdder) throws InterruptedException {
-
 		// create buffers
 		final TimeMessage timeMessage = new TimeMessage();
 		final MessagesToUsers messagesToUsers = new MessagesToUsers();
@@ -139,15 +138,19 @@ public class Main {
 		// creating the callables
 //		final Callable<Object> ahCallable = Executors.callable(new CrashOnAssertionErrorRunnable(ah));
 		final ImmutableList<Callable<Object>> callables = ImmutableList.of(
-				Executors.callable(new CrashOnAssertionErrorRunnable(ps)),
-				Executors.callable(new CrashOnAssertionErrorRunnable(is))
+//				Executors.callable(new CrashOnAssertionErrorRunnable(ps)),
+//				Executors.callable(new CrashOnAssertionErrorRunnable(is))
+				Executors.callable(ps),
+				Executors.callable(is)
 				);
 		final Builder<Callable<Object>> userCallablesBuilder = ImmutableList.builder();
 		for (SimpleUser user : userRecord.getUsers()) {
-			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(user)));
+//			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(user)));
+			userCallablesBuilder.add(Executors.callable(user));
 		}
 		for (EventListener listeners : ah.getEventListeners()) {
-			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(listeners)));
+//			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(listeners)));
+			userCallablesBuilder.add(Executors.callable(listeners));
 		}
 		ImmutableList<Callable<Object>> userCallables = userCallablesBuilder.build();
 		

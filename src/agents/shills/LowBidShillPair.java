@@ -1,6 +1,7 @@
 package agents.shills;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -235,7 +236,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 	// can remove...
 	@Override
 	// acts for the shill bidder. copied from simpleUser, replacing "this" with ss
-	protected void gotPaidAction(Set<Payment> paymentSet) {
+	protected void gotPaidAction(Collection<Payment> paymentSet) {
 		super.gotPaidAction(paymentSet);
 		
 		for (Payment payment : paymentSet) {

@@ -1,5 +1,6 @@
 package agents;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -143,7 +144,7 @@ public abstract class EventListener implements Runnable {
 	 * For sellers
 	 * @param auction
 	 */
-	protected void gotPaidAction(Set<Payment> paymentSet) {
+	protected void gotPaidAction(Collection<Payment> paymentSet) {
 		logger.debug(id + " received payments " + paymentSet);
 	}
 

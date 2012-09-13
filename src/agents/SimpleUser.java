@@ -1,5 +1,6 @@
 package agents;
 
+import java.util.Collection;
 import java.util.Set;
 
 
@@ -57,7 +58,7 @@ public class SimpleUser extends EventListener {
 		super.run();
 		
 		// pick up payment messages from other users
-		Set<Payment> paymentSet = ps.receive(this);
+		Collection<Payment> paymentSet = ps.receive(this);
 		if (paymentSet != null && !paymentSet.isEmpty())
 			gotPaidAction(paymentSet);
 		
@@ -94,7 +95,7 @@ public class SimpleUser extends EventListener {
 	 * @param auction
 	 */
 	@Override
-	protected void gotPaidAction(Set<Payment> paymentSet) {
+	protected void gotPaidAction(Collection<Payment> paymentSet) {
 		super.gotPaidAction(paymentSet);
 		
 		for (Payment payment : paymentSet) {
