@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import createUserFeatures.BuildSimFeatures;
+import createUserFeatures.Feature;
 import createUserFeatures.Features;
 import createUserFeatures.SimAuctionDBIterator;
 import createUserFeatures.SimAuctionIterator;
@@ -62,8 +63,8 @@ public class GenerateShillData {
 		int numberOfRuns = 1000;
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
-//		run(simplePairAdderA, numberOfRuns);
-		run(simplePairAdderA, numberOfRuns, new double[]{0.0820,0.0049,-0.0319,0.5041,0.2407,0.2003});
+		run(simplePairAdderA, numberOfRuns);
+//		run(simplePairAdderA, numberOfRuns, new double[]{0.0820,0.0049,-0.0319,0.5041,0.2407,0.2003});
 //		writeSSandPercentiles(simplePairAdderB, numberOfRuns);
 //		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
 		
@@ -75,24 +76,27 @@ public class GenerateShillData {
 	}
 	
 	private static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
-		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
+		for (int runNumber = 772; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("starting run " + runNumber);
+			
+//			List<Feature> featuresSelected = Features.defaultFeatures;
+			List<Features> featuresSelected = Arrays.asList(Features.values());
 
-//			KeepObjectsInMemory objInMem = new KeepObjectsInMemory();
-//			Main.run(objInMem, adder); // run simulator
-////			Map<Integer, UserFeatures> features = new BuildSimFeatures(true).build(new SimAuctionMemoryIterator(objInMem, true)); // build features
-////			BuildSimFeatures.writeToFile(features.values(), // write features
-////					Features.defaultFeatures, 
-////					Paths.get("single_feature_shillvsnormal", "synUserFeatures_" + Features.fileLabels(Features.defaultFeatures) + "_" + runNumber + ".csv")
-////					);
-//			writeSSandPercentiles(new SimAuctionMemoryIterator(objInMem, true), adder, runNumber, weightSets); // build and write shill scores
+			KeepObjectsInMemory objInMem = new KeepObjectsInMemory();
+			Main.run(objInMem, adder); // run simulator
+			Map<Integer, UserFeatures> features = new BuildSimFeatures(true).build(new SimAuctionMemoryIterator(objInMem, true)); // build features
+			BuildSimFeatures.writeToFile(features.values(), // write features
+					featuresSelected, 
+					Paths.get("single_feature_shillvsnormal", "synUserFeatures_" + Features.fileLabels(featuresSelected) + "_" + runNumber + ".csv")
+					);
+			writeSSandPercentiles(new SimAuctionMemoryIterator(objInMem, true), adder, runNumber, weightSets); // build and write shill scores
 			
 //			BuildSimFeatures buildFeatures = new BuildSimFeatures(true);
 //			Main.run(adder);
-			writeSSandPercentiles(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true), adder, runNumber, weightSets);
+//			writeSSandPercentiles(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true), adder, runNumber, weightSets);
 //			Map<Integer, UserFeatures> features = buildFeatures.build(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true));
 			
-			return;
+//			return;
 		}
 	}
 	

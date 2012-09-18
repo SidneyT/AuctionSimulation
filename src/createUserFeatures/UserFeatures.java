@@ -38,8 +38,6 @@ public class UserFeatures {
 	private final IncrementalSD bidTimesFractionToEnd = new IncrementalSD(); // bid time as fraction of auction time elapsed
 	private final IncrementalSD bidTimesMinsBeforeEnd = new IncrementalSD();// number of minutes before the end of the auction
 
-	final double[] bidPeriods;
-	final double[] bidPeriodsLogBins;
 	double avgNumCategory; // number of categories per auction the user is in
 	Set<String> categories;
 
@@ -48,8 +46,6 @@ public class UserFeatures {
 	private final IncrementalSD avgBidProp = new IncrementalSD();
 	
 	public UserFeatures() {
-		this.bidPeriods = new double[4];
-		this.bidPeriodsLogBins = new double[11];
 		this.categories = new HashSet<>();
 
 		// uninitilised values. used to find which users do not have a feedback page, and so have no reputation

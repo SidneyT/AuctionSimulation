@@ -20,7 +20,7 @@ public class Weka {
 	public static void main(String[] args) {
 		String pca_input = "UserFeatures-1-2-3-5-6-7-8.csv";
 		String pca_output = "UserFeatures-1-2-3-5-6-7-8_pca.arff";
-		Pca(pca_input, pca_output);
+		pca(pca_input, pca_output);
 		
 //		String filename = "UserFeatures_pca.arff";
 //		RandomizableClusterer clusterer = new XMeans();
@@ -29,7 +29,7 @@ public class Weka {
 		System.out.println("Finished.");
 	}
 	
-	public static void Pca(String inputFilename, String outputFilename) {
+	public static void pca(String inputFilename, String outputFilename) {
 		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get(outputFilename), Charset.defaultCharset())) {
 			DataSource ds = new DataSource(inputFilename);
 			Instances data = ds.getDataSet();

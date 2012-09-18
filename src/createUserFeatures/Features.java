@@ -241,7 +241,7 @@ public enum Features implements Feature {
 		return this.name();
 	}
 	
-	public static String labels(Collection<Feature> features) {
+	public static String labels(Collection<? extends Feature> features) {
 		StringBuilder sb = new StringBuilder();
 		for (Feature feature : features)
 			sb.append(feature.label()).append(",");
@@ -250,7 +250,7 @@ public enum Features implements Feature {
 		return sb.toString();
 	}
 	
-	public static String fileLabels(Collection<Feature> features) {
+	public static String fileLabels(Collection<? extends Feature> features) {
 		StringBuilder sb = new StringBuilder();
 		for (Feature feature : features)
 			sb.append(feature.label().replaceAll("^[A-za-z]+", "")).append(",");
@@ -267,7 +267,7 @@ public enum Features implements Feature {
 	 * @param userFeatures
 	 * @return
 	 */
-	public static String values(Collection<Feature> features, UserFeatures userFeatures) {
+	public static String values(Collection<? extends Feature> features, UserFeatures userFeatures) {
 		StringBuilder sb = new StringBuilder();
 		for (Feature feature : features) {
 			double value = feature.value(userFeatures);

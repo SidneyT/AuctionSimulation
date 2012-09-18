@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -18,11 +19,11 @@ public class BidRecord {
 	
 	private static final Logger logger = Logger.getLogger(BidRecord.class);
 
-	private int bidCount;
+	private final AtomicInteger bidCount;
 	private final Random r;
 	
 	public BidRecord() {
-		bidCount = 0;
+		bidCount = new AtomicInteger();
 		r = new Random();
 	}
 	
@@ -41,8 +42,7 @@ public class BidRecord {
 			winningBid = highestBids.get(r.nextInt(highestBids.size()));
 		}
 		
-		winningBid.setId(this.bidCount);
-		this.bidCount++;
+		winningBid.setId(bidCount.getAndIncrement());
 		winningBid.setTime(time);
 		
 		// update the state of the auction with the winning bid

@@ -7,10 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +18,6 @@ import agents.SimpleUser;
 
 import com.google.common.collect.ArrayListMultimap;
 
-
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import util.Util;
@@ -29,9 +26,6 @@ import util.Util;
  * Builds and updates UserFeatures objects using auction bidding information.
  */
 public abstract class BuildUserFeatures {
-	protected static final double BEG_MID_BOUNDARY = 0.5;
-	protected static final double MID_END_BOUNDARY = 0.95;
-
 	protected Map<Integer, UserFeatures> userFeaturesMap;
 	public boolean trim; // trim auction bid list lengths to 20
 
@@ -45,7 +39,7 @@ public abstract class BuildUserFeatures {
 		return this.trim;
 	}
 
-	public static void writeToFile(Collection<UserFeatures> userFeaturesCollection, List<Feature> featuresToPrint, Path path) {
+	public static void writeToFile(Collection<UserFeatures> userFeaturesCollection, List<? extends Feature> featuresToPrint, Path path) {
 		try (BufferedWriter w = Files.newBufferedWriter(path, Charset.defaultCharset())) {
 			// print headings
 			w.append(Features.labels(featuresToPrint));
@@ -98,7 +92,6 @@ public abstract class BuildUserFeatures {
 		
 		// record when bids are made
 		recordBidPeriods(auction.endTime, bidsByUser);
-		recordUserBidPeriods(auction.endTime, list);
 		updateSelfBidInterval(bidsByUser);
 		updateAnyBidInterval(list);
 		
@@ -206,58 +199,6 @@ public abstract class BuildUserFeatures {
 		}
 	}
 
-	/**
-	 * @param auctionEnd
-	 * @param bidList
-	 * 
-	 * @return Map containing mapping between userId and a 4 element array of doubles. The first 3 elements are the
-	 *         number of bids made in BEG, MID and END of the auction. The 4th element counts the number of bids that
-	 *         user has in bidList.
-	 * 
-	 */
-	protected Map<Integer, double[]> findBidPeriods(Date auctionEnd, List<BuildUserFeatures.BidObject> bidList) {
-		Map<Integer, double[]> dist = new HashMap<Integer, double[]>();
-		long length = Util.timeDiffInMin(auctionEnd, bidList.get(0).time);
-		// System.out.println("auction length: " + length);
-
-		for (BuildUserFeatures.BidObject bo : bidList) {
-			UserFeatures userFeature = userFeaturesMap.get(bo.bidderId);
-			// long bidMinsBeforeEnd = timeDiffInMin(bidList.get(bidList.size() - 1).time, bo.time);
-			long bidMinsBeforeEnd = Util.timeDiffInMin(auctionEnd, bo.time);
-			assert bidMinsBeforeEnd >= 0;
-			userFeature.getBidTimesMinsBeforeEnd().addNext(bidMinsBeforeEnd);
-
-			// time of bid as a fraction from the time of the first bid in the auction to the end time
-			double fractionElapsed = ((double) Util.timeDiffInMin(bo.time, bidList.get(0).time)) / length;
-			assert fractionElapsed <= 1;
-			userFeature.getBidTimesFractionToEnd().addNext(fractionElapsed);
-
-			// store the bidPeriod this fractionToEnd corresponds to
-			double[] userDist = dist.get(bo.bidderId);
-			if (userDist == null) {
-				userDist = new double[4];
-				Arrays.fill(userDist, 0);
-				dist.put(bo.bidderId, userDist);
-			}
-
-			BidPeriod period = findBidPeriod(fractionElapsed);
-			for (int i = 0; i < 3; i++) { // increment the correct bin: beg, mid or end
-				if (i == period.getI()) {
-					userDist[i] = Util.incrementalAvg(userDist[i], (int) userDist[3], 1);
-				} else {
-					userDist[i] = Util.incrementalAvg(userDist[i], (int) userDist[3], 0);
-				}
-			}
-			userDist[3]++; // increment count
-		}
-
-		// print out the proportions found for each user for this bidList
-		// for (int id : dist.keySet()) {
-		// System.out.println(id + ":" + Arrays.toString(dist.get(id)));
-		// }
-		return dist;
-	}
-
 	private void recordLastBidAmountProportionOfMax(int finalPrice, ArrayListMultimap<Integer, BuildUserFeatures.BidObject> bidsByUser) {
 		for (int bidderId : bidsByUser.keySet()) {
 			UserFeatures uf = userFeaturesMap.get(bidderId);
@@ -296,52 +237,6 @@ public abstract class BuildUserFeatures {
 		// System.out.print(userBidPeriods.size() + ",");
 	}
 
-	private void recordUserBidPeriods(Date auctionEndtime, List<BuildUserFeatures.BidObject> bidList) {
-		// find the proportion of bids made in the Beginning, Middle and End of an auction
-		Map<Integer, double[]> userBidPeriods = findBidPeriods(auctionEndtime, bidList);
-		// record the proportion in the UserFeatures object
-		for (int bidderId : userBidPeriods.keySet()) {
-			// UserFeatures.incrementalAvg(currAvg, currNumElements, nextValue)
-			double[] bidPeriod = userFeaturesMap.get(bidderId).bidPeriods; // get the stored bidPeriod
-			double[] newBidPeriod = userBidPeriods.get(bidderId); // get the new bidPeriod
-			for (int i = 0; i < 3; i++) {
-				// update stored bidPeriod using new BidPeriod
-				// averages are weighted using the number of bids made in each auction (in index 3)
-				bidPeriod[i] = Util.incrementalAvg(bidPeriod[i], (int) bidPeriod[3], newBidPeriod[i],
-						(int) newBidPeriod[3]);
-			}
-			bidPeriod[3] += newBidPeriod[3];
-		}
-	}
-	
-	/**
-	 * @param fractionToEnd
-	 *            proportion of time elapsed from the first bid to the end of the auction
-	 * @return the BidPeriod the number falls in
-	 */
-	protected BidPeriod findBidPeriod(double fractionToEnd) {
-		if (fractionToEnd < BEG_MID_BOUNDARY) {
-			return BidPeriod.BEGINNING;
-		} else if (fractionToEnd < MID_END_BOUNDARY) {
-			return BidPeriod.MIDDLE;
-		} else {
-			return BidPeriod.END;
-		}
-	}
-
-	public enum BidPeriod {
-		BEGINNING(0),
-		MIDDLE(1),
-		END(2);
-		private final int i;
-		private BidPeriod(int i) {
-			this.i = i;
-		}
-		public int getI() {
-			return this.i;
-		}
-	}
-	
 	protected static void removeIncompleteUserFeatures(Map<Integer, UserFeatures> userFeatures) {
 		Iterator<UserFeatures> it = userFeatures.values().iterator();
 		while (it.hasNext()) {
