@@ -67,8 +67,8 @@ public abstract class ClusterBidder extends SimpleUser {
 //	protected boolean neverBid = true;
 //	protected final long timeToTest;
 	
-	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int uniqueId) {
-		super(bh, ps, is, ah, uniqueId);
+	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah) {
+		super(bh, ps, is, ah);
 		
 		assert(num_users > 0);
 		

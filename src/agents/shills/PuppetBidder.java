@@ -23,8 +23,8 @@ public class PuppetBidder extends SimpleUser {
 	
 	private final Controller controller;
 	
-	public PuppetBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int uniqueId, Controller controller) {
-		super(bh, ps, is, ah, uniqueId);
+	public PuppetBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, Controller controller) {
+		super(bh, ps, is, ah);
 		this.controller = controller;
 	}
 

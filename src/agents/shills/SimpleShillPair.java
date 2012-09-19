@@ -54,7 +54,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 //	private final Random r;
 	
 	public SimpleShillPair(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy) {
-		super(bh, ur.nextId());
+		super(bh);
 		this.bh = bh;
 		this.ps = ps;
 		this.is = is;
@@ -62,14 +62,14 @@ public class SimpleShillPair extends EventListener implements Controller {
 		this.types = types;
 		
 		// set up the shill seller
-		PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, ur.nextId(), this, types);
-//		SimpleUser ss = new SimpleUser(bh, ps, is, ah, ur.nextId());
+		PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, this, types);
+//		SimpleUser ss = new SimpleUser(bh, ps, is, ah);
 		ur.addUser(ss);
 		this.ss = ss;
 		
 		// set up the shill bidder
-//		SimpleUser sb = new SimpleUser(bh, ps, is, ah, ur.nextId());
-		PuppetBidder sb = new PuppetBidder(bh, ps, is, ah, ur.nextId(), this);
+//		SimpleUser sb = new SimpleUser(bh, ps, is, ah);
+		PuppetBidder sb = new PuppetBidder(bh, ps, is, ah, this);
 		ur.addUser(sb);
 		this.sb = sb;
 	

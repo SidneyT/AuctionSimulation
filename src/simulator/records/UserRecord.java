@@ -16,17 +16,11 @@ import agents.SimpleUser;
  */
 public class UserRecord {
 	
-	private int userIdCount = 0; // for assigning unique ids
-	
 	// Set<User> - keeps track of users
 	private final List<SimpleUser> users;
 
 	public UserRecord() {
 		this.users  = Collections.synchronizedList(new ArrayList<SimpleUser>());
-	}
-	
-	public int nextId() {
-		return userIdCount++;
 	}
 	
 	public void addUser(SimpleUser user) {

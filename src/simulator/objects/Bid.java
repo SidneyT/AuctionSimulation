@@ -1,5 +1,7 @@
 package simulator.objects;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.log4j.Logger;
 
 import agents.SimpleUser;
@@ -9,15 +11,18 @@ import agents.SimpleUser;
  */
 public class Bid implements Comparable<Bid> {
 	
-	Logger logger = Logger.getLogger(Bid.class);
+	private static final Logger logger = Logger.getLogger(Bid.class);
 	
-	private int id;
+	private static final AtomicInteger bidId = new AtomicInteger(); // for allocating unique bid ids
+	
+	private final int id;
 	private long time;
 	private final SimpleUser bidder;
 	private final int price;
 	
 	public Bid(SimpleUser bidder, int price) {
-		this.id = -1;
+//		this.id = -1;
+		this.id = bidId.getAndIncrement();
 		this.bidder = bidder;
 		this.price = price;
 		this.time = -1;
@@ -30,14 +35,14 @@ public class Bid implements Comparable<Bid> {
 		return id;
 	}
 	
-	public void setId(int id) {
-		if (this.id == -1) {
-			this.id = id;
-		} else {
-			logger.error("Bid id cannont be changed.");
-			assert false;
-		}
-	}
+//	public void setId(int id) {
+//		if (this.id == -1) {
+//			this.id = id;
+//		} else {
+//			logger.error("Bid id cannont be changed.");
+//			assert false;
+//		}
+//	}
 	
 	public SimpleUser getBidder() {
 		return bidder;

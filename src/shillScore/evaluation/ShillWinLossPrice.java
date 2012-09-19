@@ -11,8 +11,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.sql.CallableStatement;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.math3.util.Pair;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
+
+import createUserFeatures.BuildUserFeatures.BidObject;
+import createUserFeatures.BuildUserFeatures.SimAuction;
+import createUserFeatures.BuildUserFeatures.UserObject;
+import createUserFeatures.SimAuctionDBIterator;
+import createUserFeatures.SimAuctionIterator;
+
+import simulator.categories.ItemType;
 import simulator.database.DBConnection;
 import util.IncrementalMean;
 
@@ -26,51 +43,118 @@ public class ShillWinLossPrice {
 	 * and see how often the shills win the auctions.
 	 * 
 	 * Written to <code>shillingResults/comparisons/shillWinLossCounts.csv<code>. 
+	 * @param simAuctionIterator 
 	 */
-	public static void writeToFile(String label) {
-		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("shillingResults", "comparisons", "winLossCounts.csv"), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND)){
+	public static void writeToFile(SimAuctionIterator simAuctionIterator, String label) {
+		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getAuctionIterator();
+		
+		Builder<Integer, ItemType> b = ImmutableMap.builder();
+		for (ItemType itemType : simAuctionIterator.itemTypes()) {
+			b.put(itemType.getId(), itemType);
+		}
+		ImmutableMap<Integer, ItemType> itemTypes = b.build();
+		
+		IncrementalMean shillWinAvg = new IncrementalMean();
+		IncrementalMean shillLossAvg = new IncrementalMean();
+		IncrementalMean nonShillShillWinAvg = new IncrementalMean();
+		IncrementalMean nonShillNonShillWinAvg = new IncrementalMean();
 
+		Map<Integer, UserObject> users = simAuctionIterator.users();
+		
+		while (it.hasNext()) {
+			Pair<SimAuction, List<BidObject>> pair = it.next();
+			SimAuction auction = pair.getKey();
+			String sellerType = users.get(auction.sellerId).userType;
+			String bidderType = users.get(auction.winnerId).userType;
+			if (auction.sellerId > 5000 && auction.winnerId > 5000) { // seller is shill && winner is shill
+				shillWinAvg.addNext(ratio(pair, itemTypes));
+			} else if (auction.sellerId > 5000 && !(auction.winnerId > 5000)) { // seller is shill && winner is shill
+				shillLossAvg.addNext(ratio(pair, itemTypes));
+			} else if (!(auction.sellerId > 5000) && auction.winnerId > 5000) { // seller is shill && winner is shill
+				nonShillShillWinAvg.addNext(ratio(pair, itemTypes));
+			} else if (!(auction.sellerId > 5000) && !(auction.winnerId > 5000)) { // seller is shill && winner is shill
+				nonShillNonShillWinAvg.addNext(ratio(pair, itemTypes));
+			}
+		}
+		
+		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("shillingResults", "comparisons", "winLossCounts.csv"), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND)){
 			bw.append(new Date().toString());
 			bw.append(",");
 			bw.append(label);
 			bw.append(",");
 			
-			try {
-				// number of auctions won by the shill, and the price
-				IncrementalMean shillWinAvg = findShillWinAuctions();
-				bw.append(shillWinAvg.getNumElements() + "," + shillWinAvg.getAverage() + ",");
-
-				// number of auctions lost by the shill, and the price
-				IncrementalMean shillLossAvg = findShillLossAuctions();
-				bw.append(shillLossAvg.getNumElements() + "," + shillLossAvg.getAverage() + ",");
-
-				// number of non-shill auctions lost by the shill, and the price
-				IncrementalMean nonShillShillWinAvg = findNonShillAuctionsWinByShills();
-				bw.append(nonShillShillWinAvg.getNumElements() + "," + nonShillShillWinAvg.getAverage() + ",");
-
-				// number of non-shill auctions won by a non-shill, and the price
-				IncrementalMean nonShillNonShillWinAvg = findNonShillAuctionsWinsByNonShills();
-				bw.append(nonShillNonShillWinAvg.getNumElements() + "," + nonShillNonShillWinAvg.getAverage());
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			// number of auctions won by the shill, and the price
+			bw.append(shillWinAvg.getNumElements() + "," + shillWinAvg.getAverage() + ",");
+			
+			// number of auctions won by a non-shill, and the price
+			bw.append(shillLossAvg.getNumElements() + "," + shillLossAvg.getAverage() + ",");
+			
+			// number of non-shill auctions won by the shill, and the price
+			bw.append(nonShillShillWinAvg.getNumElements() + "," + nonShillShillWinAvg.getAverage() + ",");
+			
+			// number of non-shill auctions won by a non-shill, and the price
+			bw.append(nonShillNonShillWinAvg.getNumElements() + "," + nonShillNonShillWinAvg.getAverage());
 			
 			bw.newLine();
 			bw.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+	}
+//	public static void writeToFile(SimAuctionIterator simAuctionIterator, String label) {
+//		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("shillingResults", "comparisons", "winLossCounts.csv"), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND)){
+//
+//			bw.append(new Date().toString());
+//			bw.append(",");
+//			bw.append(label);
+//			bw.append(",");
+//			
+//			try {
+//				// number of auctions won by the shill, and the price
+//				IncrementalMean shillWinAvg = findShillWinAuctions();
+//				bw.append(shillWinAvg.getNumElements() + "," + shillWinAvg.getAverage() + ",");
+//
+//				// number of auctions lost by the shill, and the price
+//				IncrementalMean shillLossAvg = findShillLossAuctions();
+//				bw.append(shillLossAvg.getNumElements() + "," + shillLossAvg.getAverage() + ",");
+//
+//				// number of non-shill auctions lost by the shill, and the price
+//				IncrementalMean nonShillShillWinAvg = findNonShillAuctionsWinByShills();
+//				bw.append(nonShillShillWinAvg.getNumElements() + "," + nonShillShillWinAvg.getAverage() + ",");
+//
+//				// number of non-shill auctions won by a non-shill, and the price
+//				IncrementalMean nonShillNonShillWinAvg = findNonShillAuctionsWinsByNonShills();
+//				bw.append(nonShillNonShillWinAvg.getNumElements() + "," + nonShillNonShillWinAvg.getAverage());
+//			} catch (SQLException e) {
+//				e.printStackTrace();
+//			}
+//			
+//			
+//			bw.newLine();
+//			bw.flush();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+	
+	public static void main(String[] args) {
+		
 	}
 	
-	/**
-	 * Find the number of shill auctions won by shills, and the average finalPrice/trueValuation ratio
-	 * for those auctions.
-	 */
+	private static double ratio(Pair<SimAuction, List<BidObject>> pair, Map<Integer, ItemType> itemTypes) {
+		return (double) pair.getValue().get(pair.getValue().size() - 1).amount / itemTypes.get(pair.getKey().itemTypeId).getTrueValuation();
+	}
+	
 	private static IncrementalMean findShillWinAuctions() throws SQLException {
 		IncrementalMean incAvg = new IncrementalMean();
 		Connection conn = DBConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice " +  
-				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +  
+				"FROM auctions as a " +
+				"JOIN itemtypes as i ON a.itemTypeId=i.id " +
+				"JOIN bids as b ON a.listingId=b.listingId " +
+				"JOIN users as seller ON seller.userId=a.sellerId " +
+				"JOIN users as bidder ON bidder.userId=a.winnerId " +  
 				"WHERE seller.userType LIKE '%Puppet%' AND bidder.userType LIKE '%Puppet%' GROUP BY a.listingId;");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
@@ -83,7 +167,7 @@ public class ShillWinLossPrice {
 		}
 		return incAvg;
 	}
-	
+
 	/**
 	 * Find the number of shill auctions lost by shills, and the average finalPrice/trueValuation ratio
 	 * for those auctions.
@@ -92,7 +176,11 @@ public class ShillWinLossPrice {
 		IncrementalMean incAvg = new IncrementalMean();
 		Connection conn = DBConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice " +  
-				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +  
+				"FROM auctions as a " +
+				"JOIN itemtypes as i ON a.itemTypeId=i.id " +
+				"JOIN bids as b ON a.listingId=b.listingId " +
+				"JOIN users as seller ON seller.userId=a.sellerId " +
+				"JOIN users as bidder ON bidder.userId=a.winnerId " +  
 				"WHERE seller.userType LIKE '%Puppet%' AND bidder.userType NOT LIKE '%Puppet%' GROUP BY a.listingId;");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
@@ -110,7 +198,11 @@ public class ShillWinLossPrice {
 		IncrementalMean incAvg = new IncrementalMean();
 		Connection conn = DBConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice, seller.userType as sellerType, bidder.userType as winnerType " + 
-				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +
+				"FROM auctions as a " +
+				"JOIN itemtypes as i ON a.itemTypeId=i.id " +
+				"JOIN bids as b ON a.listingId=b.listingId " +
+				"JOIN users as seller ON seller.userId=a.sellerId " +
+				"JOIN users as bidder ON bidder.userId=a.winnerId " +
 				"WHERE seller.userType NOT LIKE '%Puppet%' AND bidder.userType LIKE '%Puppet%' GROUP BY a.listingId;");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
@@ -132,7 +224,11 @@ public class ShillWinLossPrice {
 		IncrementalMean incAvg = new IncrementalMean();
 		Connection conn = DBConnection.getSimulationConnection();
 		CallableStatement stmt = conn.prepareCall("SELECT a.winnerId, a.listingId, itemTypeId, trueValuation, MAX(b.amount) as winningPrice, seller.userType as sellerType, bidder.userType as winnerType " +
-				"FROM auctions as a JOIN itemtypes as i ON a.itemTypeId=i.id JOIN bids as b ON a.listingId=b.listingId JOIN users as seller ON seller.userId=a.sellerId JOIN users as bidder ON bidder.userId=a.winnerId " +
+				"FROM auctions as a " +
+				"JOIN itemtypes as i ON a.itemTypeId=i.id " +
+				"JOIN bids as b ON a.listingId=b.listingId " +
+				"JOIN users as seller ON seller.userId=a.sellerId " +
+				"JOIN users as bidder ON bidder.userId=a.winnerId " +
 				"WHERE seller.userType NOT LIKE '%Puppet%' AND bidder.userType NOT LIKE '%Puppet%' GROUP BY a.listingId;");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {

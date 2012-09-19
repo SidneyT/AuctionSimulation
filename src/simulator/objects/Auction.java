@@ -3,6 +3,7 @@ package simulator.objects;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -15,9 +16,11 @@ import agents.SimpleUser;
  */
 public class Auction {
 
-	Logger logger = Logger.getLogger(Auction.class);
+	private static final Logger logger = Logger.getLogger(Auction.class);
 
-	private int id;
+	private static final AtomicInteger auctionId = new AtomicInteger(); // for allocating unique auction ids
+
+	private final int id;
 	private long startTime;
 	private final SimpleUser seller;
 	private final long startPrice;
@@ -50,7 +53,7 @@ public class Auction {
 			throw new IllegalArgumentException();
 		}
 
-		this.id = -1;
+		this.id = auctionId.getAndIncrement();
 		this.startTime = -1;
 		this.endTime = -1;
 		this.seller = seller;
@@ -76,16 +79,16 @@ public class Auction {
 		return this.id;
 	}
 
-	public void setId(int id) {
-		if (this.id == -1)
-			this.id = id;
-		else if (this.id != id) {
-			logger.error("Auction id is being set again to the same value of " + id + ".");
-		} else {
-			logger.error("Auction id cannont be changed.");
-			assert false;
-		}
-	}
+//	public void setId(int id) {
+//		if (this.id == -1)
+//			this.id = id;
+//		else if (this.id != id) {
+//			logger.error("Auction id is being set again to the same value of " + id + ".");
+//		} else {
+//			logger.error("Auction id cannont be changed.");
+//			assert false;
+//		}
+//	}
 
 	public SimpleUser getSeller() {
 		return seller;

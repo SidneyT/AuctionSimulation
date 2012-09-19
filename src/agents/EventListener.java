@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -20,9 +21,10 @@ import simulator.objects.Auction;
  * Doesn't do anything.
  */
 public abstract class EventListener implements Runnable {
-	
 	private static final Logger logger = Logger.getLogger(EventListener.class);
 
+	private final static AtomicInteger userIdCount = new AtomicInteger(); // for assigning unique ids
+	
 	public final BufferHolder bh;
 	
 	protected final int id;
@@ -30,16 +32,17 @@ public abstract class EventListener implements Runnable {
 	protected final Set<Auction> awaitingPayment;
 	protected final Set<Auction> awaitingItem;
 	
-	public EventListener(BufferHolder bh, int uniqueId) {
+	public EventListener(BufferHolder bh) {
+		this.id = userIdCount.getAndIncrement();
+		
 		this.bh = bh;
-		this.id = uniqueId;
+//		this.id = uniqueId;
 //		System.out.println("setting id as " + id);
 		this.awaitingPayment = new HashSet<Auction>();
 		this.awaitingItem = new HashSet<Auction>();
 	}
 	
 	public final int getId() {
-		assert(this.id != -1); // id must have been set
 		return id;
 	}
 

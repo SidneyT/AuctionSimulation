@@ -20,8 +20,8 @@ public class Puppet extends SimpleUser {
 	private static final Logger logger = Logger.getLogger(SimpleUser.class);
 	private final PuppetMaster master;
 	
-	public Puppet(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int uniqueId, PuppetMaster master) {
-		super(bh, ps, is, ah, uniqueId);
+	public Puppet(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, PuppetMaster master) {
+		super(bh, ps, is, ah);
 		this.master = master;
 	}
 

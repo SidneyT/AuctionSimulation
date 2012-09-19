@@ -53,14 +53,14 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	}
 	
 	public Map<Integer, UserFeatures> build(SimAuctionIterator simAuctionIterator) {
-		Iterator<Pair<SimAuction, List<createUserFeatures.BuildUserFeatures.BidObject>>> it = simAuctionIterator.iterator();
+		Iterator<Pair<SimAuction, List<createUserFeatures.BuildUserFeatures.BidObject>>> it = simAuctionIterator.getAuctionIterator();
 		while (it.hasNext()) {
 			Pair<SimAuction, List<createUserFeatures.BuildUserFeatures.BidObject>> pair = it.next();
 //			System.out.println("auction: " + pair.getKey() + ", bids: " + pair.getValue());
 			processAuction(pair.getKey(), pair.getValue());
 		}
 		
-		for (UserObject user : simAuctionIterator.userRep()) {
+		for (UserObject user : simAuctionIterator.users().values()) {
 			UserFeatures uf = this.userFeaturesMap.get(user.userId);
 			if (uf == null)
 				continue;

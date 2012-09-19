@@ -20,8 +20,8 @@ public class ClusterSnipe extends ClusterBidder {
 
 	private static final Logger logger = Logger.getLogger(ClusterSnipe.class);
 
-	public ClusterSnipe(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int uniqueId) {
-		super(bh, ps, is, ah, uniqueId);
+	public ClusterSnipe(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah) {
+		super(bh, ps, is, ah);
 		
 		probInterest *= 1.5;
 	}

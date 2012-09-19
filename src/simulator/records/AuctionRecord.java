@@ -19,7 +19,7 @@ public class AuctionRecord {
 
 	// Map<User ID, Set<Auction>> - keeps track of auctions submitted by users
 //	private final Map<Integer, Set<Auction>> submissions;
-	private final AtomicInteger auctionCount; // number of auctions submitted.  used to give auctions an ID.
+//	private final AtomicInteger auctionCount; // number of auctions submitted.  used to give auctions an ID.
 	// Map<Auction endTime, Auction object>
 	private final Map<Long, Set<Auction>> currentAuctions;
 //	private final Map<Long, Set<Auction>> expiredAuctions;
@@ -28,7 +28,7 @@ public class AuctionRecord {
 	private final Set<Auction> currentSet;
 	
 	public AuctionRecord() {
-		auctionCount = new AtomicInteger();
+//		auctionCount = new AtomicInteger();
 		
 //		this.submissions = new HashMap<Integer, Set<Auction>>();
 		this.currentAuctions = new HashMap<Long, Set<Auction>>();
@@ -38,7 +38,7 @@ public class AuctionRecord {
 	
 	public void addAuction(Auction auction, long time) {
 		// set the id and startTime of the auction
-		auction.setId(auctionCount.getAndIncrement());
+//		auction.setId(auctionCount.getAndIncrement());
 		auction.setStartTime(time);
 		
 		// recording who submitted this auction

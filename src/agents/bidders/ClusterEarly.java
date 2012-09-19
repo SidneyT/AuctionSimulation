@@ -21,8 +21,8 @@ public class ClusterEarly extends ClusterBidder {
 
 	private static final Logger logger = Logger.getLogger(ClusterEarly.class);
 
-	public ClusterEarly(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int uniqueId) {
-		super(bh, ps, is, ah, uniqueId);
+	public ClusterEarly(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah) {
+		super(bh, ps, is, ah);
 	}
 
 	// returns a value between .7-.85 of an item's private valuation, uniform distribution

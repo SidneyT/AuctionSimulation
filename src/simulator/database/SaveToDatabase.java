@@ -128,7 +128,7 @@ public class SaveToDatabase implements SaveObjects {
 				saveItemTypePstmt.setString(2, type.getName());
 				saveItemTypePstmt.setDouble(3, type.getWeight());
 				saveItemTypePstmt.setDouble(4, type.getTrueValuation());
-				saveItemTypePstmt.setInt(5, type.getCategory().getId());
+				saveItemTypePstmt.setInt(5, type.getCategoryId());
 				saveItemTypePstmt.addBatch();
 			}
 			saveItemTypePstmt.executeBatch();

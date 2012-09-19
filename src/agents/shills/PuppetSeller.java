@@ -28,8 +28,8 @@ public class PuppetSeller extends SimpleUser {
 	private List<ItemType> items;
 	private final Random r;
 	
-	public PuppetSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int uniqueId, Controller controller, List<ItemType> types) {
-		super(bh, ps, is, ah, uniqueId);
+	public PuppetSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, Controller controller, List<ItemType> types) {
+		super(bh, ps, is, ah);
 		this.controller = controller;
 		this.r = new Random();
 		

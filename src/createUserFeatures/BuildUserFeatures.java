@@ -285,7 +285,7 @@ public abstract class BuildUserFeatures {
 	}
 
 	public static class SimAuction extends AuctionObject {
-		final int itemTypeId;
+		public final int itemTypeId;
 
 		public SimAuction(int listingId, int winnerId, int sellerId, Date endTime, int itemTypeId) {
 			super(listingId, winnerId, sellerId, endTime);

@@ -34,8 +34,8 @@ public class SimpleUser extends EventListener {
 	protected final ItemSender is;
 	protected final ReputationRecord rr;
 
-	public SimpleUser(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int uniqueId) {
-		super(bh, uniqueId);
+	public SimpleUser(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah) {
+		super(bh);
 		this.ah = ah;
 		this.ps = ps;
 		this.is = is;

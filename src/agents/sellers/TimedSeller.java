@@ -29,8 +29,8 @@ public class TimedSeller extends SimpleUser {
 	private Exponential exp;
 	private List<ItemType> types;
 	
-	public TimedSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int uniqueId, List<ItemType> types) {
-		super(bh, ps, is, ah, uniqueId);
+	public TimedSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> types) {
+		super(bh, ps, is, ah);
 		assert(num_users > 0);
 		r = new Random();
 		ReputationRecord.generateRep(rr, r);

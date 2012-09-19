@@ -44,7 +44,7 @@ public class Main {
 		System.out.println("Start.");
 		
 		Main.run();
-		ClusterAnalysis.clusterSimData("");
+//		ClusterAnalysis.clusterSimData("");
 		System.out.println("Finished.");
 	}
 	
@@ -97,10 +97,10 @@ public class Main {
 		final double probIsSniper = 0.5;
 		ClusterBidder.setNumUsers(numClusterBidder);
 		for (int i = 0; i < (long) ((1 - probIsSniper) * numClusterBidder + 0.5); i++) {
-			userRecord.addUser(new ClusterEarly(bh, ps, is, ah, userRecord.nextId()));
+			userRecord.addUser(new ClusterEarly(bh, ps, is, ah));
 		}
 		for (int i = 0; i < (long) (probIsSniper * numClusterBidder + 0.5); i++) {
-			userRecord.addUser(new ClusterSnipe(bh, ps, is, ah, userRecord.nextId()));
+			userRecord.addUser(new ClusterSnipe(bh, ps, is, ah));
 		}
 //		System.out.println("average: " + ClusterBidder.debugAverage);
 
@@ -108,7 +108,7 @@ public class Main {
 		// creating normal sellers
 		TimedSeller.setNumUsers(numSellers);
 		for (int i = 0; i < numSellers; i++) {
-			userRecord.addUser(new TimedSeller(bh, ps, is, ah, userRecord.nextId(), types));
+			userRecord.addUser(new TimedSeller(bh, ps, is, ah, types));
 		}
 		
 		// TODO: Add fraud agents here

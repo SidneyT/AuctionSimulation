@@ -19,11 +19,11 @@ public class BidRecord {
 	
 	private static final Logger logger = Logger.getLogger(BidRecord.class);
 
-	private final AtomicInteger bidCount;
+//	private final AtomicInteger bidCount;
 	private final Random r;
 	
 	public BidRecord() {
-		bidCount = new AtomicInteger();
+//		bidCount = new AtomicInteger();
 		r = new Random();
 	}
 	
@@ -42,7 +42,7 @@ public class BidRecord {
 			winningBid = highestBids.get(r.nextInt(highestBids.size()));
 		}
 		
-		winningBid.setId(bidCount.getAndIncrement());
+//		winningBid.setId(bidCount.getAndIncrement());
 		winningBid.setTime(time);
 		
 		// update the state of the auction with the winning bid

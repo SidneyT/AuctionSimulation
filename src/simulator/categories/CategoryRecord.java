@@ -18,14 +18,8 @@ public class CategoryRecord {
 	private Map<Integer, CategoryNode> categoryMap;
 	
 	public CategoryRecord() {
-		this.root = CategoryNode.createRoot(nextId());
+		this.root = CategoryNode.createRoot();
 		this.categoryMap = new HashMap<Integer, CategoryNode>();
-	}
-	
-	private int idCount = 0;
-	
-	public int nextId() {
-		return idCount++; 
 	}
 	
 	public CategoryNode getRoot() {
@@ -44,7 +38,7 @@ public class CategoryRecord {
 
 	}
 	
-	public static CategoryNode randomCategory(Collection<CategoryNode> categories, double random) {
+	public static int randomCategory(Collection<CategoryNode> categories, double random) {
 //		System.out.println("random num is: " + random);
 		for (CategoryNode category : categories) {
 			random -= category.getWeight();
@@ -52,10 +46,9 @@ public class CategoryRecord {
 			if (random < 0) {
 //				System.out.println("<0, using " + category + ".");
 				logger.debug("Random category is " + category.getName());
-				return category;
+				return category.getId();
 			}
 		}
-		assert false;
 		throw new RuntimeException();
 	}
 	

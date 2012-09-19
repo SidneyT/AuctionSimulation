@@ -48,7 +48,7 @@ public class SingleShillController extends EventListener implements Controller {
 //	private Random r;
 	
 	public SingleShillController(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy) {
-		super(bh, ur.nextId());
+		super(bh);
 		this.bh = bh;
 		this.ps = ps;
 		this.is = is;
@@ -57,12 +57,12 @@ public class SingleShillController extends EventListener implements Controller {
 		
 
 		// set up the shill seller
-		PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, ur.nextId(), this, types);
+		PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, this, types);
 		ur.addUser(ss);
 		this.ss = ss;
 		
 		// set up the shill bidder
-		PuppetBidder sb = new PuppetBidder(bh, ps, is, ah, ur.nextId(), this);
+		PuppetBidder sb = new PuppetBidder(bh, ps, is, ah, this);
 		ur.addUser(sb);
 		this.sb = sb;
 	

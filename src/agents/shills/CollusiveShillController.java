@@ -42,7 +42,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 	protected final Strategy strategy;
 	
 	public CollusiveShillController(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numSeller, int bidderPerAgent) {
-		super(bh, ur.nextId());
+		super(bh);
 		this.bh = bh;
 		this.ps = ps;
 		this.is = is;
@@ -53,14 +53,14 @@ public abstract class CollusiveShillController extends EventListener implements 
 		// set up the shill seller, only need 1.
 		css = new ArrayList<>(numSeller);
 		for (int i = 0; i < numSeller; i++) {
-			PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, ur.nextId(), this, types);
+			PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, this, types);
 			ur.addUser(ss);
 			css.add(ss);
 		}
 		
 		cbs = new ArrayList<>(bidderPerAgent);
 		for (int i = 0; i < bidderPerAgent; i++) {
-			PuppetBidder cb = new PuppetBidder(bh, ps, is, ah, ur.nextId(), this);
+			PuppetBidder cb = new PuppetBidder(bh, ps, is, ah, this);
 			ur.addUser(cb);
 			this.cbs.add(cb);
 		}

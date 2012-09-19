@@ -3,24 +3,38 @@ package simulator.categories;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import distributions.Exponential;
 
 public class ItemType {
+	
+	private static final AtomicInteger itemTypeIdCount = new AtomicInteger();
+	
 	private final int id;
 	private double weight;
 	private final String name;
 	private final int trueValuation;
-	private final CategoryNode category;
+	private final int categoryId;
 	
-	public ItemType(int id, double weight, String name, int trueValuation, CategoryNode category) {
-		this.id = id;
+	public ItemType(double weight, String name, int trueValuation, int categoryId) {
+		this.id = itemTypeIdCount.getAndIncrement();
+		
 		this.weight = weight;
 		this.name = name;
 		this.trueValuation = trueValuation;
-		this.category = category;
+		this.categoryId = categoryId;
 	}
 	
+	public ItemType(int id, double weight, String name, int trueValuation, int categoryId) {
+		this.id = id;
+		
+		this.weight = weight;
+		this.name = name;
+		this.trueValuation = trueValuation;
+		this.categoryId = categoryId;
+	}
+
 	public static void normaliseWeights(Collection<ItemType> items) {
 		double weightSum = 0;
 		for (ItemType item : items) {
@@ -41,7 +55,6 @@ public class ItemType {
 	}
 	
 	public static ArrayList<ItemType> createItems(int numberOfItems, Collection<CategoryNode> categories) {
-		int itemId = 0;
 		Random r = new Random();
 		
 		ArrayList<ItemType> items = new ArrayList<>();
@@ -56,7 +69,7 @@ public class ItemType {
 			do {
 			 trueValuation = (int) (exp2.nextDouble() + 0.5);
 			} while (trueValuation < minimumValuation);
-			ItemType item = new ItemType(itemId++, weight, "type" + (int) (weight * 10000), trueValuation, CategoryRecord.randomCategory(categories, r.nextDouble()));
+			ItemType item = new ItemType(weight, "type" + (int) (weight * 10000), trueValuation, CategoryRecord.randomCategory(categories, r.nextDouble()));
 			items.add(item);
 		}
 		
@@ -67,7 +80,7 @@ public class ItemType {
 	
 	@Override
 	public String toString() {
-		return "(" +  id + "," + name + "," + weight + "," + trueValuation + "," + category + ")";
+		return "(" +  id + "," + name + "," + weight + "," + trueValuation + "," + categoryId + ")";
 	}
 	
 	public int getId() {
@@ -86,8 +99,8 @@ public class ItemType {
 		return trueValuation;
 	}
 
-	public CategoryNode getCategory() {
-		return category;
+	public int getCategoryId() {
+		return categoryId;
 	}
 
 	public static void main(String[] args) {

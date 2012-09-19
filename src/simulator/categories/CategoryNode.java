@@ -2,8 +2,11 @@ package simulator.categories;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CategoryNode {
+	
+	private static final AtomicInteger categoryIdCount = new AtomicInteger();
 	
 	private final int id;
 	private List<CategoryNode> children;
@@ -15,8 +18,9 @@ public class CategoryNode {
 		return this.id;
 	}
 	
-	public CategoryNode(int id, String name) {
-		this.id = id;
+	public CategoryNode(String name) {
+		this.id = categoryIdCount.getAndIncrement();
+		
 		this.name = name;
 		children = new ArrayList<CategoryNode>();
 	}
@@ -52,8 +56,8 @@ public class CategoryNode {
 	}
 	
 	private boolean isRoot = false;
-	public static final CategoryNode createRoot(int id) {
-		CategoryNode root = new CategoryNode(id, "root");
+	public static final CategoryNode createRoot() {
+		CategoryNode root = new CategoryNode("root");
 		root.isRoot = true;
 		return root;
 	}
