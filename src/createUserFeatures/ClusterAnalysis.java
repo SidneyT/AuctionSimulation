@@ -57,7 +57,7 @@ public class ClusterAnalysis {
 ////		String featuresToPrint = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
 		
 		int numberOfClusters = 4;
-		List<Feature> featureList = Arrays.<Feature>asList(
+		List<Features> featureList = Arrays.asList(
 				Features.AvgBidPropMax10,
 				Features.PropWin5,
 				Features.BidsPerAuc6Ln,
@@ -76,7 +76,7 @@ public class ClusterAnalysis {
 ////		String featuresForClustering = "-1ln-2ln-3ln-10-4ln-5-11-9";
 ////		String featuresToPrint = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
 		
-		List<Feature> featureList = Arrays.<Feature>asList(
+		List<Features> featureList = Arrays.asList(
 				Features.AvgBidPropMax10,
 				Features.PropWin5,
 				Features.BidsPerAuc6Ln,
@@ -86,7 +86,7 @@ public class ClusterAnalysis {
 		clusterToFile(new BuildTMFeatures(), 1356, featureList, featureList, numberOfClusters, suffix);
 	}
 	
-	public static String generateFilename(Class<? extends BuildUserFeatures> clazz, boolean trim, int seed, List<Feature> featuresToPrintString, int numberOfClusters, String suffix) {
+	public static String generateFilename(Class<? extends BuildUserFeatures> clazz, boolean trim, int seed, List<Features> featuresToPrintString, int numberOfClusters, String suffix) {
 		String delimiter = "_";
 		if (trim)
 			return clazz.getSimpleName() + delimiter + Features.labels(featuresToPrintString) + delimiter + "t" + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;
@@ -95,7 +95,7 @@ public class ClusterAnalysis {
 	}
 	
 	// returns the Filename of the file written to
-	public static String clusterToFile(BuildUserFeatures buf, int seed, List<Feature> featuresToCluster, List<Feature> featuresToPrint, int numberOfClusters, String suffix) {
+	public static String clusterToFile(BuildUserFeatures buf, int seed, List<Features> featuresToCluster, List<Features> featuresToPrint, int numberOfClusters, String suffix) {
 		return clusterToFile(buf, seed, featuresToCluster, featuresToPrint, numberOfClusters, false, false, -1, suffix);
 	}
 	
@@ -111,7 +111,7 @@ public class ClusterAnalysis {
 	 * @param suffix
 	 * @return
 	 */
-	private static String clusterToFile(BuildUserFeatures buf, int seed, List<Feature> featuresToClusterOn, List<Feature> featuresToPrint, int numberOfClusters, boolean usePca, boolean recluster, int clusterToRecluster, String suffix) {
+	private static String clusterToFile(BuildUserFeatures buf, int seed, List<Features> featuresToClusterOn, List<Features> featuresToPrint, int numberOfClusters, boolean usePca, boolean recluster, int clusterToRecluster, String suffix) {
 		File tempUserFeaturesFile = null;
 		String tempUserFeaturesFilePath = null;
 		try {
@@ -274,7 +274,7 @@ public class ClusterAnalysis {
 	 * UserFeatures objects in userFeaturesCol are written to the file filename.
 	 * @param clusteringAssignments 
 	 */
-	private static void writeUserFeaturesWithClustersToFile(List<Feature> featuresToPrint, Map<Integer, UserFeatures> userFeaturesMap, List<Integer> clusteringAssignments, String filename) {
+	private static void writeUserFeaturesWithClustersToFile(List<Features> featuresToPrint, Map<Integer, UserFeatures> userFeaturesMap, List<Integer> clusteringAssignments, String filename) {
 		try {
 			BufferedWriter w = new BufferedWriter(new FileWriter(filename));
 			
@@ -324,7 +324,7 @@ public class ClusterAnalysis {
 		
 
 		public static String headings() {
-			return "clusterLabel, size " + Features.labels(Arrays.<Feature>asList(Features.values()));
+			return "clusterLabel, size " + Features.labels(Arrays.asList(Features.values()));
 		}
 
 		public String toString() {

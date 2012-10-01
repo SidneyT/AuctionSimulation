@@ -19,7 +19,6 @@ import org.apache.log4j.Logger;
 
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
-import createUserFeatures.Feature;
 import createUserFeatures.Features;
 
 import util.HungarianAlgorithm;
@@ -41,7 +40,7 @@ public class TMStability implements Runnable{
 
 	public static void main(String[] args) throws Exception {
 		
-		List<Feature> featuresToPrint = Arrays.<Feature>asList(Features.AvgBidPropMax10, 
+		List<Features> featuresToPrint = Arrays.<Features>asList(Features.AvgBidPropMax10, 
 				Features.PropWin5, 
 				Features.BidsPerAuc6Ln, 
 				Features.AvgBidProp11);
@@ -74,7 +73,7 @@ public class TMStability implements Runnable{
 		bw_short.flush();
 	}
 
-	public synchronized static void writeResults(BufferedWriter bw_full, BufferedWriter bw_short, int numberOfClusters, List<Feature> featuresForClustering, double[][] correctMatrix, int[][] assignment, int correct, int total) throws IOException {
+	public synchronized static void writeResults(BufferedWriter bw_full, BufferedWriter bw_short, int numberOfClusters, List<Features> featuresForClustering, double[][] correctMatrix, int[][] assignment, int correct, int total) throws IOException {
 		long currentTime = System.currentTimeMillis();
 		write(bw_full, "Clusters:" + numberOfClusters);
 		write(bw_full, "Timestamp:" + new Date(currentTime).toString());
@@ -101,11 +100,11 @@ public class TMStability implements Runnable{
 		try {
 //			String featuresForClustering = "-1ln-2ln-3ln-10-11-12";
 //			String featuresToPrint = "-1ln-2ln-3ln-10-11-12";
-			List<Feature> featuresToPrint = Arrays.<Feature>asList(Features.AvgBidPropMax10, 
+			List<Features> featuresToPrint = Arrays.asList(Features.AvgBidPropMax10, 
 					Features.PropWin5, 
 					Features.BidsPerAuc6Ln, 
 					Features.AvgBidProp11);
-			List<Feature> featuresForClustering = featuresToPrint;
+			List<Features> featuresForClustering = featuresToPrint;
 			
 			String tmClusteredFile = "BuildTMFeatures_SimpleKMeans" + featuresForClustering + "_" + numberOfClusters + "clusters.csv";
 			Random random = new Random();

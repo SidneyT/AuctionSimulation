@@ -37,13 +37,14 @@ public class UserFeatures {
 	private final IncrementalSD anyBidInterval = new IncrementalSD(); // average bid interval
 	private final IncrementalSD bidTimesFractionToEnd = new IncrementalSD(); // bid time as fraction of auction time elapsed
 	private final IncrementalSD bidTimesMinsBeforeEnd = new IncrementalSD();// number of minutes before the end of the auction
-
+	
 	double avgNumCategory; // number of categories per auction the user is in
 	Set<String> categories;
 
 	private final IncrementalSD avgBidAmountComparedToMax = new IncrementalSD(); // average of the bid amounts as fractions of the maximum bid in the same auction
 	private final IncrementalSD avgFinalBidComparedToMax = new IncrementalSD(); // average of the last bid as fraction of the maximum
 	private final IncrementalSD avgBidProp = new IncrementalSD();
+	private final IncrementalSD bidAmountComparedToValuation = new IncrementalSD(); 
 	
 	public UserFeatures() {
 		this.categories = new HashSet<>();
@@ -154,21 +155,16 @@ public class UserFeatures {
 		return avgBidInc;
 	}
 
-	public double avgBidIncMinusMinInc() {
-		assert avgBidIncMinusMinInc >= 0;
-		return avgBidIncMinusMinInc;
-	}
-
-	public double avgBidIncMinusMinIncLn() {
-		return Math.log1p(avgBidIncMinusMinInc());
-	}
-
 	public IncrementalSD getBidTimesMinsBeforeEnd() {
 		return bidTimesMinsBeforeEnd;
 	}
 
 	public IncrementalSD getAvgFinalBidComparedToMax() {
 		return avgFinalBidComparedToMax;
+	}
+
+	public IncrementalSD getBidAmountComparedToValuation() {
+		return bidAmountComparedToValuation;
 	}
 
 }

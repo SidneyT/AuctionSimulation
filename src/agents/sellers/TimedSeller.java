@@ -3,6 +3,7 @@ package agents.sellers;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.math3.distribution.ExponentialDistribution;
 import org.apache.log4j.Logger;
 
 
@@ -26,7 +27,7 @@ public class TimedSeller extends SimpleUser {
 	private final Random r;
 	private static int num_users;
 	private long nextSubmission;
-	private Exponential exp;
+	private ExponentialDistribution exp;
 	private List<ItemType> types;
 	
 	public TimedSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> types) {
@@ -42,7 +43,7 @@ public class TimedSeller extends SimpleUser {
 		logger.debug(" submitting auction at " + this.nextSubmission + " at time " + 0 + ".");
 	}
 	
-	private Exponential createExpDist() {
+	private ExponentialDistribution createExpDist() {
 		double ran = r.nextDouble();
 		double mean = 0; // average number of auctions in 181418 minutes
 		if (ran < 0.5825) { // 1 auction
@@ -55,7 +56,7 @@ public class TimedSeller extends SimpleUser {
 		mean /= 36283.6;
 		mean = ((double) 1) / mean;
 //		System.out.println("mean: " + mean);
-		return new Exponential(mean);
+		return new ExponentialDistribution(mean);
 	}
 
 	/**
@@ -68,7 +69,7 @@ public class TimedSeller extends SimpleUser {
 	}
 	
 	private long nextAuctionSubmission() {
-		double sample = exp.nextDouble();
+		double sample = exp.sample();
 		long next = (long) (sample + 0.5); 
 		return next;
 	}

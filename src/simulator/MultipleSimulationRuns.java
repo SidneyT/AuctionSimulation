@@ -5,9 +5,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
+
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildUserFeatures;
-import createUserFeatures.Feature;
 import createUserFeatures.Features;
 import createUserFeatures.UserFeatures;
 
@@ -34,15 +35,16 @@ public class MultipleSimulationRuns {
 			Main.run();
 
 			// make multiple sets of user features from the synthetic data
-			List<List<Feature>> featureSets = Arrays.asList(
-					Arrays.<Feature>asList(Features.values()),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.AvgBidProp11),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.AvgBidProp11),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidTimesMinsBeforeEnd12),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.BidTimesMinsBeforeEnd12),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidTimesMinsBeforeEnd12),
-					Arrays.<Feature>asList(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.BidTimesMinsBeforeEnd12)
+			List<List<Features>> featureSets = Arrays.asList(
+					Features.ALL_FEATURES,
+					ImmutableList.of(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.AvgBidProp11),
+					ImmutableList.of(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.AvgBidProp11),
+					ImmutableList.of(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidTimesMinsBeforeEnd12),
+					ImmutableList.of(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.PropWin5, Features.BidsPerAuc6Ln, Features.BidTimesMinsBeforeEnd12),
+					ImmutableList.of(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.AvgBidProp11, Features.BidTimesMinsBeforeEnd12),
+					ImmutableList.of(Features.AvgBid3Ln, Features.AvgBidPropMax10, Features.BidsPerAuc6Ln, Features.BidTimesMinsBeforeEnd12)
 					);
+			List<Features> features = null;
 			boolean trim = true;
 			BuildSimFeatures buildFeatures = new BuildSimFeatures(trim);
 			
@@ -50,7 +52,7 @@ public class MultipleSimulationRuns {
 			Map<Integer, UserFeatures> userFeatureMap = buildFeatures.build();
 			
 			String folder = "synData";
-			for (List<Feature> featureSet : featureSets) {
+			for (List<Features> featureSet : featureSets) {
 				String filename;
 				if (trim)
 					filename = featureSet + "_t_" + label + ".csv";

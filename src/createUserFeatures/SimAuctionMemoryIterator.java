@@ -3,13 +3,14 @@ package createUserFeatures;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.math3.util.Pair;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 
 import agents.SimpleUser;
 
@@ -82,8 +83,12 @@ public class SimAuctionMemoryIterator implements SimAuctionIterator {
 	}
 
 	@Override
-	public Collection<ItemType> itemTypes() {
-		return savedObjects.getTypes();
+	public Map<Integer, ItemType> itemTypes() {
+		Builder<Integer, ItemType> b = ImmutableMap.builder();
+		for (ItemType itemType : savedObjects.getTypes()) {
+			b.put(itemType.getId(), itemType);
+		}
+		return b.build();
 	}
 
 }

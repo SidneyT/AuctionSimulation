@@ -18,7 +18,6 @@ import weka.core.converters.ConverterUtils.DataSource;
 
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
-import createUserFeatures.Feature;
 import createUserFeatures.Features;
 
 /**
@@ -89,7 +88,7 @@ public class AccuracyEvaluation_SetCentroids implements Runnable {
 				System.out.println("Processing " + simFile + ".");
 				String[] filenameParts = simFile.getName().replace(".csv", "").split("_");
 				
-				List<Feature> features = new ArrayList<>();
+				List<Features> features = new ArrayList<>();
 				for (String f : Arrays.asList(filenameParts[0].split(","))) {
 					features.add(Features.valueOf(f));
 				}

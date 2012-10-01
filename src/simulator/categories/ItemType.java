@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import distributions.Exponential;
+import org.apache.commons.math3.distribution.ExponentialDistribution;
 
 public class ItemType {
 	
@@ -59,15 +59,15 @@ public class ItemType {
 		
 		ArrayList<ItemType> items = new ArrayList<>();
 		for (int i = 0; i < numberOfItems; i++) {
-			Exponential exp1 = new Exponential(1);
-			double weight = exp1.nextDouble();
+			ExponentialDistribution exp1 = new ExponentialDistribution(1);
+			double weight = exp1.sample();
 			
 			int averageValuation = 3000;
 			int minimumValuation = 500;
-			Exponential exp2 = new Exponential(averageValuation);
+			ExponentialDistribution exp2 = new ExponentialDistribution(averageValuation);
 			int trueValuation;
 			do {
-			 trueValuation = (int) (exp2.nextDouble() + 0.5);
+			 trueValuation = (int) (exp2.sample() + 0.5);
 			} while (trueValuation < minimumValuation);
 			ItemType item = new ItemType(weight, "type" + (int) (weight * 10000), trueValuation, CategoryRecord.randomCategory(categories, r.nextDouble()));
 			items.add(item);

@@ -50,9 +50,10 @@ public class BuildShillScore {
 		Map<Integer, ShillScore> shillScores = new HashMap<>();
 		Map<SimAuction, List<Integer>> auctionBidders = new HashMap<>(); // Map(seller, bidderlist)
 		Map<Integer, Integer> auctionCounts = new HashMap<>();
+		Map<Integer, UserObject> users = simAuctionIterator.users();
 		while (it.hasNext()) {
 			Pair<SimAuction, List<BidObject>> pair = it.next();
-			processBids(shillScores, auctionBidders, auctionCounts, simAuctionIterator.users(), pair.getKey(), pair.getValue());
+			processBids(shillScores, auctionBidders, auctionCounts, users, pair.getKey(), pair.getValue());
 		}
 		
 		return new ShillScoreInfo(shillScores, auctionBidders, auctionCounts);
@@ -88,8 +89,8 @@ public class BuildShillScore {
 		for (BidObject bid : bids) {
 			int bidderId = bid.bidderId;
 			String bidderType = users.get(bidderId).userType;
-			ShillScore ss;
 			
+			ShillScore ss;
 			if (!shillScores.containsKey(bidderId)) {
 				ss = new ShillScore(bidderId, bidderType);
 				shillScores.put(bidderId, ss);

@@ -30,6 +30,7 @@ public class WriteScores {
 			
 			for (ShillScore ss : shillScores.values()) {
 				if (ss.getLossCount() != 0) {
+					bw.append(ss.userType + delimiter);
 					bw.append(ss.getId() + delimiter);
 					bw.append(SSRatingsString(ss, auctionCounts, reweights).toString());
 					bw.newLine();
@@ -62,6 +63,7 @@ public class WriteScores {
 
 	private static String shillScoreHeadings(double[]... reweights) {
 		StringBuilder sb = new StringBuilder();
+		sb.append("userType,");
 		sb.append("bidderId,");
 		sb.append("wins,");
 		sb.append("losses,");

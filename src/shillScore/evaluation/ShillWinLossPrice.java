@@ -46,13 +46,7 @@ public class ShillWinLossPrice {
 	 * @param simAuctionIterator 
 	 */
 	public static void writeToFile(SimAuctionIterator simAuctionIterator, String label) {
-		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getAuctionIterator();
-		
-		Builder<Integer, ItemType> b = ImmutableMap.builder();
-		for (ItemType itemType : simAuctionIterator.itemTypes()) {
-			b.put(itemType.getId(), itemType);
-		}
-		ImmutableMap<Integer, ItemType> itemTypes = b.build();
+		Map<Integer, ItemType> itemTypes = simAuctionIterator.itemTypes();
 		
 		IncrementalMean shillWinAvg = new IncrementalMean();
 		IncrementalMean shillLossAvg = new IncrementalMean();
@@ -61,18 +55,21 @@ public class ShillWinLossPrice {
 
 		Map<Integer, UserObject> users = simAuctionIterator.users();
 		
+		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getAuctionIterator();
 		while (it.hasNext()) {
 			Pair<SimAuction, List<BidObject>> pair = it.next();
 			SimAuction auction = pair.getKey();
 			String sellerType = users.get(auction.sellerId).userType;
 			String bidderType = users.get(auction.winnerId).userType;
-			if (auction.sellerId > 5000 && auction.winnerId > 5000) { // seller is shill && winner is shill
+			boolean sellerIsShill = sellerType.toLowerCase().contains("puppet");
+			boolean winnerIsShill = bidderType.toLowerCase().contains("puppet");
+			if (sellerIsShill && winnerIsShill) { // seller is shill && winner is shill
 				shillWinAvg.addNext(ratio(pair, itemTypes));
-			} else if (auction.sellerId > 5000 && !(auction.winnerId > 5000)) { // seller is shill && winner is shill
+			} else if (sellerIsShill && !winnerIsShill) { // seller is shill && winner is shill
 				shillLossAvg.addNext(ratio(pair, itemTypes));
-			} else if (!(auction.sellerId > 5000) && auction.winnerId > 5000) { // seller is shill && winner is shill
+			} else if (!sellerIsShill && winnerIsShill) { // seller is shill && winner is shill
 				nonShillShillWinAvg.addNext(ratio(pair, itemTypes));
-			} else if (!(auction.sellerId > 5000) && !(auction.winnerId > 5000)) { // seller is shill && winner is shill
+			} else if (!sellerIsShill && !winnerIsShill) { // seller is shill && winner is shill
 				nonShillNonShillWinAvg.addNext(ratio(pair, itemTypes));
 			}
 		}
@@ -84,7 +81,7 @@ public class ShillWinLossPrice {
 			bw.append(",");
 			
 			// number of auctions won by the shill, and the price
-			bw.append(shillWinAvg.getNumElements() + "," + shillWinAvg.getAverage() + ",");
+			bw.append(shillWinAvg.getNumElements() + ",").append(shillWinAvg.getAverage() + ",");
 			
 			// number of auctions won by a non-shill, and the price
 			bw.append(shillLossAvg.getNumElements() + "," + shillLossAvg.getAverage() + ",");

@@ -20,7 +20,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
-import createUserFeatures.Feature;
+import createUserFeatures.Features;
 
 /**
  * Runs a modified version of the evaluation described in Stability-based Clustering Evaluation by Lange et al.
@@ -75,7 +75,7 @@ public class AccuracyEvaluation implements Runnable {
 //	}
 
 	public synchronized static void writeResults(BufferedWriter bw_full, BufferedWriter bw_short, int numberOfClusters, 
-			List<Feature> featuresForClustering, double[][] correctMatrix, int[][] assignment, int correct, int total, 
+			List<Features> featuresForClustering, double[][] correctMatrix, int[][] assignment, int correct, int total, 
 			int tmSeed, int simSeed, int runNumber) throws IOException {
 		long currentTime = System.currentTimeMillis();
 		write(bw_full, "Clusters:" + numberOfClusters);
@@ -99,13 +99,13 @@ public class AccuracyEvaluation implements Runnable {
 
 //	private enum ClassifyWith {TM, SIM};
 //	private final ClassifyWith classifyWith;
-	private final List<Feature> featuresForClustering;
-	private final List<Feature>  featuresToPrint;
+	private final List<Features> featuresForClustering;
+	private final List<Features>  featuresToPrint;
 	private final int numberOfClusters;
 
 	private final int tmSeed, simSeed;
 	
-	public AccuracyEvaluation(List<Feature> featuresForClustering, int numberOfClusters
+	public AccuracyEvaluation(List<Features> featuresForClustering, int numberOfClusters
 //			, ClassifyWith classifyWith
 			, int tmSeed, int simSeed) {
 //		this.classifyWith = classifyWith;
@@ -152,7 +152,7 @@ public class AccuracyEvaluation implements Runnable {
 	 * @throws Exception
 	 */
 	public static void evaluate(String tmFile, String simFile, int numberOfClusters, BufferedWriter bw_full, BufferedWriter bw_short, 
-			List<Feature> featuresForClustering, int tmSeed, int simSeed, int runNumber) throws Exception {
+			List<Features> featuresForClustering, int tmSeed, int simSeed, int runNumber) throws Exception {
 		Instances tmIs = new DataSource(tmFile).getDataSet();
 //		tmIs.randomize(new Random());
 		tmIs.setClassIndex(tmIs.numAttributes() - 1); // the last attribute is the cluster assignment 

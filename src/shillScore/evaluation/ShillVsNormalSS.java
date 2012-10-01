@@ -25,6 +25,7 @@ import org.apache.commons.math3.stat.Frequency;
 
 import createUserFeatures.BuildUserFeatures;
 import createUserFeatures.BuildUserFeatures.SimAuction;
+import createUserFeatures.BuildUserFeatures.UserObject;
 
 import shillScore.ShillScore;
 import shillScore.evaluation.BayseanAverageSS.BayseanSS;
@@ -188,13 +189,17 @@ public class ShillVsNormalSS {
 	 * @param shillScores
 	 * @param auctionBidders
 	 * @param auctionCounts
+	 * @param map 
 	 * @param path
 	 */
-	public static void ssRankForShills(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, double[]... reweights) {		
-		writeRanks(shillScores, auctionBidders, auctionCounts, path, label, ShillScore.DEFAULT_WEIGHTS);
+	public static void ssRankForShills(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, 
+			Map<Integer, Integer> auctionCounts, 
+			Map<Integer, UserObject> users, 
+			Path path, String label, double[]... reweights) {		
+		writeRanks(shillScores, auctionBidders, auctionCounts, users, path, label, ShillScore.DEFAULT_WEIGHTS);
 		for (int i = 0; i < reweights.length; i++) {
 			String weightString = Arrays.toString(reweights[i]).replace(", ", "");
-			writeRanks(shillScores, auctionBidders, auctionCounts, path, label + "." + weightString, reweights[i]);
+			writeRanks(shillScores, auctionBidders, auctionCounts, users, path, label + "." + weightString, reweights[i]);
 		}
 		
 //		return new RankPair(shillFirstCount, normalFirstCount);
@@ -218,7 +223,21 @@ public class ShillVsNormalSS {
 		}
 	}
 
-	private static void writeRanks(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label, double[] weights) {
+	/**
+	 * Counts the number of auctions in which the shill has the highest shill score.
+	 * @param shillScores
+	 * @param auctionBidders
+	 * @param auctionCounts
+	 * @param users
+	 * @param path
+	 * @param label
+	 * @param weights
+	 */
+	private static void writeRanks(Map<Integer, ShillScore> shillScores, 
+			Map<SimAuction, List<Integer>> auctionBidders, 
+			Map<Integer, Integer> auctionCounts, 
+			Map<Integer, UserObject> users, 
+			Path path, String label, double[] weights) {
 		int shillFirstCount = 0;
 		int normalFirstCount = 0;
 		
@@ -226,8 +245,8 @@ public class ShillVsNormalSS {
 			SimAuction auction = auctionBidderEntry.getKey();
 			List<Integer> bidders = auctionBidderEntry.getValue();
 			
-//			if (auction.sellerId.userType.toLowerCase().contains("puppet")) {// TODO:
-			if (auction.sellerId >= 5000) {// TODO:
+			if (users.get(auction.sellerId).userType.toLowerCase().contains("puppet")) {
+//			if (auction.sellerId >= 5000) {// TODO:
 				Set<Integer> seen = new HashSet<>();
 				List<ScoreBidderPair> pairs = new ArrayList<>();
 				for (int bidder : bidders) {
@@ -251,8 +270,8 @@ public class ShillVsNormalSS {
 //					System.out.print("[");
 //					for (ScoreBidderPair pair : pairs) {
 						ScoreBidderPair pair = pairs.get(0);
-//						if (pair.bidderId.userType.toLowerCase().contains("puppet")) {// TODO:
-						if (auction.sellerId >= 5000) {// TODO:
+						if (users.get(pair.bidderId).userType.toLowerCase().contains("puppet")) {
+//						if (auction.sellerId >= 5000) {// TODO:
 //							System.out.print("1,");
 							shillFirstCount++;
 						} else {
@@ -282,14 +301,19 @@ public class ShillVsNormalSS {
 	}
 	
 	/**
-	 * 
+	 * Same as writeRanks() above, but for BayseanSS
 	 * @param shillScores
 	 * @param auctionBidders
 	 * @param auctionCounts
 	 * @param path
 	 * @param label
 	 */
-	public static void writeRanks(Map<Integer, ShillScore> shillScores, BayseanSS bayseanSS, Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts, Path path, String label) {
+	public static void writeRanks(Map<Integer, ShillScore> shillScores, 
+			BayseanSS bayseanSS, 
+			Map<SimAuction, List<Integer>> auctionBidders, 
+			Map<Integer, Integer> auctionCounts, 
+			Map<Integer, UserObject> users, 
+			Path path, String label) {
 		int shillFirstCount = 0;
 		int normalFirstCount = 0;
 		
@@ -297,8 +321,8 @@ public class ShillVsNormalSS {
 			SimAuction auction = auctionBidderEntry.getKey();
 			List<Integer> bidders = auctionBidderEntry.getValue();
 			
-//			if (auction.sellerId.userType.toLowerCase().contains("puppet")) {// TODO:
-			if (auction.sellerId >= 5000) {// TODO:
+			if (users.get(auction.sellerId).userType.toLowerCase().contains("puppet")) {
+//			if (auction.sellerId >= 5000) {// TODO:
 				Set<Integer> seen = new HashSet<>();
 				List<ScoreBidderPair> pairs = new ArrayList<>();
 				for (int bidder : bidders) {
@@ -322,8 +346,8 @@ public class ShillVsNormalSS {
 //					System.out.print("[");
 //					for (ScoreBidderPair pair : pairs) {
 						ScoreBidderPair pair = pairs.get(0);
-//						if (pair.bidderId.userType.toLowerCase().contains("puppet")) {// TODO:
-						if (auction.sellerId >= 5000) { // TODO:
+						if (users.get(pair.bidderId).userType.toLowerCase().contains("puppet")) {
+//						if (auction.sellerId >= 5000) { // TODO:
 //							System.out.print("1,");
 							shillFirstCount++;
 						} else {

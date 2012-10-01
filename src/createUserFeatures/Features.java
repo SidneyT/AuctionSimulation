@@ -6,12 +6,17 @@ import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
 
-
 /**
  * Per-user features of bidders 
  */
-public enum Features implements Feature {
+public enum Features {
 	
+	UserType0b {
+		@Override
+		public double value(UserFeatures uf) {
+			throw new UnsupportedOperationException();
+		}
+	},
 	/**
 	 * User Id
 	 */
@@ -202,13 +207,19 @@ public enum Features implements Feature {
 	FirstBidTimes13 {
 		@Override
 		public double value(UserFeatures uf) {
+			return uf.getFirstBidTime().getAverage();
+		}
+	},
+	FirstBidTimes13Ln {
+		@Override
+		public double value(UserFeatures uf) {
 			return FastMath.log(uf.getFirstBidTime().getAverage());
 		}
 	},
 	FirstBidTimes13SD {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log(uf.getFirstBidTime().getSD());
+			return uf.getFirstBidTime().getSD();
 		}
 	},
 	/**
@@ -235,24 +246,66 @@ public enum Features implements Feature {
 			return (double) uf.getPos() / (uf.getPos() + uf.getNeg());
 		}
 	},
+	SelfBidInterval16 {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getSelfBidInterval().getAverage();
+		}
+	},
+	SelfBidInterval16SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getSelfBidInterval().getSD();
+		}
+	},
+	AnyBidInterval17 {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getAnyBidInterval().getAverage();
+		}
+	},
+	AnyBidInterval17SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getAnyBidInterval().getSD();
+		}
+	},
+	// not using because TM doesn't have this. But not sure.
+//	BidAmountPropValuation18 {
+//		@Override
+//		public double value(UserFeatures uf) {
+//			return uf.getBidAmountComparedToValuation().getAverage();
+//		}
+//	},
+//	BidAmountPropValuation18SD {
+//		@Override
+//		public double value(UserFeatures uf) {
+//			return uf.getBidAmountComparedToValuation().getSD();
+//		}
+//	}
 	;
 	
 	public String label() {
 		return this.name();
 	}
 	
-	public static String labels(Collection<? extends Feature> features) {
+	public abstract double value(UserFeatures uf);
+
+	public static String labels(Collection<Features> features) {
 		StringBuilder sb = new StringBuilder();
-		for (Feature feature : features)
+		for (Features feature : features)
 			sb.append(feature.label()).append(",");
 		if (!features.isEmpty())
 			sb.deleteCharAt(sb.length() - 1);
 		return sb.toString();
 	}
 	
-	public static String fileLabels(Collection<? extends Feature> features) {
+	public static String fileLabels(Collection<Features> features) {
+		if (features == ALL_FEATURES)
+			return "ALL_FEATURES";
+
 		StringBuilder sb = new StringBuilder();
-		for (Feature feature : features)
+		for (Features feature : features)
 			sb.append(feature.label().replaceAll("^[A-za-z]+", "")).append(",");
 		if (!features.isEmpty())
 			sb.deleteCharAt(sb.length() - 1);
@@ -261,18 +314,22 @@ public enum Features implements Feature {
 	
 	/**
 	 * 
-	 * Values for features where Double.isNaN() == true is not printed.
+	 * Values for features where if <code>Double.isNaN()</code> is not printed.
 	 * 
 	 * @param features
 	 * @param userFeatures
 	 * @return
 	 */
-	public static String values(Collection<? extends Feature> features, UserFeatures userFeatures) {
+	public static String values(Collection<? extends Features> features, UserFeatures userFeatures) {
 		StringBuilder sb = new StringBuilder();
-		for (Feature feature : features) {
-			double value = feature.value(userFeatures);
-			if (!Double.isNaN(value))
-				sb.append(value);
+		for (Features feature : features) {
+			if (feature == UserType0b) {
+				sb.append(userFeatures.userType);
+			} else {
+				double value = feature.value(userFeatures);
+				if (!Double.isNaN(value))
+					sb.append(value);
+			}
 			sb.append(",");
 		}
 		if (!features.isEmpty())
@@ -285,7 +342,7 @@ public enum Features implements Feature {
 		throw new UnsupportedOperationException();
 	}
 	
-	public static final List<Feature> defaultFeatures = Arrays.<Feature>asList(
+	public static final List<Features> DEFAULT_FEATURES = Arrays.<Features>asList(
 			Features.UserId0,
 			Features.AuctionCount1Ln, 
 			Features.Rep2Ln,
@@ -298,4 +355,6 @@ public enum Features implements Feature {
 			Features.AvgBidPropMax10,
 			Features.AvgBidProp11
 		);
+	
+	public static final List<Features> ALL_FEATURES = Arrays.asList(Features.values());
 }

@@ -16,8 +16,6 @@ import java.util.Set;
 
 import org.apache.commons.math3.util.Pair;
 
-import createUserFeatures.BuildUserFeatures.BidObject;
-
 import simulator.database.DBConnection;
 
 /**
@@ -29,30 +27,38 @@ public class BuildTMFeatures extends BuildUserFeatures{
 //		String features = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15"; // all
 //		String features = "-1ln-2ln-3ln-4ln-6ln-13-9-5-10-11";
 		
-		List<Feature> allFeatures = Arrays.<Feature>asList(Features.values());
-		List<Feature> featureList = Arrays.<Feature>asList(
-				Features.AuctionCount1Ln, 
-				Features.Rep2Ln,
-				Features.AvgBid3Ln,
-				Features.AvgBidIncMinusMinInc4Ln,
-				Features.BidsPerAuc6Ln,
-				Features.FirstBidTimes13,
-				Features.BidTimesElapsed9,
-				Features.PropWin5,
-				Features.AvgBidPropMax10,
-				Features.AvgBidProp11
-				);
+		List<Features> featureList = Features.ALL_FEATURES;
+//		List<Features> featureList = Features.defaultFeatures;
 		
 		BuildTMFeatures bf = new BuildTMFeatures();
 		
 //		writeToFile(bf.build().values(), bf.getFeaturesToPrint(), Paths.get("TradeMeUserFeatures" + features + ".csv"));
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 //		reclustering(features, 4);
-		int minimumFinalPrice = 2000;
-		int maximumFinalPrice = 10000;
-		writeToFile(bf.build(minimumFinalPrice, maximumFinalPrice).values(), featureList, 
-				Paths.get("TradeMeUserFeatures" + Features.fileLabels(featureList) + "-" + minimumFinalPrice + "-" + maximumFinalPrice + ".csv"));
+		
+//		int minimumFinalPrice = 2000;
+//		int maximumFinalPrice = 10000;
+//		writeToFile(bf.build(minimumFinalPrice, maximumFinalPrice).values(), featureList, 
+//				Paths.get("TradeMeUserFeatures" + Features.fileLabels(featureList) + "-" + minimumFinalPrice + "-" + maximumFinalPrice + ".csv"));
+		
+		writeToFile(bf.build().values(), featureList, 
+				Paths.get("TradeMeUserFeatures_" + Features.fileLabels(featureList) + ".csv"));
+		
+		
 		System.out.println("Finished.");
+	}
+	
+	/**
+	 * calls constructUserFeatures with default query
+	 */
+	public Map<Integer, UserFeatures> build() {
+		// get bids (and user and auction info) for auctions that are not purchased with buy now
+		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time " +
+				"FROM auctions AS a " +
+				"JOIN bids AS b ON a.listingId=b.listingId " +
+				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
+				"ORDER BY a.listingId ASC, amount ASC;";
+		return constructUserFeatures(query);
 	}
 	
 	/**
@@ -73,7 +79,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 		return constructUserFeatures(query);
 	}
 	
-	public static void reclustering(List<Feature> features, int numClusters) {
+	public static void reclustering(List<Features> features, int numClusters) {
 		for (int clusterId = 0; clusterId < numClusters; clusterId++) {
 			BuildTMFeatures buf = new BuildTMFeatures();
 			writeToFile(buf.reclustering_build(clusterId).values(), features, Paths.get("recluster_" + clusterId + ".csv"));
@@ -106,19 +112,6 @@ public class BuildTMFeatures extends BuildUserFeatures{
 		userFeaturesMap.keySet().retainAll(idsInCluster);
 		
 		return userFeaturesMap;
-	}
-	
-	/**
-	 * calls constructUserFeatures with default query
-	 */
-	public Map<Integer, UserFeatures> build() {
-		// get bids (and user and auction info) for auctions that are not purchased with buy now
-		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time " +
-				"FROM auctions AS a " +
-				"JOIN bids AS b ON a.listingId=b.listingId " +
-				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
-				"ORDER BY a.listingId ASC, amount ASC;";
-		return constructUserFeatures(query);
 	}
 	
 	/**

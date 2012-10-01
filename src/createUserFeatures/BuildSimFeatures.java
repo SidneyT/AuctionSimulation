@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 
 import createUserFeatures.BuildUserFeatures.BidObject;
 
+import simulator.categories.ItemType;
 import simulator.database.DBConnection;
 
 /**
@@ -33,7 +34,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 //		String features = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
 //		String features = "-3ln-10-5-6ln-11";
 		
-		List<Feature> features = Arrays.<Feature>asList(Features.values());
+		List<Features> features = Features.ALL_FEATURES;
 		
 		boolean trim = true;
 		BuildSimFeatures bf = new BuildSimFeatures(trim);
@@ -54,10 +55,11 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	
 	public Map<Integer, UserFeatures> build(SimAuctionIterator simAuctionIterator) {
 		Iterator<Pair<SimAuction, List<createUserFeatures.BuildUserFeatures.BidObject>>> it = simAuctionIterator.getAuctionIterator();
+		Map<Integer, ItemType> itemTypes = simAuctionIterator.itemTypes();
 		while (it.hasNext()) {
 			Pair<SimAuction, List<createUserFeatures.BuildUserFeatures.BidObject>> pair = it.next();
 //			System.out.println("auction: " + pair.getKey() + ", bids: " + pair.getValue());
-			processAuction(pair.getKey(), pair.getValue());
+			processAuction(pair.getKey(), pair.getValue(), itemTypes);
 		}
 		
 		for (UserObject user : simAuctionIterator.users().values()) {
@@ -100,5 +102,14 @@ public class BuildSimFeatures extends BuildUserFeatures{
 		}
 	}
 	
-	
+	private void processAuction(SimAuction auction, List<BidObject> list, Map<Integer, ItemType> itemtypes) {
+		super.processAuction(auction, list);
+		
+		// for recording bid amounts as a proportion of true valuation
+		// this value can only be calculated for SIM-Auctions, since true valuation is not known for TM-Auctions.
+		for (BidObject bid : list) {
+			double proportionOfValuation = (double) bid.amount/itemtypes.get(auction.itemTypeId).getTrueValuation();
+			userFeaturesMap.get(bid.bidderId).getBidAmountComparedToValuation().addNext(proportionOfValuation);
+		}
+	}
 }

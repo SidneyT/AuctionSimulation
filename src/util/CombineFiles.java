@@ -7,21 +7,26 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
  * Reads the rows from all CSV files in a folder and writes them all into the same file.
  */
-public class GatherAllSynFiles {
+public class CombineFiles {
 	public static void main(String[] args) throws IOException {
-		File synDataFolder = new File("F:/workstuff2011/AuctionSimulation/shillingResults/temp");
+		File synDataFolder = new File("F:/workstuff2011/AuctionSimulation/shillingResults/waitStartTrevathan");
 		
-		BufferedWriter bw = Files.newBufferedWriter(Paths.get(synDataFolder.getPath(), "all.csv"), Charset.defaultCharset());
+		String filename = "syn_WaitStartTrevathan_normal";
+		String suffix = ".csv";
+		Path outputFolder = Paths.get(synDataFolder.getPath(), "combined");
+		BufferedWriter bw = Files.newBufferedWriter(Paths.get(outputFolder.toString(), filename + suffix), Charset.defaultCharset());
 		int lineCount = 0;
 		for (File file : synDataFolder.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.endsWith(".csv");
+//				return name.startsWith("syn_") && name.endsWith(".csv");
+				return name.startsWith("ShillScores_") && name.endsWith(".csv");
 			}
 		})) {
 
@@ -30,12 +35,16 @@ public class GatherAllSynFiles {
 			if (br.ready()) // skip the first line with the column headings
 				br.readLine();
 			while(br.ready()) {
-				if (lineCount != 0 && lineCount % 1048576 == 0) {
-					bw.flush();
-					bw = Files.newBufferedWriter(Paths.get(synDataFolder.getPath(), "all_" + lineCount / 1048576 + ".csv"), Charset.defaultCharset());
+				String line = br.readLine();
+				if (!line.startsWith("Puppet")) {
+					lineCount++;
+					if (lineCount != 0 && lineCount % 1048576 == 0) {
+						bw.flush();
+						bw.close();
+						bw = Files.newBufferedWriter(Paths.get(outputFolder.toString(), filename + lineCount / 1048576 + suffix), Charset.defaultCharset());
+					}
+					bw.append(line).append(",fraud").append("\r\n");
 				}
-				lineCount++;
-				bw.append(br.readLine()).append("\r\n");
 			}
 		}
 		bw.flush();

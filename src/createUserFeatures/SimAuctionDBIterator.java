@@ -131,8 +131,12 @@ public class SimAuctionDBIterator implements SimAuctionIterator {
 			}
 		}
 		
+		Map<Integer, UserObject> users = null;
 		@Override
 		public Map<Integer, UserObject> users() {
+			if (users != null) {
+				return users;
+			}
 			try {
 				PreparedStatement usersQuery = conn.prepareStatement(
 						"SELECT DISTINCT userId, userType, posUnique, negUnique " +
@@ -151,22 +155,23 @@ public class SimAuctionDBIterator implements SimAuctionIterator {
 							)
 					);
 				}
-				return b.build();
+				return users = b.build();
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}
 		}
 
 		@Override
-		public Collection<ItemType> itemTypes() {
+		public Map<Integer, ItemType> itemTypes() {
 			try {
 				PreparedStatement itemtypesQuery = conn.prepareStatement(
 						"SELECT id, weight, name, trueValuation, categoryId FROM itemtypes;"
 						); 
 				ResultSet itemtypesRS = itemtypesQuery.executeQuery();
-				ArrayList<ItemType> itemtypes = new ArrayList<>();
+				Builder<Integer, ItemType> itemtypesBuilder = ImmutableMap.builder();
 				while (itemtypesRS.next()) {
-					itemtypes.add(new ItemType(
+					itemtypesBuilder.put(itemtypesRS.getInt("id"),
+							new ItemType(
 							itemtypesRS.getInt("id"),
 							itemtypesRS.getDouble("weight"),
 							itemtypesRS.getString("name"),
@@ -175,7 +180,7 @@ public class SimAuctionDBIterator implements SimAuctionIterator {
 							)
 					);
 				}
-				return itemtypes;
+				return itemtypesBuilder.build();
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}

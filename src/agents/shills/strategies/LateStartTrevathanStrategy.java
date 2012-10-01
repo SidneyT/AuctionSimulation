@@ -7,20 +7,15 @@ import simulator.objects.Auction;
 import simulator.objects.Bid;
 
 /**
- *	Strategy consistent with the behaviour described in <i>A Simple Shill Bidding Agent</i>
- *	by <i>Trevathan et al.</i>.
- *
- *	Does NOT keep track of who is winning an auction; and does NOT
- *	keep track of whether the auction should be bid on by, e.g.,
- *	a shill.
+ *	Similar to TrevathanStrategy, except starts bidding later, and makes bids that are not always the minimum required.
  */
-public class ModifiedTrevathanStrategy implements Strategy {
+public class LateStartTrevathanStrategy implements Strategy {
 
 	private final double theta;
 	private final double alpha;
 	private final double mu;
 	
-	public ModifiedTrevathanStrategy(double theta, double alpha, double mu) {
+	public LateStartTrevathanStrategy(double theta, double alpha, double mu) {
 		this.theta = theta;
 		this.alpha = alpha;
 		this.mu = mu;

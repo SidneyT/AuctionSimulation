@@ -9,8 +9,16 @@ public class IncrementalSD extends IncrementalMean {
 		super.addNext(newValue); // update average
 		stdDev = stdDev + (newValue - oldAverage) * (newValue - average);
 	}
+//	public void addNext(int newValue) {
+//		addNext((double) newValue);
+//	}
+//	public void addNext(long newValue) {
+//		addNext((double) newValue);
+//	}
 	
 	public double getSD() {
+		if (numElements <=  1)
+			return Double.NaN;
 		return Math.sqrt(stdDev / (numElements - 1));
 	}
 	
@@ -41,5 +49,5 @@ public class IncrementalSD extends IncrementalMean {
 		System.out.println(sd.getSD());
 //		System.out.println(sd.average);
 	}
-
+	
 }

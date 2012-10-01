@@ -1,7 +1,7 @@
 package shillScore.evaluation;
 
+import java.io.BufferedWriter;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,8 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.io.Files;
+
 import createUserFeatures.BuildSimFeatures;
-import createUserFeatures.Feature;
 import createUserFeatures.Features;
 import createUserFeatures.SimAuctionDBIterator;
 import createUserFeatures.SimAuctionIterator;
@@ -25,9 +26,10 @@ import agents.shills.NonAltHybrid;
 import agents.shills.RandomHybrid;
 import agents.shills.SimpleShillPair;
 import agents.shills.strategies.LowPriceStrategy;
-import agents.shills.strategies.ModifiedTrevathanStrategy;
+import agents.shills.strategies.LateStartTrevathanStrategy;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
+import agents.shills.strategies.WaitStartTrevathanStrategy;
 import shillScore.BuildCollusiveShillScore;
 import shillScore.BuildShillScore;
 import shillScore.CollusiveShillScore;
@@ -39,31 +41,36 @@ import simulator.AgentAdder;
 import simulator.Main;
 import simulator.database.DBConnection;
 import simulator.database.KeepObjectsInMemory;
+import simulator.database.SaveToDatabase;
 
 public class GenerateShillData {
 
 	public static void main(String[] args) {
 		// strategies
-		Strategy travethanStrategy = new TrevathanStrategy(0.95, 0.85, 0.85);
-		Strategy modifiedTravethanStrategy = new ModifiedTrevathanStrategy(0.95, 0.85, 0.85);
-		Strategy lowPriceStrategy = new LowPriceStrategy();
-		
-		// adders
-		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethanStrategy); // can use 20, since each submits 10 auctions.
-		AgentAdder simplePairAdderB = SimpleShillPair.getAgentAdder(20, modifiedTravethanStrategy);
-		AgentAdder simplePairAdderC = LowBidShillPair.getAgentAdder(20, travethanStrategy, lowPriceStrategy);
-		AgentAdder hybridAdderA = Hybrid.getAgentAdder(5, travethanStrategy, 4); // use only 5 groups, since each group submits 40 auctions. if too many will affect normal auctions too much. 
-		AgentAdder hybridAdderB = Hybrid.getAgentAdder(5, modifiedTravethanStrategy, 4);
-		AgentAdder hybridAdderC = ModifiedHybrid.getAgentAdder(5, modifiedTravethanStrategy, lowPriceStrategy, 4);
-		AgentAdder randomHybridAdderA = RandomHybrid.getAgentAdder(5, travethanStrategy, 4);
-		AgentAdder multisellerHybridAdderA = MultiSellerHybrid.getAgentAdder(5, travethanStrategy, 3, 4);
-		
-		AgentAdder nonAltHybridA = NonAltHybrid.getAgentAdder(5, travethanStrategy, 4);
+		Strategy travethan = new TrevathanStrategy(0.95, 0.85, 0.85);
+		Strategy lateStart = new LateStartTrevathanStrategy(0.95, 0.85, 0.85);
+		Strategy lowPrice = new LowPriceStrategy();
+		Strategy waitStart = new WaitStartTrevathanStrategy(0.95, 0.85, 0.85);
 
-		int numberOfRuns = 1008;
+		// adders
+		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethan); // can use 20, since each submits 10 auctions.
+		AgentAdder simplePairAdderB = SimpleShillPair.getAgentAdder(20, lateStart);
+		AgentAdder simplePairAdderC = LowBidShillPair.getAgentAdder(20, travethan, lowPrice);
+		AgentAdder simplePairAdderD = SimpleShillPair.getAgentAdder(20, waitStart);
+		AgentAdder hybridAdderA = Hybrid.getAgentAdder(5, travethan, 4); // use only 5 groups, since each group submits 40 auctions. if too many will affect normal auctions too much. 
+		AgentAdder hybridAdderB = Hybrid.getAgentAdder(5, lateStart, 4);
+		AgentAdder hybridAdderC = ModifiedHybrid.getAgentAdder(5, lateStart, lowPrice, 4);
+		AgentAdder randomHybridAdderA = RandomHybrid.getAgentAdder(5, travethan, 4);
+		AgentAdder multisellerHybridAdderA = MultiSellerHybrid.getAgentAdder(5, travethan, 3, 4);
+		
+		
+		AgentAdder nonAltHybridA = NonAltHybrid.getAgentAdder(5, travethan, 4);
+
+		int numberOfRuns = 1000;
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
 		run(simplePairAdderA, numberOfRuns);
+//		run(simplePairAdderD, numberOfRuns);
 //		run(simplePairAdderA, numberOfRuns, new double[]{0.0820,0.0049,-0.0319,0.5041,0.2407,0.2003});
 //		writeSSandPercentiles(simplePairAdderB, numberOfRuns);
 //		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
@@ -76,11 +83,11 @@ public class GenerateShillData {
 	}
 	
 	private static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
-		for (int runNumber = 1007; runNumber < numberOfRuns; runNumber++) {
+		for (int runNumber = 107; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("starting run " + runNumber);
 			
-//			List<Feature> featuresSelected = Features.defaultFeatures;
-			List<Features> featuresSelected = Arrays.asList(Features.values());
+//			List<Features> featuresSelected = Features.defaultFeatures;
+			List<Features> featuresSelected = Features.ALL_FEATURES;
 
 			KeepObjectsInMemory objInMem = new KeepObjectsInMemory();
 			SimAuctionIterator simAuctionIterator = new SimAuctionMemoryIterator(objInMem, true);
@@ -88,13 +95,12 @@ public class GenerateShillData {
 			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator); // build features
 			
 //			SimAuctionIterator simAuctionIterator = new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true);
-//			Main.run(adder);
-//			writeSSandPercentiles(simAuctionIterator, adder, runNumber, weightSets);
-//			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true));
+//			Main.run(new SaveToDatabase(), adder);
+//			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator);
 			
 			BuildSimFeatures.writeToFile(userFeatures.values(), // write features
 					featuresSelected, 
-					Paths.get("single_feature_shillvsnormal", "synUserFeatures_" + Features.fileLabels(featuresSelected) + "_" + runNumber + ".csv")
+					Paths.get("single_feature_shillvsnormal", "syn_" + adder + "_" + Features.fileLabels(featuresSelected) + "_" + runNumber + ".csv")
 					);
 			writeSSandPercentiles(simAuctionIterator, adder, runNumber, weightSets); // build and write shill scores
 			
@@ -135,7 +141,7 @@ public class GenerateShillData {
 		ShillVsNormalSS.writePercentiles(Paths.get("shillingResults", "comparisons", "ssPercentiles.csv"), ssPercentilesRunLabel, ssPercentiless);
 		
 		// write out the number of shill auctions for which the shill had the highest (or not highest) SS
-		ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, Paths.get("shillingResults", "comparisons", "rank.csv"), runLabel, weightSets);
+		ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, simAuctionIterator.users(), Paths.get("shillingResults", "comparisons", "rank.csv"), runLabel, weightSets);
 		
 //		WriteScores.writeShillScoresForAuctions(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, runLabel);
 	}
@@ -145,8 +151,8 @@ public class GenerateShillData {
 		List<Double> normalSS = new ArrayList<>();
 		
 		for (ShillScore ss : sss) { // sort SS for shills and normals into different lists
-//			if (ss.userType.toLowerCase().contains("puppet")) { // TODO:
-			if (ss.getId() > 5000) { // TODO:
+			if (ss.userType.toLowerCase().contains("puppet")) { // TODO:
+//			if (ss.getId() > 5000) { // TODO:
 				shillSS.add(ss.getShillScore(auctionCounts, weights));
 			} else {
 				normalSS.add(ss.getShillScore(auctionCounts, weights));

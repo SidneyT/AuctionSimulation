@@ -39,7 +39,7 @@ public abstract class BuildUserFeatures {
 		return this.trim;
 	}
 
-	public static void writeToFile(Collection<UserFeatures> userFeaturesCollection, List<? extends Feature> featuresToPrint, Path path) {
+	public static void writeToFile(Collection<UserFeatures> userFeaturesCollection, List<Features> featuresToPrint, Path path) {
 		try (BufferedWriter w = Files.newBufferedWriter(path, Charset.defaultCharset())) {
 			// print headings
 			w.append(Features.labels(featuresToPrint));
@@ -72,10 +72,10 @@ public abstract class BuildUserFeatures {
 	 * @param auction
 	 * @param list list of bids for this auction in ascending price order
 	 */
-	protected void processAuction(AuctionObject auction, List<BuildUserFeatures.BidObject> list) {
+	protected void processAuction(AuctionObject auction, List<BidObject> list) {
 		// convert bidList into a multimap
-		ArrayListMultimap<Integer, BuildUserFeatures.BidObject> bidsByUser = ArrayListMultimap.create();
-		for (BuildUserFeatures.BidObject bo : list) {
+		ArrayListMultimap<Integer, BidObject> bidsByUser = ArrayListMultimap.create();
+		for (BidObject bo : list) {
 			boolean unique = bidsByUser.put(bo.bidderId, bo);
 			if (!unique)
 				throw new AssertionError("Every bidObject's price should be different.");
@@ -91,11 +91,11 @@ public abstract class BuildUserFeatures {
 		}
 		
 		// record when bids are made
-		recordBidPeriods(auction.endTime, bidsByUser);
+		recordFirstLastBidTimes(auction.endTime, bidsByUser);
+		recordBidTimes(auction.endTime, list.get(0).time, bidsByUser);
+		recordBidProportions(bidsByUser);
 		updateSelfBidInterval(bidsByUser);
 		updateAnyBidInterval(list);
-		
-		recordBidProportions(bidsByUser);
 		
 		// record bid counts, amounts and increments
 		recordBidAmounts(list);
@@ -116,14 +116,14 @@ public abstract class BuildUserFeatures {
 	 * record bid counts, amounts and increments
 	 * @param list
 	 */
-	protected void recordBidAmounts(List<BuildUserFeatures.BidObject> list) {
-		BuildUserFeatures.BidObject firstBid = list.get(0);
-		BuildUserFeatures.BidObject lastBid = list.get(list.size() - 1);
+	protected void recordBidAmounts(List<BidObject> list) {
+		BidObject firstBid = list.get(0);
+		BidObject lastBid = list.get(list.size() - 1);
 		addBid(userFeaturesMap.get(firstBid.bidderId), firstBid.amount, -1, lastBid.amount);
 		if (list.size() >= 1) {
 			// record bid increments
 			for (int i = 1; i < list.size(); i++) {
-				BuildUserFeatures.BidObject bo = list.get(i);
+				BidObject bo = list.get(i);
 				addBid(userFeaturesMap.get(bo.bidderId), bo.amount, list.get(i - 1).amount, lastBid.amount);
 			}
 		}
@@ -151,7 +151,7 @@ public abstract class BuildUserFeatures {
 				incMinusMin = 0;
 			if (Double.isNaN(uf.avgBidIncMinusMinInc))
 				uf.avgBidIncMinusMinInc = 0;
-			uf.avgBidIncMinusMinInc = Util.incrementalAvg(uf.avgBidIncMinusMinInc(), uf.bidIncCount, incMinusMin);
+			uf.avgBidIncMinusMinInc = Util.incrementalAvg(uf.getAvgBidIncMinusMinInc(), uf.bidIncCount, incMinusMin);
 			uf.bidIncCount++;
 		}
 		// update average bid value
@@ -167,7 +167,7 @@ public abstract class BuildUserFeatures {
 	 * 
 	 * @param list
 	 */
-	private void updateAnyBidInterval(List<BuildUserFeatures.BidObject> list) {
+	private void updateAnyBidInterval(List<BidObject> list) {
 		// if there's only 1 bid in the auction, there is no interval.
 		if (list.size() <= 1)
 			return;
@@ -182,13 +182,13 @@ public abstract class BuildUserFeatures {
 	}
 
 	/**
-	 * calculate & record the interval of time between bids made by the SAME USER
+	 * calculate & record the interval of time, in minutes, between bids made by the SAME USER
 	 * 
 	 * @param bidsByUser
 	 */
-	protected void updateSelfBidInterval(ArrayListMultimap<Integer, BuildUserFeatures.BidObject> bidsByUser) {
+	protected void updateSelfBidInterval(ArrayListMultimap<Integer, BidObject> bidsByUser) {
 		for (int bidderId : bidsByUser.keySet()) {
-			List<BuildUserFeatures.BidObject> userBidList = bidsByUser.get(bidderId);
+			List<BidObject> userBidList = bidsByUser.get(bidderId);
 			// if there is only 1 bid in the list, there is no interval.
 			UserFeatures user = userFeaturesMap.get(bidderId);
 			for (int i = 1; i < userBidList.size(); i++) {
@@ -199,7 +199,7 @@ public abstract class BuildUserFeatures {
 		}
 	}
 
-	private void recordLastBidAmountProportionOfMax(int finalPrice, ArrayListMultimap<Integer, BuildUserFeatures.BidObject> bidsByUser) {
+	private void recordLastBidAmountProportionOfMax(int finalPrice, ArrayListMultimap<Integer, BidObject> bidsByUser) {
 		for (int bidderId : bidsByUser.keySet()) {
 			UserFeatures uf = userFeaturesMap.get(bidderId);
 			double finalBidComparedToMax = (double) bidsByUser.get(bidderId).get(bidsByUser.get(bidderId).size() - 1).amount / finalPrice;
@@ -208,7 +208,7 @@ public abstract class BuildUserFeatures {
 	}
 
 	/** record proportion of bids in the auction are made by each user */
-	protected void recordBidProportions(ArrayListMultimap<Integer, BuildUserFeatures.BidObject> bidsByUser) {
+	protected void recordBidProportions(ArrayListMultimap<Integer, BidObject> bidsByUser) {
 		for (int bidderId : bidsByUser.keySet()) {
 			UserFeatures uf = userFeaturesMap.get(bidderId);
 			double bidProp = ((double) bidsByUser.get(bidderId).size() / bidsByUser.size());
@@ -217,7 +217,7 @@ public abstract class BuildUserFeatures {
 		}
 	}
 	
-	protected void recordBidPeriods(Date auctionEnd, ArrayListMultimap<Integer, BuildUserFeatures.BidObject> bidsByUser) {
+	private void recordFirstLastBidTimes(Date auctionEnd, ArrayListMultimap<Integer, BidObject> bidsByUser) {
 		for (int bidderId : bidsByUser.keySet()) {
 			UserFeatures user = userFeaturesMap.get(bidderId);
 			// record how many minutes before the end of the auction the FIRST bid was made by each user
@@ -237,6 +237,24 @@ public abstract class BuildUserFeatures {
 		// System.out.print(userBidPeriods.size() + ",");
 	}
 
+	private void recordBidTimes(Date auctionEnd, Date firstBidTime, ArrayListMultimap<Integer, BidObject> bidsByUser) {
+		long length = Util.timeDiffInMin(auctionEnd, firstBidTime);
+		// System.out.println("auction length: " + length);
+
+		for (int userId : bidsByUser.keySet()) {
+			UserFeatures userFeature = userFeaturesMap.get(userId);
+			for (BidObject bo : bidsByUser.get(userId)) {
+				// long bidMinsBeforeEnd = timeDiffInMin(bidList.get(bidList.size() - 1).time, bo.time);
+				long bidMinsBeforeEnd = Util.timeDiffInMin(auctionEnd, bo.time);
+				userFeature.getBidTimesMinsBeforeEnd().addNext(bidMinsBeforeEnd);
+	
+				// time of bid as a fraction from the time of the first bid in the auction to the end time
+				double fractionElapsed = ((double) Util.timeDiffInMin(bo.time, firstBidTime)) / length;
+				userFeature.getBidTimesFractionToEnd().addNext(fractionElapsed);
+			}
+		}
+	}
+	
 	protected static void removeIncompleteUserFeatures(Map<Integer, UserFeatures> userFeatures) {
 		Iterator<UserFeatures> it = userFeatures.values().iterator();
 		while (it.hasNext()) {
@@ -298,7 +316,6 @@ public abstract class BuildUserFeatures {
 					auction.getSeller().getId(), 
 					BuildSimFeatures.convertTimeunitToTimestamp(auction.getEndTime()));
 			this.itemTypeId = auction.getItem().getType().getId();
-			
 		}
 		
 		@Override

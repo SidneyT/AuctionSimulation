@@ -1,10 +1,8 @@
 package createUserFeatures;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.math3.util.Pair;
 
@@ -22,6 +20,6 @@ public interface SimAuctionIterator {
 	 */
 	public abstract Iterator<Pair<SimAuction, List<BidObject>>> getAuctionIterator();
 	public abstract Map<Integer, UserObject> users();
-	public abstract Collection<ItemType> itemTypes();
+	public abstract Map<Integer, ItemType> itemTypes();
 
 }
