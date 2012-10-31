@@ -59,11 +59,11 @@ public class TMSeller extends TimedSeller {
 		double logParam = 2.5; // from TM data. See countCategorySpread.xlsx
 		
 		ItemType type;
-		if (useNewAuctionCategory(++auctionsSubmitted, logParam)) { // use an previously used type
-			type = chooseItemType(logParam, itemTypesUsed);
-		} else { // pick a new type
-			type = CreateItemTypes.pickType(types, r.nextDouble());
+		if (useNewAuctionCategory(++auctionsSubmitted, logParam, r.nextDouble())) { // pick a new type
+			type = CreateItemTypes.pickType(itemTypes, r.nextDouble());
 			itemTypesUsed.add(type);
+		} else { // use an previously used type
+			type = chooseOldItemType(logParam, itemTypesUsed, r.nextDouble());
 		}
 		
 		Item newItem = new Item(type, "item" + r.nextInt(100000));
@@ -83,24 +83,27 @@ public class TMSeller extends TimedSeller {
 	 * @param logParam
 	 * @return
 	 */
-	public boolean useNewAuctionCategory(int auctionNumber, double logParam) {
+	public static boolean useNewAuctionCategory(int auctionNumber, double logParam, double rand) {
 		if (auctionNumber < 1 || logParam < 1)
 			throw new IllegalArgumentException();
+
+		if (auctionNumber == 1)
+			return true;
 		
 		// log( (x + 1) / x), log-base to be given
-		double probNewCat = FastMath.log(1 + 1 / auctionNumber) / FastMath.log(logParam);
-		return r.nextDouble() < probNewCat; // new category
+		double probNewCat = FastMath.log(1 + (double) 1 / auctionNumber) / FastMath.log(logParam);
+		return rand < probNewCat; // new category
 	}
 	
-	public ItemType chooseItemType(double logParam, List<ItemType> itemTypesUsed) {
+	public static ItemType chooseOldItemType(double logParam, List<ItemType> itemTypes, double rand) {
 		// sum of log values for each category in itemTypesUsed
 		// log( (x + 1) / x), log-base to be given
-		double totalWeight = 1 + FastMath.log(logParam, (double) (itemTypesUsed.size() + 1)/2);
+		double totalWeight = FastMath.log(logParam, itemTypes.size() + 1);
 		// x = 2 * k ^ (y - 1), where k is the log base, y is a random number between 1 and totalWeight
 		// basically given a random number, decides which category to reuse.
-		double rand = r.nextDouble() * totalWeight;
-		int index = (int) (2 * FastMath.pow(logParam, rand - 1)) - 1; // gives a value between 0 and itemTypesUsed.size() exclusive
-		return itemTypesUsed.get(index);
+		double scaledRand = rand * totalWeight;
+		int index = (int) (FastMath.pow(logParam, scaledRand)) - 1; // gives a value between 0 and itemTypesUsed.size() exclusive
+		return itemTypes.get(index);
 	}
 
 	public static int sellersRequired(double targetPerDay) {

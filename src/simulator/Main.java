@@ -76,10 +76,13 @@ public class Main {
 		final ItemSender is = new ItemSender();
 
 		// create item types
-		final CategoryRecord cr = CreateCategories.mockCategories();
+//		final CategoryRecord cr = CreateCategories.mockCategories();
+//		ArrayList<ItemType> types = CreateItemTypes.mockItems(20, cr.getCategories());
+		final CategoryRecord cr = CreateCategories.TMCategories();
+		ArrayList<ItemType> itemTypes = CreateItemTypes.TMItems(cr.getRoot().getChildren());
+
 		saveObjects.saveCategories(cr.getCategories());
-		ArrayList<ItemType> types = CreateItemTypes.mockItems(20, cr.getCategories());
-		saveObjects.saveItemTypes(types);
+		saveObjects.saveItemTypes(itemTypes);
 
 		final UserRecord userRecord = new UserRecord();
 		final AuctionHouse ah = new AuctionHouse(userRecord, bh, saveObjects);
@@ -96,10 +99,10 @@ public class Main {
 		final double probIsSniper = 0.5;
 		ClusterBidder.setNumUsers(numClusterBidder);
 		for (int i = 0; i < (long) ((1 - probIsSniper) * numClusterBidder + 0.5); i++) {
-			userRecord.addUser(new ClusterEarly(bh, ps, is, ah));
+			userRecord.addUser(new ClusterEarly(bh, ps, is, ah, itemTypes));
 		}
 		for (int i = 0; i < (long) (probIsSniper * numClusterBidder + 0.5); i++) {
-			userRecord.addUser(new ClusterSnipe(bh, ps, is, ah));
+			userRecord.addUser(new ClusterSnipe(bh, ps, is, ah, itemTypes));
 		}
 //		System.out.println("average: " + ClusterBidder.debugAverage);
 
@@ -112,14 +115,14 @@ public class Main {
 		int numSellers = TMSeller.sellersRequired(auctionsPerDay);
 		// creating normal sellers
 		for (int i = 0; i < numSellers; i++) {
-			userRecord.addUser(new TMSeller(bh, ps, is, ah, types));
+			userRecord.addUser(new TMSeller(bh, ps, is, ah, itemTypes));
 		}
 		
 		// TODO: Add fraud agents here
 		// initialise shillers; shillers are different from normal agents - their constructors add additional
 		// agents to the UserRecord
 		for (int i = 0; i < agentAdder.length; i++)
-			agentAdder[i].add(bh, ps, is, ah, userRecord, types);
+			agentAdder[i].add(bh, ps, is, ah, userRecord, itemTypes);
 		
 		// print out the list of users
 		logger.debug(userRecord);
@@ -129,15 +132,13 @@ public class Main {
 		// creating the callables
 //		final Callable<Object> ahCallable = Executors.callable(new CrashOnAssertionErrorRunnable(ah));
 		final ImmutableList<Callable<Object>> callables = ImmutableList.of(
-//				Executors.callable(new CrashOnAssertionErrorRunnable(ps)),
-//				Executors.callable(new CrashOnAssertionErrorRunnable(is))
 				Executors.callable(ps),
 				Executors.callable(is)
 				);
 		final Builder<Callable<Object>> userCallablesBuilder = ImmutableList.builder();
 		for (SimpleUser user : userRecord.getUsers()) {
-//			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(user)));
-			userCallablesBuilder.add(Executors.callable(user));
+			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(user)));
+//			userCallablesBuilder.add(Executors.callable(user));
 		}
 		for (EventListener listeners : ah.getEventListeners()) {
 //			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(listeners)));

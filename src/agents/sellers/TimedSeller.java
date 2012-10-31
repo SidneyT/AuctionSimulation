@@ -26,14 +26,14 @@ public class TimedSeller extends SimpleUser {
 	protected final Random r;
 	private long nextSubmission;
 	private final ExponentialDistribution exp;
-	protected final List<ItemType> types;
+	protected final List<ItemType> itemTypes;
 	
-	public TimedSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> types) {
+	public TimedSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes) {
 		super(bh, ps, is, ah);
 		r = new Random();
 		ReputationRecord.generateRep(rr, r);
 		
-		this.types = types;
+		this.itemTypes = itemTypes;
 
 		exp = createExpDist();
 		nextSubmission = nextAuctionSubmission();
@@ -89,7 +89,7 @@ public class TimedSeller extends SimpleUser {
 	}
 	
 	private void submitAuction() {
-		ItemType type = CreateItemTypes.pickType(types, r.nextDouble());
+		ItemType type = CreateItemTypes.pickType(itemTypes, r.nextDouble());
 		Item newItem = new Item(type, "item" + (int) (r.nextDouble() * 100000));
 		double popularity;
 		if (r.nextDouble() < 0.5)

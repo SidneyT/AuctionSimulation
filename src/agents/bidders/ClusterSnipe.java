@@ -1,5 +1,6 @@
 package agents.bidders;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,6 +14,7 @@ import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
+import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import util.Util;
 
@@ -20,8 +22,8 @@ public class ClusterSnipe extends ClusterBidder {
 
 	private static final Logger logger = Logger.getLogger(ClusterSnipe.class);
 
-	public ClusterSnipe(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah) {
-		super(bh, ps, is, ah);
+	public ClusterSnipe(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, ArrayList<ItemType> itemTypes) {
+		super(bh, ps, is, ah, itemTypes);
 		
 		probInterest *= 1.5;
 	}
@@ -34,29 +36,11 @@ public class ClusterSnipe extends ClusterBidder {
 	protected void action() {
 		Set<Auction> alreadyBidOn = new HashSet<Auction>();
 		
-		long currentTime = this.bh.getTimeMessage().getTime();
-				
-		for (Auction auction : this.newAuctionsUnprocessed) {
-			// randomly pick 1 auction to participate in
-			if (shouldParticipateInAuction(currentTime)) {
-				int index = r.nextInt(this.newAuctionsUnprocessed.size());
-				int count = 0;
-					if (count == index) {
-						this.ah.registerForAuction(this, auction);
-			
-						long timeToMakeBid = firstBidTime() + currentTime;
-						logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
-						Util.mapListAdd(auctionsToBidIn, timeToMakeBid, auction);
-						participated();
-						break;
-					}
-					count++;
-			}
-		}
-		newAuctionsUnprocessed.clear();
-
+		long currentTime = this.bh.getTime();
+		selectAuctionsToBidIn();
+		
 		if (this.auctionsToBidIn.containsKey(currentTime)) {
-			for (Auction auction : this.auctionsToBidIn.remove(currentTime)) {
+			for (Auction auction : this.auctionsToBidIn.removeAll(currentTime)) {
 				if (!alreadyBidOn.contains(auction)) {
 					// if item is under 50% value, made a bid greater than the minimum
 //					if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.6) {
@@ -161,7 +145,8 @@ public class ClusterSnipe extends ClusterBidder {
 //		}
 //		return SEVEN_DAYS - unitsBeforeEnd;
 //	}
-	private long firstBidTime() {
+	@Override
+	protected long firstBidTime() {
 		double bidTimeBeforeEnd;
 		do {
 			double random = r.nextDouble();

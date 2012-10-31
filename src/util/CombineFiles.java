@@ -15,9 +15,9 @@ import java.nio.file.Paths;
  */
 public class CombineFiles {
 	public static void main(String[] args) throws IOException {
-		File synDataFolder = new File("F:/workstuff2011/AuctionSimulation/shillingResults/waitStartTrevathan");
+		File synDataFolder = new File("F:/workstuff2011/AuctionSimulation/single_feature_shillvsnormal/TMSeller");
 		
-		String filename = "syn_WaitStartTrevathan_normal";
+		String filename = "syn_waitStart_normal";
 		String suffix = ".csv";
 		Path outputFolder = Paths.get(synDataFolder.getPath(), "combined");
 		BufferedWriter bw = Files.newBufferedWriter(Paths.get(outputFolder.toString(), filename + suffix), Charset.defaultCharset());
@@ -25,8 +25,8 @@ public class CombineFiles {
 		for (File file : synDataFolder.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-//				return name.startsWith("syn_") && name.endsWith(".csv");
-				return name.startsWith("ShillScores_") && name.endsWith(".csv");
+				return name.startsWith("syn_") && name.endsWith(".csv");
+//				return name.startsWith("ShillScore_") && name.endsWith(".csv");
 			}
 		})) {
 
@@ -43,7 +43,7 @@ public class CombineFiles {
 						bw.close();
 						bw = Files.newBufferedWriter(Paths.get(outputFolder.toString(), filename + lineCount / 1048576 + suffix), Charset.defaultCharset());
 					}
-					bw.append(line).append(",fraud").append("\r\n");
+					bw.append(line).append(",0").append("\r\n");
 				}
 			}
 		}

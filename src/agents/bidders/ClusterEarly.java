@@ -1,19 +1,18 @@
 package agents.bidders;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import distributions.Uniform;
-
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
+import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import util.Util;
 
@@ -21,8 +20,8 @@ public class ClusterEarly extends ClusterBidder {
 
 	private static final Logger logger = Logger.getLogger(ClusterEarly.class);
 
-	public ClusterEarly(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah) {
-		super(bh, ps, is, ah);
+	public ClusterEarly(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, ArrayList<ItemType> itemTypes) {
+		super(bh, ps, is, ah, itemTypes);
 	}
 
 	// returns a value between .7-.85 of an item's private valuation, uniform distribution
@@ -32,30 +31,13 @@ public class ClusterEarly extends ClusterBidder {
 	
 	@Override
 	protected void action() {
+		
+		long currentTime = this.bh.getTime();
+		selectAuctionsToBidIn();
+		
 		Set<Auction> alreadyBidOn = new HashSet<Auction>();
-		
-		long currentTime = this.bh.getTimeMessage().getTime();
-		boolean shouldParticipate = shouldParticipateInAuction(currentTime);
-		
-		if (shouldParticipate) {
-			for (int i = 0; i < this.newAuctionsUnprocessed.size(); i++) {
-				Auction auction = removeOne(this.newAuctionsUnprocessed);
-				if (r.nextDouble() < auction.getPopularity()) {
-					this.ah.registerForAuction(this, auction);
-		
-					long timeToMakeBid = firstBidTime() + currentTime;
-					logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
-					Util.mapListAdd(auctionsToBidIn, timeToMakeBid, auction);
-					participated();
-					break;
-				}
-			}
-		}
-		
-		newAuctionsUnprocessed.clear();
-		
 		if (this.auctionsToBidIn.containsKey(currentTime)) {
-			for (Auction auction : this.auctionsToBidIn.remove(currentTime)) {
+			for (Auction auction : this.auctionsToBidIn.removeAll(currentTime)) {
 				if (!alreadyBidOn.contains(auction)) {
 					if (r.nextDouble() < valuationEffect(auction.getCurrentPrice(), privateValuationProportion * auction.getCurrentPrice())) {
 						// if item is under 50% value, made a bid greater than the minimum
@@ -86,9 +68,6 @@ public class ClusterEarly extends ClusterBidder {
 		}
 	}
 	
-	private <T> T removeOne(List<T> list) {
-		return list.remove(r.nextInt(list.size()));
-	}
 	
 	private boolean prepareRebid(Auction auction) {
 //		if (r.nextDouble() < 0.04) {
@@ -200,8 +179,9 @@ public class ClusterEarly extends ClusterBidder {
 //		return SEVEN_DAYS - (long) (minBeforeEnd/AuctionHouse.UNIT_LENGTH + 0.5);
 //	}
 
-		//y = 4.5727*EXP(8.2147* x); y is bid-time, x is U[0-1]
-	private long firstBidTime() {
+	@Override
+	//y = 4.5727*e^(8.2147* x); y is bid-time, x is U[0-1]
+	protected long firstBidTime() {
 		double bidTimeBeforeEnd;
 		do {
 			double random = r.nextDouble();

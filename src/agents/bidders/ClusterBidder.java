@@ -2,26 +2,29 @@ package agents.bidders;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import distributions.Exponential;
 import distributions.Normal;
-import distributions.Uniform;
 
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
+import simulator.categories.CreateItemTypes;
+import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.records.ReputationRecord;
 import util.Util;
 import agents.SimpleUser;
+import agents.sellers.TMSeller;
 
 /**
  * Not thread safe.
@@ -37,15 +40,12 @@ public abstract class ClusterBidder extends SimpleUser {
 	protected double probInterest;
 	// probability of bidding when auction has 1-7 days to go, adjusted by number of users 
 	
-	// use it to decide when to stop participating in new auctions
-	int auctions; // auctions participated in.  
-	
 	// parameters
 	private static final Logger logger = Logger.getLogger(ClusterBidder.class);
 	
 //	protected final Set<Auction> oneBidAuctionsUnprocessed; // auctions with more than 1 bid to be processed 
 	protected final List<Auction> newAuctionsUnprocessed; // should be empty at the beginning of each time unit
-	protected final Map<Long, List<Auction>> auctionsToBidIn;
+	protected final Multimap<Long, Auction> auctionsToBidIn;
 	
 	// Auctions for which this bidder is much more likely to bid on.
 	// Simulates motivation...
@@ -62,19 +62,22 @@ public abstract class ClusterBidder extends SimpleUser {
 
 	protected final Random r;
 	
+	protected final List<ItemType> itemTypes;
 	
 	//TODO: hacky hack hack
 //	protected boolean neverBid = true;
 //	protected final long timeToTest;
 	
-	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah) {
+	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, ArrayList<ItemType> itemTypes) {
 		super(bh, ps, is, ah);
-		
+
 		assert(num_users > 0);
+		
+		this.itemTypes = itemTypes;
 		
 //		this.oneBidAuctionsUnprocessed = new HashSet<Auction>();
 		this.newAuctionsUnprocessed = new ArrayList<Auction>();
-		this.auctionsToBidIn = new HashMap<Long, List<Auction>>();
+		this.auctionsToBidIn = ArrayListMultimap.create();
 		
 		r = new Random();
 		ReputationRecord.generateRep(rr, r);
@@ -114,11 +117,86 @@ public abstract class ClusterBidder extends SimpleUser {
 		Collections.sort(interestTimes, Collections.reverseOrder());
 		
 //		nextInterestTime = -1;
+		
+		this.numberOfInterestedCategories = numberOfInterestedCategories(interestTimes.size());
+		System.out.println(interestTimes.size() + " vs " + numberOfInterestedCategories);
+	}
+	
+	protected abstract void action();
+	protected abstract long firstBidTime();
+	
+	private final int numberOfInterestedCategories; 
+	
+	private int numberOfInterestedCategories(int totalNumberOfAuctions) {
+		int numberOfCategories = 0;
+		
+		for (int i = 0; i < totalNumberOfAuctions; i++) {
+			if(TMSeller.useNewAuctionCategory(i + 1, logParam, r.nextDouble()))
+				numberOfCategories++;
+		}
+
+		return numberOfCategories;
+	}
+	
+	private List<ItemType> itemTypesBidOn = new ArrayList<>();
+	private int auctionsSubmitted = 0; // auctions participated in
+	private boolean consideredNewCategory = false;
+	private static final double logParam = 2.4;
+	/**
+	 * Selects auctions to bid in, and the time to begin bidding in them.
+	 */
+	protected void selectAuctionsToBidIn() {
+		long currentTime = this.bh.getTime();
+
+		// don't do anything if you're not scheduled to bid in an auction yet.
+		if (!shouldParticipateInAuction(currentTime)) {
+			newAuctionsUnprocessed.clear();
+			return;
+		}
+		
+		Collections.shuffle(newAuctionsUnprocessed); // randomise order of the newAuctions
+		for (Auction auction : newAuctionsUnprocessed) {
+			// less likely to be interested in an auction if they have a low popularity
+			if (r.nextDouble() > auction.getPopularity())
+				continue; 
+			
+			// check if the auction is in a category you're interested in
+			if (itemTypesBidOn.contains(auction.getItem().getType())) { // if yes, then bid.
+				this.ah.registerForAuction(this, auction);
+				long timeToMakeBid = firstBidTime() + currentTime;
+				logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
+				auctionsToBidIn.put(timeToMakeBid, auction);
+				consideredNewCategory = false;
+				participated();
+				break;
+			} else { // if not, check if you are willing to buy things from another category
+				// this check only happens once for each new auction you participate in.
+				if (consideredNewCategory) // already considered before, so skip this auction
+					continue;
+				consideredNewCategory = true;
+				
+				// decide whether to participate in a new category of auctions
+				if (TMSeller.useNewAuctionCategory(++auctionsSubmitted, logParam, r.nextDouble())) {
+					itemTypesBidOn.add(CreateItemTypes.pickType(itemTypes, r.nextDouble()));
+					
+					consideredNewCategory = false; // since we are submitting to another auction, can consider a new category again.
+
+					this.ah.registerForAuction(this, auction);
+					long timeToMakeBid = firstBidTime() + currentTime;
+					logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
+					auctionsToBidIn.put(timeToMakeBid, auction);
+					participated();
+					break;
+				}
+			}
+		}
+		
+		newAuctionsUnprocessed.clear();
 	}
 	
 //	public static int debugAverage = 0;
 	
-ArrayList<Long> interestTimes; // sorted in decreasing order
+	ArrayList<Long> interestTimes; // sorted in decreasing order
 	// returns number of auctions this user should bid in at this time
 //	protected int shouldBid(int currentTime) {
 //		int result = 0;
@@ -132,6 +210,12 @@ ArrayList<Long> interestTimes; // sorted in decreasing order
 //		}
 //		return result;
 //	}
+	/**
+	 * If the scheduled time for participating for an auction has passed,
+	 * return true.
+	 * @param currentTime
+	 * @return
+	 */
 	protected boolean shouldParticipateInAuction(long currentTime) {
 		if (interestTimes.isEmpty()) {
 			return false;
@@ -168,31 +252,6 @@ ArrayList<Long> interestTimes; // sorted in decreasing order
 //			return 0;
 		return Util.sigmoid(bidAmount/maximumBid);
 	}
-	
-	private boolean willRebid() {
-		if (this.r.nextDouble() < 0.6) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-	private double likelihoodOfRebid() {
-		double likelihood = r.nextGaussian() * 0.2 + 0.8;
-		return likelihood > 0 ? likelihood : 0;
-	}
-//	protected double likelihoodToRebid(int bidCount) {
-//		if (willRebid) {
-////			double likelihood = 0.5 + bidCount * 0.04;
-//			double likelihood = 0.6;
-//			likelihood *= likelihoodOfRebid;
-//			if (likelihood > 0.95)
-//				return 0.95;
-//			else
-//				return likelihood;
-//		} else {
-//			return 0;
-//		}
-//	}
 	
 	public static void setNumUsers(int numUsers) {
 		num_users = numUsers;

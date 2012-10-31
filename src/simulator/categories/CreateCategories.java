@@ -63,6 +63,7 @@ public class CreateCategories {
 		for (int i = 0; i < categoryNames.size(); i++) {
 			CategoryNode category = new CategoryNode(categoryNames.get(i));
 			category.setWeight(categoryWeights.get(i));
+			root.addChild(category);
 			category.setParent(root);
 		}
 		

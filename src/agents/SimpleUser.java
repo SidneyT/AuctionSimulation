@@ -25,7 +25,7 @@ import simulator.records.ReputationRecord;
  * Will respond if it wins an auction, receives a payment or receives an item and
  * gives feedback accordingly.
  */
-public class SimpleUser extends EventListener {
+public abstract class SimpleUser extends EventListener {
 	
 	private static final Logger logger = Logger.getLogger(SimpleUser.class);
 

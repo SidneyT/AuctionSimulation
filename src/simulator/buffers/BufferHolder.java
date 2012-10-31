@@ -29,6 +29,10 @@ public class BufferHolder {
 		return this.timeMessage;
 	}
 	
+	public long getTime() {
+		return this.timeMessage.getTime();
+	}
+	
 	public MessagesToUsers getMessagesToUsers() {
 		return this.messagesToUsers;
 	}
