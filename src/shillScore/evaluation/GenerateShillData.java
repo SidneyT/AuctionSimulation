@@ -53,7 +53,8 @@ public class GenerateShillData {
 		Strategy waitStart = new WaitStartTrevathanStrategy(0.95, 0.85, 0.85);
 
 		// adders
-		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethan); // can use 20, since each submits 10 auctions.
+//		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethan); // can use 20, since each submits 10 auctions.
+		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(1, travethan); // can use 20, since each submits 10 auctions.
 		AgentAdder simplePairAdderB = SimpleShillPair.getAgentAdder(20, lateStart);
 		AgentAdder simplePairAdderC = LowBidShillPair.getAgentAdder(20, travethan, lowPrice);
 		AgentAdder simplePairAdderD = SimpleShillPair.getAgentAdder(20, waitStart);
@@ -63,10 +64,9 @@ public class GenerateShillData {
 		AgentAdder randomHybridAdderA = RandomHybrid.getAgentAdder(5, travethan, 4);
 		AgentAdder multisellerHybridAdderA = MultiSellerHybrid.getAgentAdder(5, travethan, 3, 4);
 		
-		
 		AgentAdder nonAltHybridA = NonAltHybrid.getAgentAdder(5, travethan, 4);
 
-		int numberOfRuns = 1000;
+		int numberOfRuns = 20;
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
 		run(simplePairAdderA, numberOfRuns);
@@ -83,13 +83,13 @@ public class GenerateShillData {
 	}
 	
 	private static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
-		for (int runNumber = 107; runNumber < numberOfRuns; runNumber++) {
+		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("starting run " + runNumber);
 			
 //			List<Features> featuresSelected = Features.defaultFeatures;
 			List<Features> featuresSelected = Features.ALL_FEATURES;
 
-			KeepObjectsInMemory objInMem = new KeepObjectsInMemory();
+			KeepObjectsInMemory objInMem = KeepObjectsInMemory.instance();
 			SimAuctionIterator simAuctionIterator = new SimAuctionMemoryIterator(objInMem, true);
 			Main.run(objInMem, adder); // run simulator
 			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator); // build features
@@ -166,7 +166,7 @@ public class GenerateShillData {
 			System.out.println("starting run " + i);
 			
 			// run the simulator with the adder
-			Main.run(adder);
+			Main.run(SaveToDatabase.instance(), adder);
 			
 			String runLabel = adder.toString() + "." + i;
 

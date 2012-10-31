@@ -15,17 +15,13 @@ import util.IncrementalSD;
  * 
  */
 public class UserFeatures {
-	int userId;
+	private final int userId;
 	int pos, neg; // reputation
 	String userType;
 
-	int bidCount = 0; // number of bids made
-
-	int bidIncCount; // number of bidIncrements made (does not count as incrementing a bid if user is first to bid)
-
 	IncrementalSD avgBidInc = new IncrementalSD();
 //	double avgBidInc; // average bid increment
-	double avgBidIncMinusMinInc = Double.NaN; // average bid increment minus minimum increment; initialise to NaN to know when it has not been used
+	private final IncrementalSD avgBidIncMinusMinInc = new IncrementalSD(); // average bid increment minus minimum increment; initialise to NaN to know when it has not been used
 
 	int auctionCount; // number of auctions as a bidder
 	int auctionsWon; // number of auctions won
@@ -44,9 +40,13 @@ public class UserFeatures {
 	private final IncrementalSD avgBidAmountComparedToMax = new IncrementalSD(); // average of the bid amounts as fractions of the maximum bid in the same auction
 	private final IncrementalSD avgFinalBidComparedToMax = new IncrementalSD(); // average of the last bid as fraction of the maximum
 	private final IncrementalSD avgBidProp = new IncrementalSD();
-	private final IncrementalSD bidAmountComparedToValuation = new IncrementalSD(); 
+	private final IncrementalSD bidAmountComparedToValuation = new IncrementalSD();
 	
-	public UserFeatures() {
+	private final IncrementalSD avgFinalBidAmount = new IncrementalSD();
+	
+	public UserFeatures(int userId) {
+		this.userId = userId;
+		
 		this.categories = new HashSet<>();
 
 		// uninitilised values. used to find which users do not have a feedback page, and so have no reputation
@@ -60,10 +60,6 @@ public class UserFeatures {
 
 	public int getAuctionCount() {
 		return auctionCount;
-	}
-
-	public void setUserId(int userId) {
-		this.userId = userId;
 	}
 
 	public void setRep(int pos, int neg) {
@@ -83,22 +79,11 @@ public class UserFeatures {
 		return neg;
 	}
 
-	public int getBidCount() {
-		return bidCount;
-	}
-
 	public IncrementalSD getAvgBid() {
 		return avgBid;
 	}
 
-	public int getBidIncCount() {
-		return bidIncCount;
-	}
-
-	/**
-	 * @return Double.NaN if no value for this user exists (i.e., never bid after another bidder).
-	 */
-	public double getAvgBidIncMinusMinInc() {
+	public IncrementalSD getAvgBidIncMinusMinInc() {
 		return avgBidIncMinusMinInc;
 	}
 
@@ -146,10 +131,6 @@ public class UserFeatures {
 		return pos != -1; // && neg != -1
 	}
 
-	public double numAuctionsBidInLn() {
-		return Math.log(auctionCount);
-	}
-
 	public IncrementalMean getAvgBidInc() {
 		assert avgBidInc.getAverage() >= 0;
 		return avgBidInc;
@@ -165,6 +146,10 @@ public class UserFeatures {
 
 	public IncrementalSD getBidAmountComparedToValuation() {
 		return bidAmountComparedToValuation;
+	}
+
+	public IncrementalSD getAvgFinalBidAmount() {
+		return avgFinalBidAmount;
 	}
 
 }

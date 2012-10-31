@@ -11,7 +11,7 @@ public class CategoryNode {
 	private final int id;
 	private List<CategoryNode> children;
 	private CategoryNode parent;
-	private String name;
+	private final String name;
 	private double weight; // probability this category is chosen
 	
 	public int getId() {
@@ -44,9 +44,6 @@ public class CategoryNode {
 	}
 	public String getName() {
 		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
 	}
 	public double getWeight() {
 		return weight;

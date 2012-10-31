@@ -39,7 +39,7 @@ public class ClusterSnipe extends ClusterBidder {
 		for (Auction auction : this.newAuctionsUnprocessed) {
 			// randomly pick 1 auction to participate in
 			if (shouldParticipateInAuction(currentTime)) {
-				int index = Uniform.nextInt(r.nextDouble(), 0, this.newAuctionsUnprocessed.size());
+				int index = r.nextInt(this.newAuctionsUnprocessed.size());
 				int count = 0;
 					if (count == index) {
 						this.ah.registerForAuction(this, auction);
@@ -59,7 +59,8 @@ public class ClusterSnipe extends ClusterBidder {
 			for (Auction auction : this.auctionsToBidIn.remove(currentTime)) {
 				if (!alreadyBidOn.contains(auction)) {
 					// if item is under 50% value, made a bid greater than the minimum
-					if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.6) {
+//					if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.6) {
+					if (r.nextDouble() < 0.2) {
 						int bidAmount = (int) (auction.trueValue() * 0.80);
 						if (bidAmount < auction.minimumBid())
 							bidAmount = auction.minimumBid();

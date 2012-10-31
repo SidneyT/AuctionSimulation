@@ -16,6 +16,7 @@ import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
+import simulator.database.SaveToDatabase;
 import simulator.objects.Auction;
 import simulator.records.UserRecord;
 
@@ -85,7 +86,7 @@ public class AlternatingBid extends CollusiveShillController {
 	
 	public static void main(String[] args) {
 		final int numberOfGroups = 1;
-		Main.run(getAgentAdder(numberOfGroups, new TrevathanStrategy(0.85, 0.85, 0.85), 4));
+		Main.run(SaveToDatabase.instance(), getAgentAdder(numberOfGroups, new TrevathanStrategy(0.85, 0.85, 0.85), 4));
 	}
 	
 }

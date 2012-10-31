@@ -59,7 +59,8 @@ public class ClusterEarly extends ClusterBidder {
 				if (!alreadyBidOn.contains(auction)) {
 					if (r.nextDouble() < valuationEffect(auction.getCurrentPrice(), privateValuationProportion * auction.getCurrentPrice())) {
 						// if item is under 50% value, made a bid greater than the minimum
-						if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.7) {
+//						if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.7) {
+						if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.4 && r.nextDouble() < 0.3) {
 							int bidAmount = (int) (auction.trueValue() * 0.6);
 							if (bidAmount < auction.minimumBid())
 								bidAmount = auction.minimumBid();
@@ -86,7 +87,7 @@ public class ClusterEarly extends ClusterBidder {
 	}
 	
 	private <T> T removeOne(List<T> list) {
-		return list.remove(Uniform.nextInt(r.nextDouble(), 0, list.size()));
+		return list.remove(r.nextInt(list.size()));
 	}
 	
 	private boolean prepareRebid(Auction auction) {
@@ -164,7 +165,8 @@ public class ClusterEarly extends ClusterBidder {
 	Map<Long, Set<Auction>> revisitForRebids = new HashMap<Long, Set<Auction>>();
 	private void revisitLater(Auction auction) {
 		long currentTime = this.bh.getTimeMessage().getTime();
-		int delayForRevisit = 288; // since this runs before action(), if delay is zero, auction will be revisited immediately
+//		int delayForRevisit = 288; // since this runs before action(), if delay is zero, auction will be revisited immediately
+		int delayForRevisit = 188 + r.nextInt(200);
 		
 		Util.mapSetAdd(this.revisitForRebids, currentTime + delayForRevisit, auction);
 	}

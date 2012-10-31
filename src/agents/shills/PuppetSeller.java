@@ -10,6 +10,7 @@ import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
+import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Item;
@@ -37,7 +38,7 @@ public class PuppetSeller extends SimpleUser {
 	}
 
 	protected Auction submitAuction() {
-		Item item = new Item(ItemType.pickType(items, r.nextDouble()), "item" + (int) (r.nextDouble() * 100000));
+		Item item = new Item(CreateItemTypes.pickType(items, r.nextDouble()), "item" + (int) (r.nextDouble() * 100000));
 		Auction auction = new Auction(this, item, AuctionLength.SEVEN_DAYS.timeUnits(), (int) getPrice(), 0, 1);
 		this.bh.getAuctionMessagesToAh().put(auction);
 		

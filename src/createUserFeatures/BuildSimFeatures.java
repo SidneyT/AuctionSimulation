@@ -38,7 +38,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 		
 		boolean trim = true;
 		BuildSimFeatures bf = new BuildSimFeatures(trim);
-		writeToFile(bf.build().values(), features, Paths.get("BuildTrimmedSimFeatures" + Features.fileLabels(features) + ".csv"));
+		writeToFile(bf.build().values(), features, Paths.get("BuildTrimmedSimFeatures_" + Features.fileLabels(features) + ".csv"));
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 		System.out.println("Finished.");
 	}
@@ -54,10 +54,10 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	}
 	
 	public Map<Integer, UserFeatures> build(SimAuctionIterator simAuctionIterator) {
-		Iterator<Pair<SimAuction, List<createUserFeatures.BuildUserFeatures.BidObject>>> it = simAuctionIterator.getAuctionIterator();
+		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getAuctionIterator();
 		Map<Integer, ItemType> itemTypes = simAuctionIterator.itemTypes();
 		while (it.hasNext()) {
-			Pair<SimAuction, List<createUserFeatures.BuildUserFeatures.BidObject>> pair = it.next();
+			Pair<SimAuction, List<BidObject>> pair = it.next();
 //			System.out.println("auction: " + pair.getKey() + ", bids: " + pair.getValue());
 			processAuction(pair.getKey(), pair.getValue(), itemTypes);
 		}

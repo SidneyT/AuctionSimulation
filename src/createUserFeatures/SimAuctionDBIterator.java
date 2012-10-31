@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap.Builder;
 import simulator.categories.ItemType;
 import simulator.database.DBConnection;
 
+import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.BuildUserFeatures.SimAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
 
@@ -32,17 +33,17 @@ public class SimAuctionDBIterator implements SimAuctionIterator {
 			this.trim = trim;
 		}
 		
-		private List<BuildUserFeatures.BidObject> bids = new ArrayList<>();
+		private List<BidObject> bids;
 		private SimAuction auction = null;
 		/* (non-Javadoc)
 		 * @see createUserFeatures.SimAuctionIterator#iterator()
 		 */
 		@Override
-		public Iterator<Pair<SimAuction, List<BuildUserFeatures.BidObject>>> getAuctionIterator() {
+		public Iterator<Pair<SimAuction, List<BidObject>>> getAuctionIterator() {
 			return new AuctionIterator();
 		}
 		
-		private class AuctionIterator implements Iterator<Pair<SimAuction, List<BuildUserFeatures.BidObject>>> {
+		private class AuctionIterator implements Iterator<Pair<SimAuction, List<BidObject>>> {
 			private int listingId = -1; // id of the current one being processed
 			private final ResultSet rs;
 			private boolean hasNext = true;
@@ -91,27 +92,31 @@ public class SimAuctionDBIterator implements SimAuctionIterator {
 			}
 
 			@Override
-			public Pair<SimAuction, List<BuildUserFeatures.BidObject>> next() {
+			public Pair<SimAuction, List<BidObject>> next() {
 				try {
 					while (rs.next()) {
 						int nextId = rs.getInt("listingId");
 						if (listingId != nextId) {
-							if (listingId == -1) {
+							if (listingId == -1) { // first auction, so don't return anything.
 								listingId = nextId;
 								auction = new SimAuction(rs.getInt("listingId"), rs.getInt("winnerId"), rs.getInt("sellerId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("endTime")), rs.getInt("itemTypeId"));
 								bids = new ArrayList<>();
 							} else {
 								listingId = nextId;
-								Pair<SimAuction, List<BuildUserFeatures.BidObject>> resultPair = new Pair<>(auction, bids); 
+								Pair<SimAuction, List<BidObject>> resultPair = new Pair<>(auction, bids); 
 								auction = new SimAuction(rs.getInt("listingId"), rs.getInt("winnerId"), rs.getInt("sellerId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("endTime")), rs.getInt("itemTypeId"));
 								bids = new ArrayList<>();
-								BuildUserFeatures.BidObject bid = new BuildUserFeatures.BidObject(rs.getInt("bidderId"), rs.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), rs.getInt("bidAmount"));
+								BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), rs.getInt("bidAmount"));
 								bids.add(bid);
+								
+								if (auction == null) {
+									throw new RuntimeException();
+								}
 								return resultPair;
 							}
 						} 
 						// still going through bids from the same auction
-						BuildUserFeatures.BidObject bid = new BuildUserFeatures.BidObject(rs.getInt("bidderId"), rs.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), rs.getInt("bidAmount"));
+						BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), rs.getInt("bidAmount"));
 						bids.add(bid);
 					}
 					hasNext = false;

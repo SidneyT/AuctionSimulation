@@ -1,4 +1,4 @@
-package temporary;
+package dataAnalysis;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -15,14 +15,15 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.primitives.Doubles;
 
 import simulator.database.DBConnection;
+import temporary.Chart;
 import util.Util;
 
 public class AnalyseAuctionCategories {
 	public static void main(String[] args) throws SQLException {
-		new AnalyseAuctionCategories().run();
+		new AnalyseAuctionCategories().analyseAuctionCategories();
 	}
 	
-	public void run() throws SQLException {
+	public void analyseAuctionCategories() throws SQLException {
 		Connection conn = DBConnection.getTrademeConnection();
 		
 		ArrayListMultimap<String, Integer> map = ArrayListMultimap.create();
@@ -61,7 +62,7 @@ public class AnalyseAuctionCategories {
 		chart.build();
 	}
 	
-	private String shorten(String fullCategoryName) {
+	public static String shorten(String fullCategoryName) {
 		String[] parts = fullCategoryName.replace("//", "/").split("/");
 		assert(parts.length >= 2);
 		

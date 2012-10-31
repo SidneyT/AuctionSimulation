@@ -1,18 +1,14 @@
 package simulator.categories;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.math3.distribution.ExponentialDistribution;
 
 public class ItemType {
 	
 	private static final AtomicInteger itemTypeIdCount = new AtomicInteger();
 	
 	private final int id;
-	private double weight;
+	double weight;
 	private final String name;
 	private final int trueValuation;
 	private final int categoryId;
@@ -35,49 +31,6 @@ public class ItemType {
 		this.categoryId = categoryId;
 	}
 
-	public static void normaliseWeights(Collection<ItemType> items) {
-		double weightSum = 0;
-		for (ItemType item : items) {
-			weightSum += item.weight;
-		}
-		for (ItemType item : items) {
-			item.weight /= weightSum;
-		}
-	}
-	
-	public static ItemType pickType(Collection<ItemType> items, double random) {
-		for (ItemType item : items) {
-			random -= item.weight;
-			if (random < 0)
-				return item;
-		}
-		throw new RuntimeException("Sum of weights should've been 1.");
-	}
-	
-	public static ArrayList<ItemType> createItems(int numberOfItems, Collection<CategoryNode> categories) {
-		Random r = new Random();
-		
-		ArrayList<ItemType> items = new ArrayList<>();
-		for (int i = 0; i < numberOfItems; i++) {
-			ExponentialDistribution exp1 = new ExponentialDistribution(1);
-			double weight = exp1.sample();
-			
-			int averageValuation = 3000;
-			int minimumValuation = 500;
-			ExponentialDistribution exp2 = new ExponentialDistribution(averageValuation);
-			int trueValuation;
-			do {
-			 trueValuation = (int) (exp2.sample() + 0.5);
-			} while (trueValuation < minimumValuation);
-			ItemType item = new ItemType(weight, "type" + (int) (weight * 10000), trueValuation, CategoryRecord.randomCategory(categories, r.nextDouble()));
-			items.add(item);
-		}
-		
-		normaliseWeights(items);
-		
-		return items;
-	}
-	
 	@Override
 	public String toString() {
 		return "(" +  id + "," + name + "," + weight + "," + trueValuation + "," + categoryId + ")";
@@ -104,7 +57,7 @@ public class ItemType {
 	}
 
 	public static void main(String[] args) {
-		for (ItemType item : createItems(20, MockCategories.createCategories().getCategories())) {
+		for (ItemType item : CreateItemTypes.mockItems(20, CreateCategories.mockCategories().getCategories())) {
 			System.out.println(item);
 		}
 	}

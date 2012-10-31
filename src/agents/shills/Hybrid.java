@@ -18,6 +18,7 @@ import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
+import simulator.database.SaveToDatabase;
 import simulator.objects.Auction;
 import simulator.records.UserRecord;
 import util.CombinationGenerator;
@@ -97,7 +98,7 @@ public class Hybrid extends CollusiveShillController {
 		final int numberOfAgents = 1;
 		Strategy strategy = new TrevathanStrategy(0.85, 0.85, 0.85);
 		logger.info("Running hybrid with " + strategy.getClass().getSimpleName() + ".");
-		Main.run(getAgentAdder(numberOfAgents, strategy, 4));
+		Main.run(SaveToDatabase.instance(), getAgentAdder(numberOfAgents, strategy, 4));
 	}
 	
 }

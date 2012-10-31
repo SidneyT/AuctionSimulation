@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -84,8 +85,7 @@ public abstract class BuildUserFeatures {
 		// create a new UserFeatures the bidder if there is no UserFeatures object for them yet
 		for (int bidderId : bidsByUser.keySet()) {
 			if (!userFeaturesMap.containsKey(bidderId)) {
-				UserFeatures uf = new UserFeatures();
-				uf.setUserId(bidderId);
+				UserFeatures uf = new UserFeatures(bidderId);
 				userFeaturesMap.put(bidderId, uf);
 			}
 		}
@@ -99,7 +99,7 @@ public abstract class BuildUserFeatures {
 		
 		// record bid counts, amounts and increments
 		recordBidAmounts(list);
-		recordLastBidAmountProportionOfMax(list.get(list.size() - 1).amount, bidsByUser);
+		recordLastBidAmount(list.get(list.size() - 1).amount, bidsByUser);
 
 		// record who won the auction
 		if (userFeaturesMap.containsKey(auction.winnerId))
@@ -139,27 +139,39 @@ public abstract class BuildUserFeatures {
 	 * @param previousBid value of the previous bid
 	 * @param maximumBid the value of the last/highest bid in the auction
 	 */
+//	BufferedWriter bw2; 
+//	{
+//		try {
+//			bw2 = Files.newBufferedWriter(Paths.get("C:/asdf.txt"), Charset.defaultCharset());
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
 	public void addBid(UserFeatures uf, int bid, int previousBid, int maximumBid) {
 		if (previousBid > 0) { // test whether there's a previous bid
 			int increment = bid - previousBid; // find the difference between this and the previous bid amount
 //			uf.avgBidInc = Util.incrementalAvg(uf.avgBidInc, uf.bidIncCount, increment);
-			uf.avgBidInc.addNext(increment);
+			uf.getAvgBidInc().addNext(increment);
 			
 
 			int incMinusMin = increment - Util.minIncrement(previousBid);
 			if (incMinusMin < 0)
 				incMinusMin = 0;
-			if (Double.isNaN(uf.avgBidIncMinusMinInc))
-				uf.avgBidIncMinusMinInc = 0;
-			uf.avgBidIncMinusMinInc = Util.incrementalAvg(uf.getAvgBidIncMinusMinInc(), uf.bidIncCount, incMinusMin);
-			uf.bidIncCount++;
+			uf.getAvgBidIncMinusMinInc().addNext(incMinusMin);
 		}
 		// update average bid value
 		uf.getAvgBid().addNext(bid);
 		// update avgBidComparedToFinal
 		double fractionOfMax = ((double) bid) / maximumBid;
+//		try {
+//		bw2.write(fractionOfMax + "");
+//		bw2.newLine();
+//		bw2.flush();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 		uf.getAvgBidAmountComparedToMax().addNext(fractionOfMax);
-		uf.bidCount++;
 	}
 
 	/**
@@ -199,11 +211,15 @@ public abstract class BuildUserFeatures {
 		}
 	}
 
-	private void recordLastBidAmountProportionOfMax(int finalPrice, ArrayListMultimap<Integer, BidObject> bidsByUser) {
+	private void recordLastBidAmount(int finalPrice, ArrayListMultimap<Integer, BidObject> bidsByUser) {
 		for (int bidderId : bidsByUser.keySet()) {
 			UserFeatures uf = userFeaturesMap.get(bidderId);
-			double finalBidComparedToMax = (double) bidsByUser.get(bidderId).get(bidsByUser.get(bidderId).size() - 1).amount / finalPrice;
-			uf.getAvgFinalBidComparedToMax().addNext(finalBidComparedToMax); 
+			int highestAmount = bidsByUser.get(bidderId).get(bidsByUser.get(bidderId).size() - 1).amount;
+			
+			double finalBidComparedToMax = (double) highestAmount / finalPrice;
+			uf.getAvgFinalBidComparedToMax().addNext(finalBidComparedToMax);
+			
+			uf.getAvgFinalBidAmount().addNext(highestAmount);
 		}
 	}
 

@@ -13,6 +13,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import createUserFeatures.BuildUserFeatures.UserObject;
+import createUserFeatures.SimAuctionIterator;
+
 
 import agents.shills.SimpleShillPair;
 import agents.shills.strategies.Strategy;
@@ -36,6 +39,8 @@ public class BayseanAverageSS {
 			
 			String label = simplePairAdderA.toString() + "." + i;
 			
+			SimAuctionIterator simAuctionIterator = null;
+			
 			// run simulation
 //			Main.run(simplePairAdderA);
 			
@@ -49,8 +54,9 @@ public class BayseanAverageSS {
 			
 			// record rank information
 			Path rankFile = Paths.get("shillingResults", "comparisons", "rank.csv");
-			ShillVsNormalSS.writeRanks(ssi.shillScores, bayseanSS, ssi.auctionBidders, ssi.auctionCounts, rankFile, label + ".BSS");
-			ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, rankFile, label);
+			Map<Integer, UserObject> users = simAuctionIterator.users();
+			ShillVsNormalSS.writeRanks(ssi.shillScores, bayseanSS, ssi.auctionBidders, ssi.auctionCounts, users, rankFile, label + ".BSS");
+			ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, users, rankFile, label);
 		}
 		
 	}

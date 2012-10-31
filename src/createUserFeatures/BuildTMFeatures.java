@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -21,13 +20,13 @@ import simulator.database.DBConnection;
 /**
  *	Builds UserFeature object using scraped TradeMe data. 
  */
-public class BuildTMFeatures extends BuildUserFeatures{
+public class BuildTMFeatures extends BuildUserFeatures {
 	
 	public static void main(String[] args) {
 //		String features = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15"; // all
 //		String features = "-1ln-2ln-3ln-4ln-6ln-13-9-5-10-11";
 		
-		List<Features> featureList = Features.ALL_FEATURES;
+		List<Features> featureList = Features.ALL_FEATURES_MINUS_TYPE;
 //		List<Features> featureList = Features.defaultFeatures;
 		
 		BuildTMFeatures bf = new BuildTMFeatures();
@@ -36,29 +35,28 @@ public class BuildTMFeatures extends BuildUserFeatures{
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 //		reclustering(features, 4);
 		
-//		int minimumFinalPrice = 2000;
-//		int maximumFinalPrice = 10000;
+//		int minimumFinalPrice = 10000;
+//		int maximumFinalPrice = 999999999;
 //		writeToFile(bf.build(minimumFinalPrice, maximumFinalPrice).values(), featureList, 
-//				Paths.get("TradeMeUserFeatures" + Features.fileLabels(featureList) + "-" + minimumFinalPrice + "-" + maximumFinalPrice + ".csv"));
+//				Paths.get("TradeMeUserFeatures_" + Features.fileLabels(featureList) + "-" + minimumFinalPrice + "-" + maximumFinalPrice + ".csv"));
 		
-		writeToFile(bf.build().values(), featureList, 
-				Paths.get("TradeMeUserFeatures_" + Features.fileLabels(featureList) + ".csv"));
-		
+		writeToFile(bf.build().values(), featureList, Paths.get("TradeMeUserFeatures_" + Features.fileLabels(featureList) + ".csv"));
 		
 		System.out.println("Finished.");
 	}
 	
+	public static final String DEFAULT_QUERY = 
+			"SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount bidAmount, b.time bidTime " +
+			"FROM auctions AS a " +
+			"JOIN bids AS b ON a.listingId=b.listingId " +
+			"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
+			"ORDER BY a.listingId ASC, amount ASC;";
 	/**
 	 * calls constructUserFeatures with default query
 	 */
 	public Map<Integer, UserFeatures> build() {
 		// get bids (and user and auction info) for auctions that are not purchased with buy now
-		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time " +
-				"FROM auctions AS a " +
-				"JOIN bids AS b ON a.listingId=b.listingId " +
-				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
-				"ORDER BY a.listingId ASC, amount ASC;";
-		return constructUserFeatures(query);
+		return constructUserFeatures(DEFAULT_QUERY);
 	}
 	
 	/**
@@ -68,7 +66,7 @@ public class BuildTMFeatures extends BuildUserFeatures{
 	 * @return
 	 */
 	public Map<Integer, UserFeatures> build(int minimumPrice, int maximumPrice) {
-		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time " +
+		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount bidAmount, b.time bidTime " +
 				"FROM auctions AS a " +
 				"JOIN bids AS b ON a.listingId=b.listingId " +
 				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
@@ -87,12 +85,12 @@ public class BuildTMFeatures extends BuildUserFeatures{
 	}
 	@Override
 	public Map<Integer, UserFeatures> reclustering_build(int clusterId) {
-		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time, c.cluster " +  
+		String query = "SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount bidAmount, b.time bidTime, c.cluster " +  
 				"FROM auctions AS a " +
 				"JOIN bids AS b ON a.listingId=b.listingId " +
 				"JOIN cluster AS c ON b.bidderId=c.userId " + 
 				"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
-				"ORDER BY a.listingId, b.amount ASC;";
+				"ORDER BY a.listingId, b.amount bidAmount ASC;";
 		
 		Map<Integer, UserFeatures> userFeaturesMap = constructUserFeatures(query); // contains userFeatures from all clusters
 		
@@ -122,30 +120,12 @@ public class BuildTMFeatures extends BuildUserFeatures{
 	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
 		try {
 			Connection conn = DBConnection.getTrademeConnection();
+			Iterator<Pair<TMAuction, List<BidObject>>> auctionIterator = new TMAuctionGroupIterator(conn, query).iterator();
 			
-			PreparedStatement bigQuery = conn.prepareStatement(query);
-			ResultSet bigRS = bigQuery.executeQuery();
-
-			int lastListingId = -1;
-			TMAuction ao = null;
-			
-			// split group the bids by auctions, and put them into a list
-			List<BuildUserFeatures.BidObject> bidList = new ArrayList<BuildUserFeatures.BidObject>();
-			while (bigRS.next()) {
-				int currentListingId = bigRS.getInt("listingId");
-				if (lastListingId != currentListingId) { // new auction
-					if (lastListingId != -1) { // test if there is a previous auction processed, if there is, then process the previous auction
-						processAuction(ao, bidList);
-						// clear the lists
-						bidList.clear();
-					}
-					lastListingId = currentListingId;
-					// record the auction information for the new row
-					ao = new TMAuction(currentListingId, bigRS.getInt("winnerId"), bigRS.getInt("sellerId"), bigRS.getTimestamp("endTime"), simpleCategory(bigRS.getString("category")));
-				}
-				bidList.add(new BuildUserFeatures.BidObject(bigRS.getInt("bidderId"), currentListingId, bigRS.getTimestamp("time"), bigRS.getInt("amount")));
+			while(auctionIterator.hasNext()) {
+				Pair<TMAuction, List<BidObject>> pair = auctionIterator.next();
+				processAuction(pair.getKey(), pair.getValue()); // process the bidList for the last remaining auction
 			}
-			processAuction(ao, bidList); // process the bidList for the last remaining auction
 			
 			userRep(conn);
 			conn.close();
@@ -156,57 +136,72 @@ public class BuildTMFeatures extends BuildUserFeatures{
 		return this.userFeaturesMap;
 	}
 	
-	public static class SimAuctionGroupIterator {
+	public static class TMAuctionGroupIterator {
 		private int listingId = -1; // id of the current one being processed
 		private final ResultSet rs;
-		private boolean hasNext = true;
-		public SimAuctionGroupIterator(Connection conn) {
+		private boolean hasNext;
+		public TMAuctionGroupIterator(Connection conn, String query) {
 			try {
 				Statement stmt = conn.createStatement();
-				rs = stmt.executeQuery(
-						"SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount, b.time " +
-							"FROM auctions AS a " +
-							"JOIN bids AS b ON a.listingId=b.listingId " +
-							"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
-							"ORDER BY a.listingId ASC, amount ASC;"
-						);
+				rs = stmt.executeQuery(query);
+				
+				this.hasNext = rs.first(); // see if there's anything in result set
+				rs.beforeFirst(); // put the cursor back
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}
 		}
 		
-		public Iterator<Pair<TMAuction, List<BuildUserFeatures.BidObject>>> iterator() {
-			return new Iterator<Pair<TMAuction,List<BuildUserFeatures.BidObject>>>() {
+		private List<BidObject> bids;
+		private TMAuction auction;
+
+		public Iterator<Pair<TMAuction, List<BidObject>>> iterator() {
+			return new Iterator<Pair<TMAuction,List<BidObject>>>() {
 				@Override
 				public boolean hasNext() {
 					return hasNext;
 				}
 
 				@Override
-				public Pair<TMAuction, List<BuildUserFeatures.BidObject>> next() {
+				public Pair<TMAuction, List<BidObject>> next() {
 					try {
-						List<BuildUserFeatures.BidObject> bids = new ArrayList<>();
-						TMAuction auction = null;
-							while (rs.next()) {
-								int nextId = rs.getInt("listingId");
-								if (listingId != nextId) {
+						while (rs.next()) {
+							int nextId = rs.getInt("listingId");
+							if (listingId != nextId) {
+								if (listingId == -1) {
 									listingId = nextId;
-									return new Pair<>(auction, bids);
-								} else { // still going through bids from the same auction
-									auction = new TMAuction(rs.getInt("listingId"), 
-											rs.getInt("winnerId"), 
-											rs.getInt("sellerId"), 
-											BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("endTime")), 
-											BuildTMFeatures.simpleCategory(rs.getString("category"))
-										);
+									auction = new TMAuction(rs.getInt("listingId"), rs.getInt("winnerId"),
+											rs.getInt("sellerId"), rs.getTimestamp("endTime"),
+											BuildTMFeatures.simpleCategory(rs.getString("category")));
+									bids = new ArrayList<>();
+								} else {
+									listingId = nextId;
+									Pair<TMAuction, List<BidObject>> result = new Pair<>(auction, bids);
+									auction = new TMAuction(rs.getInt("listingId"), rs.getInt("winnerId"),
+											rs.getInt("sellerId"), rs.getTimestamp("endTime"),
+											BuildTMFeatures.simpleCategory(rs.getString("category")));
+									bids = new ArrayList<>();
+									BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"),
+											rs.getTimestamp("bidTime"),
+											rs.getInt("bidAmount"));
+									bids.add(bid);
+									
+									if (auction == null) {
+										throw new RuntimeException();
+									}
+									return result;
 								}
-								BuildUserFeatures.BidObject bid = new BuildUserFeatures.BidObject(rs.getInt("bidderId"), 
-										rs.getInt("listingId"), 
-										BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), 
-										rs.getInt("bidAmount"));
-								bids.add(bid);
 							}
+							// still going through bids from the same auction
+							BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"),
+									rs.getTimestamp("bidTime"),
+									rs.getInt("bidAmount"));
+							bids.add(bid);
+						}
 						hasNext = false;
+						if (auction == null) {
+							throw new RuntimeException();
+						}
 						return new Pair<>(auction, bids);
 						
 					} catch (SQLException e) {

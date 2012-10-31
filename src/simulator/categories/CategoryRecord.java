@@ -13,7 +13,7 @@ public class CategoryRecord {
 	
 	private static final Logger logger = Logger.getLogger(CategoryRecord.class);
 	
-	private CategoryNode root;
+	private final CategoryNode root;
 	// Map<id, CategoryNode>
 	private Map<Integer, CategoryNode> categoryMap;
 	
@@ -35,7 +35,6 @@ public class CategoryRecord {
 		this.categoryMap.put(category.getId(), category);
 		
 //		SaveObjects.saveCategory(category);
-
 	}
 	
 	public static int randomCategory(Collection<CategoryNode> categories, double random) {

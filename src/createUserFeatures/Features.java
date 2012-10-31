@@ -1,10 +1,13 @@
 package createUserFeatures;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Per-user features of bidders 
@@ -87,7 +90,7 @@ public enum Features {
 	AvgBid3SD {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log(uf.getAvgBid().getSD());
+			return uf.getAvgBid().getSD();
 		}
 	},
 	/**
@@ -96,7 +99,7 @@ public enum Features {
 	AvgBidIncMinusMinInc4 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgBidIncMinusMinInc();
+			return uf.getAvgBidIncMinusMinInc().getAverage();
 		}
 	},
 	/**
@@ -105,7 +108,13 @@ public enum Features {
 	AvgBidIncMinusMinInc4Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log1p(uf.getAvgBidIncMinusMinInc());
+			return FastMath.log1p(uf.getAvgBidIncMinusMinInc().getAverage());
+		}
+	},
+	AvgBidIncMinusMinInc4SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return FastMath.log1p(uf.getAvgBidIncMinusMinInc().getSD());
 		}
 	},
 	/**
@@ -138,7 +147,7 @@ public enum Features {
 	BidsPerAuc6SD {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log1p(uf.getBidsPerAuc().getSD());
+			return uf.getBidsPerAuc().getSD();
 		}
 	},
 	/**
@@ -246,6 +255,9 @@ public enum Features {
 			return (double) uf.getPos() / (uf.getPos() + uf.getNeg());
 		}
 	},
+	/**
+	 * Average interval, in minutes, between bids made by the SAME USER
+	 */
 	SelfBidInterval16 {
 		@Override
 		public double value(UserFeatures uf) {
@@ -258,6 +270,9 @@ public enum Features {
 			return uf.getSelfBidInterval().getSD();
 		}
 	},
+	/**
+	 * Average interval, in minutes, between bids made by this user and the previous bid
+	 */
 	AnyBidInterval17 {
 		@Override
 		public double value(UserFeatures uf) {
@@ -282,7 +297,29 @@ public enum Features {
 //		public double value(UserFeatures uf) {
 //			return uf.getBidAmountComparedToValuation().getSD();
 //		}
-//	}
+//	},
+	/**
+	 * Final bid amount for this user, averaged across all auctions.
+	 */
+	AvgLastBidAmount19 {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getAvgFinalBidAmount().getAverage();
+		}
+	},
+	AvgLastBidAmount19Ln {
+		@Override
+		public double value(UserFeatures uf) {
+			return FastMath.log(uf.getAvgFinalBidAmount().getAverage());
+		}
+	},
+	AvgLastBidAmount19SD {
+		@Override
+		public double value(UserFeatures uf) {
+			return uf.getAvgFinalBidAmount().getSD();
+		}
+	},
+
 	;
 	
 	public String label() {
@@ -303,6 +340,8 @@ public enum Features {
 	public static String fileLabels(Collection<Features> features) {
 		if (features == ALL_FEATURES)
 			return "ALL_FEATURES";
+		if (features == ALL_FEATURES_MINUS_TYPE)
+			return "ALL_FEATURES_MINUS_TYPE";
 
 		StringBuilder sb = new StringBuilder();
 		for (Features feature : features)
@@ -357,4 +396,10 @@ public enum Features {
 		);
 	
 	public static final List<Features> ALL_FEATURES = Arrays.asList(Features.values());
+	public static final List<Features> ALL_FEATURES_MINUS_TYPE;
+	static {
+		List<Features> allFeaturesMinusType = new ArrayList<>(Arrays.asList(Features.values()));
+		allFeaturesMinusType.remove(UserType0b);
+		ALL_FEATURES_MINUS_TYPE = ImmutableList.copyOf(allFeaturesMinusType);
+	}
 }

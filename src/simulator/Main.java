@@ -20,8 +20,9 @@ import simulator.buffers.MessagesToUsers;
 import simulator.buffers.PaymentSender;
 import simulator.buffers.TimeMessage;
 import simulator.categories.CategoryRecord;
+import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
-import simulator.categories.MockCategories;
+import simulator.categories.CreateCategories;
 import simulator.database.SaveToDatabase;
 import simulator.database.SaveObjects;
 import simulator.objects.Auction;
@@ -33,6 +34,7 @@ import agents.SimpleUser;
 import agents.bidders.ClusterBidder;
 import agents.bidders.ClusterEarly;
 import agents.bidders.ClusterSnipe;
+import agents.sellers.TMSeller;
 import agents.sellers.TimedSeller;
 
 public class Main {
@@ -43,7 +45,7 @@ public class Main {
 	public static void main(String[] args) throws InterruptedException {
 		System.out.println("Start.");
 		
-		Main.run();
+		Main.run(SaveToDatabase.instance());
 //		ClusterAnalysis.clusterSimData("");
 		System.out.println("Finished.");
 	}
@@ -51,10 +53,6 @@ public class Main {
 	/**
 	 * Runs the simulator
 	 */
-	public static void run(AgentAdder... userAdder) {
-		run(new SaveToDatabase(), userAdder);
-	}
-
 	public static void run(SaveObjects saveObjects, AgentAdder... userAdder) {
 		try {
 			go(saveObjects, userAdder);
@@ -78,9 +76,9 @@ public class Main {
 		final ItemSender is = new ItemSender();
 
 		// create item types
-		final CategoryRecord cr = MockCategories.createCategories();
+		final CategoryRecord cr = CreateCategories.mockCategories();
 		saveObjects.saveCategories(cr.getCategories());
-		ArrayList<ItemType> types = ItemType.createItems(20, cr.getCategories());
+		ArrayList<ItemType> types = CreateItemTypes.mockItems(20, cr.getCategories());
 		saveObjects.saveItemTypes(types);
 
 		final UserRecord userRecord = new UserRecord();
@@ -90,7 +88,8 @@ public class Main {
 		final int numClusterBidder = 4000;
 		final double numberOfDays = 100;
 //		final double auctionsPerBidder = 1.04; // value from TM data
-		final double auctionsPerBidder = 1.2; // assuming 35.9% of auctions have no bids, 1.04 becomes 1.62
+//		final double auctionsPerBidder = 1.25; // assuming 35.9% of auctions have no bids, 1.04 becomes 1.62
+		final double auctionsPerBidder = 1.4;
 		final double auctionsPerDay = auctionsPerBidder * numClusterBidder / numberOfDays;
 
 //		double probIsSniper = 0.33; // from tradeMeData
@@ -104,11 +103,16 @@ public class Main {
 		}
 //		System.out.println("average: " + ClusterBidder.debugAverage);
 
-		int numSellers = TimedSeller.targetAuctionsPerDay(auctionsPerDay);
+		// add sellers
+//		int numSellers = TimedSeller.sellersRequired(auctionsPerDay);
+//		// creating normal sellers
+//		for (int i = 0; i < numSellers; i++) {
+//			userRecord.addUser(new TimedSeller(bh, ps, is, ah, types));
+//		}
+		int numSellers = TMSeller.sellersRequired(auctionsPerDay);
 		// creating normal sellers
-		TimedSeller.setNumUsers(numSellers);
 		for (int i = 0; i < numSellers; i++) {
-			userRecord.addUser(new TimedSeller(bh, ps, is, ah, types));
+			userRecord.addUser(new TMSeller(bh, ps, is, ah, types));
 		}
 		
 		// TODO: Add fraud agents here
@@ -117,19 +121,6 @@ public class Main {
 		for (int i = 0; i < agentAdder.length; i++)
 			agentAdder[i].add(bh, ps, is, ah, userRecord, types);
 		
-//		List<ShillController> scs = new ArrayList<>();
-//		int numberOfShillers = 10;
-//		for (int i = 0; i < numberOfShillers; i++) {
-//			ShillController sc = new ShillController(bh, ps, is, ah, ur, types); // modifies UserRecord
-////			TrevathanSimpleShill sc = new TrevathanSimpleShill(bh, ps, is, ah, this.ur, types);
-////			scs.add(sc);
-////			ah.addEventListener(sc);
-//			ah.addEventListener(sc);
-//		}
-//		SingleShillController sc = new SingleShillController(bh, ps, is, ah, this.ur, types);
-//		TrevathanSimpleShill sc = new TrevathanSimpleShill(bh, ps, is, ah, this.ur, types);
-//		ah.addEventListener(sc);
-
 		// print out the list of users
 		logger.debug(userRecord);
 
@@ -162,9 +153,8 @@ public class Main {
 //			if ((i + 1) % tenPercent == 0) {
 //				logger.warn("another 10% done");
 //			}
-			
+//			System.out.println("time unit: " + i);
 			try {
-//				es.submit(ahCallable).get();
 				ah.run();
 				bh.startUserTurn();
 				

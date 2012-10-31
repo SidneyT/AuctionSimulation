@@ -75,11 +75,11 @@ public class SimAuctionMemoryIterator implements SimAuctionIterator {
 
 	@Override
 	public Map<Integer, UserObject> users() {
-		Map<Integer, UserObject> userObjects = new HashMap<>();
+		Builder<Integer, UserObject> userObjects = ImmutableMap.builder();
 		for (SimpleUser user : savedObjects.getUserStore()) {
 			userObjects.put(user.getId(), new UserObject(user));
 		}
-		return userObjects;
+		return userObjects.build();
 	}
 
 	@Override

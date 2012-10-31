@@ -5,11 +5,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import simulator.database.KeepObjectsInMemory;
+import simulator.database.SaveToDatabase;
+
 import com.google.common.collect.ImmutableList;
 
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildUserFeatures;
 import createUserFeatures.Features;
+import createUserFeatures.SimAuctionMemoryIterator;
 import createUserFeatures.UserFeatures;
 
 /**
@@ -31,8 +35,6 @@ public class MultipleSimulationRuns {
 	 */
 	public static void run(String label) {
 		try {
-			// run the simulator
-			Main.run();
 
 			// make multiple sets of user features from the synthetic data
 			List<List<Features>> featureSets = Arrays.asList(
@@ -49,7 +51,10 @@ public class MultipleSimulationRuns {
 			BuildSimFeatures buildFeatures = new BuildSimFeatures(trim);
 			
 			
-			Map<Integer, UserFeatures> userFeatureMap = buildFeatures.build();
+			// run the simulator
+			KeepObjectsInMemory savedObjects = KeepObjectsInMemory.instance();
+			Main.run(savedObjects);
+			Map<Integer, UserFeatures> userFeatureMap = buildFeatures.build(new SimAuctionMemoryIterator(savedObjects, trim));
 			
 			String folder = "synData";
 			for (List<Features> featureSet : featureSets) {

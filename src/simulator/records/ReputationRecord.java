@@ -93,7 +93,8 @@ public class ReputationRecord {
 				rr.negUnique = -rr.negUnique;
 			rr.posUnique = netRep + rr.negUnique;
 		}
-		assert(rr.posUnique >= 0 && rr.negUnique >= 0);
+		if (!(rr.posUnique >= 0 && rr.negUnique >= 0))
+			throw new AssertionError();
 	}
 
 	@Override

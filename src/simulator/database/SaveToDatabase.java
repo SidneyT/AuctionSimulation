@@ -19,10 +19,14 @@ import agents.SimpleUser;
 public class SaveToDatabase implements SaveObjects {
 
 	private final Connection conn;
-	public SaveToDatabase() {
+	private SaveToDatabase() {
 		conn = DBConnection.getSimulationConnection();
 
 		emptyTables(conn); // first empty everything else.
+	}
+	
+	public static SaveToDatabase instance() {
+		return new SaveToDatabase();
 	}
 	
 	private void emptyTables(Connection conn) {

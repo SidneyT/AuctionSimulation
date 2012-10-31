@@ -16,7 +16,10 @@ import simulator.objects.Feedback;
 import agents.SimpleUser;
 
 public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
-	public KeepObjectsInMemory() {
+	private KeepObjectsInMemory() {}
+	
+	public static KeepObjectsInMemory instance() {
+		return new KeepObjectsInMemory();
 	}
 
 	private List<SimpleUser> userStore = new ArrayList<SimpleUser>();
