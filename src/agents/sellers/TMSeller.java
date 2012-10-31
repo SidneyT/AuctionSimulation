@@ -53,15 +53,15 @@ public class TMSeller extends TimedSeller {
 		}
 	}
 	
+	private int auctionsSubmitted = 0;
 	private void submitAuction() {
-		double rand = r.nextDouble();
-		// probability of each successive category to NOT be reused.
-		double probNext = 0.8; 
-		int index = (int) (FastMath.log(rand)/FastMath.log(probNext));
+		
+		double logParam = 2.5; // from TM data. See countCategorySpread.xlsx
+		
 		ItemType type;
-		if (index < itemTypesUsed.size())
-			type = itemTypesUsed.get(index);
-		else {
+		if (useNewAuctionCategory(++auctionsSubmitted, logParam)) { // use an previously used type
+			type = chooseItemType(logParam, itemTypesUsed);
+		} else { // pick a new type
 			type = CreateItemTypes.pickType(types, r.nextDouble());
 			itemTypesUsed.add(type);
 		}
@@ -83,7 +83,7 @@ public class TMSeller extends TimedSeller {
 	 * @param logParam
 	 * @return
 	 */
-	public boolean probNewAuctionCategory(int auctionNumber, int logParam, List<ItemType> itemTypesUsed) {
+	public boolean useNewAuctionCategory(int auctionNumber, double logParam) {
 		if (auctionNumber < 1 || logParam < 1)
 			throw new IllegalArgumentException();
 		
@@ -92,7 +92,7 @@ public class TMSeller extends TimedSeller {
 		return r.nextDouble() < probNewCat; // new category
 	}
 	
-	public ItemType chooseItemType(int logParam, List<ItemType> itemTypesUsed) {
+	public ItemType chooseItemType(double logParam, List<ItemType> itemTypesUsed) {
 		// sum of log values for each category in itemTypesUsed
 		// log( (x + 1) / x), log-base to be given
 		double totalWeight = 1 + FastMath.log(logParam, (double) (itemTypesUsed.size() + 1)/2);
