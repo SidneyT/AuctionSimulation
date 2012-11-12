@@ -212,10 +212,10 @@ public class BuildShillScore {
 		// find the max and min for normalising
 		double max = Double.MIN_VALUE, min = Double.MAX_VALUE;
 		for (IncrementalMean incAvg : timeDiffs.values()) {
-			if (incAvg.getAverage() < min)
-				min = incAvg.getAverage();
-			if (incAvg.getAverage() > max)
-				max = incAvg.getAverage();
+			if (incAvg.average() < min)
+				min = incAvg.average();
+			if (incAvg.average() > max)
+				max = incAvg.average();
 		}
 		
 		// remove the winner: definition is that winner is skipped
@@ -225,7 +225,7 @@ public class BuildShillScore {
 		// normalise, then average the interbid times with previous interbid times for the users
 		for (Entry<Integer, IncrementalMean> timeDiffsEntry : timeDiffs.entrySet()) {
 //			System.out.println(timeDiffsEntry.getKey() + " normalised interBidTime: " + normalise((timeDiffsEntry.getValue().getAverage()), min, max));
-			shillScores.get(timeDiffsEntry.getKey()).interBidTime.addNext(normalise((timeDiffsEntry.getValue().getAverage()), min, max));
+			shillScores.get(timeDiffsEntry.getKey()).interBidTime.addNext(normalise((timeDiffsEntry.getValue().average()), min, max));
 		}
 	}
 	
@@ -253,15 +253,15 @@ public class BuildShillScore {
 		// find the max and min for normalising
 		double max = Double.MIN_VALUE, min = Double.MAX_VALUE;
 		for (IncrementalMean incAvg : increments.values()) {
-			if (incAvg.getAverage() < min)
-				min = incAvg.getAverage();
-			if (incAvg.getAverage() > max)
-				max = incAvg.getAverage();
+			if (incAvg.average() < min)
+				min = incAvg.average();
+			if (incAvg.average() > max)
+				max = incAvg.average();
 		}
 		
 		for (Entry<Integer, IncrementalMean> incrementEntry : increments.entrySet()) {
 //			System.out.println(incrementEntry.getKey() + " normalised bidIncrement: " + normalise((incrementEntry.getValue().getAverage()), min, max));
-			shillScores.get(incrementEntry.getKey()).bidIncrement.addNext(normalise((incrementEntry.getValue().getAverage()), min, max));
+			shillScores.get(incrementEntry.getKey()).bidIncrement.addNext(normalise((incrementEntry.getValue().average()), min, max));
 		}
 	}
 	

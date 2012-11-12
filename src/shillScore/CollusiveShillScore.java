@@ -38,11 +38,11 @@ public class CollusiveShillScore {
 	}
 	
 	public double getBindingFactorB() {
-		return bindingFactorB.getAverage();
+		return bindingFactorB.average();
 	}
 	
 	public double getBindingFactorA() {
-		return bindingFactorA.getAverage();
+		return bindingFactorA.average();
 	}
 	
 	@Override

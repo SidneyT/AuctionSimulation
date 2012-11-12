@@ -162,7 +162,7 @@ public class SingleShillController extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void loseAction(Auction auction, long time) {
+	protected void lossAction(Auction auction, long time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;

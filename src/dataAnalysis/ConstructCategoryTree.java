@@ -26,6 +26,7 @@ public class ConstructCategoryTree {
 	//SELECT category, COUNT(DISTINCT a.listingId), AVG(b.amount) FROM auctions as a JOIN bids as b ON a.listingId=b.listingId AND a.winnerId=b.bidderId AND a.purchasedWithBuyNow=0 GROUP BY category;
 	
 	public static void main(String[] args) {
+		System.out.println("Start.");
 		go();
 	}
 	
@@ -72,9 +73,10 @@ public class ConstructCategoryTree {
 			
 			HashMap<String, Node> categories = flattenTree(root); 
 			
-//			for (Entry<String, Node> category : categories.entrySet()) {
-//				System.out.println(category.getKey() + ":" + category.getValue());
-//			}
+			// print out list of categories
+			for (Entry<String, Node> category : categories.entrySet()) {
+				System.out.println(category.getKey() + "," + category.getValue().avgPrice.numElements() + "," + category.getValue().avgPrice.average());
+			}
 			
 			// change the maps to take into account of the merging of small categories 
 			for (String category : new HashSet<String>(catSellerMap.keySet())) {
@@ -89,10 +91,10 @@ public class ConstructCategoryTree {
 				catSellerMap.putAll(tempCatString, catSellerMap.removeAll(category));
 				catBuyerMap.putAll(tempCatString, catBuyerMap.removeAll(category));
 				
-				if (!catMeanMap.containsKey(tempCatString))
-					catMeanMap.put(tempCatString, new IncrementalSD());
-				IncrementalSD catMean = catMeanMap.get(category); 
-				catMeanMap.get(tempCatString).addAverage(catMean.numElements(), catMean.average());
+//				if (!catMeanMap.containsKey(tempCatString))
+//					catMeanMap.put(tempCatString, new IncrementalSD());
+//				IncrementalSD catMean = catMeanMap.get(category); 
+//				catMeanMap.get(tempCatString).addAverage(catMean.numElements(), catMean.average());
 				
 //				System.out.println("looking for: " + category);
 //				if (!categories.containsKey(category)) {
@@ -108,10 +110,10 @@ public class ConstructCategoryTree {
 //				System.out.println(sellerId + ":" + sellerCatMap.get(sellerId).size() + ":" + new HashSet<String>(sellerCatMap.get(sellerId)).size());
 //			}
 			
-			Multimap<Integer, String> buyerCatMap = Multimaps.invertFrom(catBuyerMap, ArrayListMultimap.<Integer, String>create());
-			for (int sellerId : buyerCatMap.keySet()) {
-				System.out.println(sellerId + ":" + buyerCatMap.get(sellerId).size() + ":" + new HashSet<String>(buyerCatMap.get(sellerId)).size());
-			}
+//			Multimap<Integer, String> buyerCatMap = Multimaps.invertFrom(catBuyerMap, ArrayListMultimap.<Integer, String>create());
+//			for (int buyerId : buyerCatMap.keySet()) {
+//				System.out.println(buyerId + ":" + buyerCatMap.get(buyerId).size() + ":" + new HashSet<String>(buyerCatMap.get(buyerId)).size());
+//			}
 			
 		} catch (SQLException e) {
 			e.printStackTrace();

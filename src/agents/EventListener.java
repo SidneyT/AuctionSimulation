@@ -69,7 +69,7 @@ public abstract class EventListener implements Runnable {
 					priceChangeAction(auction, time);
 					break;
 				case LOSS:
-					loseAction(auction, time);
+					lossAction(auction, time);
 					break;
 				case WIN:
 					winAction(auction, time);
@@ -107,7 +107,7 @@ public abstract class EventListener implements Runnable {
 	 * For bidders
 	 * @param auction
 	 */
-	protected void loseAction(Auction auction, long time) {
+	protected void lossAction(Auction auction, long time) {
 		logger.debug(id + " received " + auction + " " + MessageType.LOSS + " at " + time);
 	}
 

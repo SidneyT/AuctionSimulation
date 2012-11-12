@@ -132,7 +132,7 @@ public class UserFeatures {
 	}
 
 	public IncrementalMean getAvgBidInc() {
-		assert avgBidInc.getAverage() >= 0;
+		assert avgBidInc.average() >= 0;
 		return avgBidInc;
 	}
 

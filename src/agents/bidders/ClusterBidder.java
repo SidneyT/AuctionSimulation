@@ -2,8 +2,10 @@ package agents.bidders;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -119,7 +121,7 @@ public abstract class ClusterBidder extends SimpleUser {
 //		nextInterestTime = -1;
 		
 		this.numberOfInterestedCategories = numberOfInterestedCategories(interestTimes.size());
-		System.out.println(interestTimes.size() + " vs " + numberOfInterestedCategories);
+//		System.out.println(interestTimes.size() + " vs " + numberOfInterestedCategories);
 	}
 	
 	protected abstract void action();
@@ -138,9 +140,7 @@ public abstract class ClusterBidder extends SimpleUser {
 		return numberOfCategories;
 	}
 	
-	private List<ItemType> itemTypesBidOn = new ArrayList<>();
-	private int auctionsSubmitted = 0; // auctions participated in
-	private boolean consideredNewCategory = false;
+	private Set<ItemType> itemTypesBidOn = new HashSet<>();
 	private static final double logParam = 2.4;
 	/**
 	 * Selects auctions to bid in, and the time to begin bidding in them.
@@ -166,28 +166,23 @@ public abstract class ClusterBidder extends SimpleUser {
 				long timeToMakeBid = firstBidTime() + currentTime;
 				logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
 				auctionsToBidIn.put(timeToMakeBid, auction);
-				consideredNewCategory = false;
 				participated();
 				break;
 			} else { // if not, check if you are willing to buy things from another category
-				// this check only happens once for each new auction you participate in.
-				if (consideredNewCategory) // already considered before, so skip this auction
-					continue;
-				consideredNewCategory = true;
 				
-				// decide whether to participate in a new category of auctions
-				if (TMSeller.useNewAuctionCategory(++auctionsSubmitted, logParam, r.nextDouble())) {
-					itemTypesBidOn.add(CreateItemTypes.pickType(itemTypes, r.nextDouble()));
-					
-					consideredNewCategory = false; // since we are submitting to another auction, can consider a new category again.
-
-					this.ah.registerForAuction(this, auction);
-					long timeToMakeBid = firstBidTime() + currentTime;
-					logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
-					auctionsToBidIn.put(timeToMakeBid, auction);
-					participated();
-					break;
+				// check if the number of categories you participated in has reached the predetermined number
+				if (numberOfInterestedCategories == itemTypesBidOn.size()) {
+					continue;
 				}
+				
+				itemTypesBidOn.add(auction.getItem().getType()); // record the new category you'll bid in
+				
+				this.ah.registerForAuction(this, auction);
+				long timeToMakeBid = firstBidTime() + currentTime;
+				logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
+				auctionsToBidIn.put(timeToMakeBid, auction);
+				participated();
+				break;
 			}
 		}
 		
@@ -309,8 +304,8 @@ public abstract class ClusterBidder extends SimpleUser {
 	}
 	
 	@Override
-	protected void loseAction(Auction auction, long time) {
-		super.loseAction(auction, time);
+	protected void lossAction(Auction auction, long time) {
+		super.lossAction(auction, time);
 		
 //		this.oneBidAuctionsUnprocessed.remove(auction);
 	}

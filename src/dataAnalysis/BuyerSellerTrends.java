@@ -123,8 +123,8 @@ public class BuyerSellerTrends {
 			for (Integer userId : averagePrices.keySet()) {
 				bw.append(userId + ",");
 				IncrementalSD averagePrice = averagePrices.get(userId);
-				bw.append(averagePrice.getNumElements() + ",");
-				bw.append(averagePrice.getAverage() + ",");
+				bw.append(averagePrice.numElements() + ",");
+				bw.append(averagePrice.average() + ",");
 				bw.append(averagePrice.getSD() + ",");
 				bw.append(categoryCount.get(userId).size() + "");
 				
@@ -171,8 +171,8 @@ public class BuyerSellerTrends {
 			for (Integer winnerId : averagePrices.keySet()) {
 				bw.append(winnerId + ",");
 				IncrementalSD averagePrice = averagePrices.get(winnerId);
-				bw.append(averagePrice.getNumElements() + ",");
-				bw.append(averagePrice.getAverage() + ",");
+				bw.append(averagePrice.numElements() + ",");
+				bw.append(averagePrice.average() + ",");
 				bw.append(averagePrice.getSD() + ",");
 				bw.append(categoryCount.get(winnerId).size() + "");
 				

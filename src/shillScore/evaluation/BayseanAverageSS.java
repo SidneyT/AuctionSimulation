@@ -106,11 +106,11 @@ public class BayseanAverageSS {
 		
 		public double bss(ShillScore ss, int sellerId) {
 //			return ss.getShillScore(auctionCounts, sellerId);
-			return ss.bayseanSS(avgNumLoss.getAverage(), avgShillScore.getAverage(), auctionCounts, sellerId);
+			return ss.bayseanSS(avgNumLoss.average(), avgShillScore.average(), auctionCounts, sellerId);
 		}
 		
 		public double bss(ShillScore ss) {
-			return ss.bayseanSS(avgNumLoss.getAverage(), avgShillScore.getAverage(), auctionCounts);
+			return ss.bayseanSS(avgNumLoss.average(), avgShillScore.average(), auctionCounts);
 		}
 	}
 	

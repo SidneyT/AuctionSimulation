@@ -75,7 +75,7 @@ public enum Features {
 	AvgBid3 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgBid().getAverage();
+			return uf.getAvgBid().average();
 		}
 	},
 	/**
@@ -84,7 +84,7 @@ public enum Features {
 	AvgBid3Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log(uf.getAvgBid().getAverage());
+			return FastMath.log(uf.getAvgBid().average());
 		}
 	},
 	AvgBid3SD {
@@ -99,7 +99,7 @@ public enum Features {
 	AvgBidIncMinusMinInc4 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgBidIncMinusMinInc().getAverage();
+			return uf.getAvgBidIncMinusMinInc().average();
 		}
 	},
 	/**
@@ -108,7 +108,7 @@ public enum Features {
 	AvgBidIncMinusMinInc4Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log1p(uf.getAvgBidIncMinusMinInc().getAverage());
+			return FastMath.log1p(uf.getAvgBidIncMinusMinInc().average());
 		}
 	},
 	AvgBidIncMinusMinInc4SD {
@@ -132,7 +132,7 @@ public enum Features {
 	BidsPerAuc6 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getBidsPerAuc().getAverage();
+			return uf.getBidsPerAuc().average();
 		}
 	},
 	/**
@@ -141,7 +141,7 @@ public enum Features {
 	BidsPerAuc6Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log1p(uf.getBidsPerAuc().getAverage());
+			return FastMath.log1p(uf.getBidsPerAuc().average());
 		}
 	},
 	BidsPerAuc6SD {
@@ -156,7 +156,7 @@ public enum Features {
 	BidTimesElapsed9 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getBidTimesFractionToEnd().getAverage();
+			return uf.getBidTimesFractionToEnd().average();
 		}
 	},
 	BidTimesElapsed9SD {
@@ -171,7 +171,7 @@ public enum Features {
 	AvgBidPropMax10 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgBidAmountComparedToMax().getAverage();
+			return uf.getAvgBidAmountComparedToMax().average();
 		}
 	},
 	AvgBidPropMax10SD {
@@ -185,7 +185,7 @@ public enum Features {
 	AvgBidProp11 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgBidProp().getAverage();
+			return uf.getAvgBidProp().average();
 		}
 	},
 	AvgBidProp11SD {
@@ -201,7 +201,7 @@ public enum Features {
 	BidTimesMinsBeforeEnd12 { 
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getBidTimesMinsBeforeEnd().getAverage();
+			return uf.getBidTimesMinsBeforeEnd().average();
 		}
 	},
 	BidTimesMinsBeforeEnd12SD { 
@@ -216,13 +216,13 @@ public enum Features {
 	FirstBidTimes13 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getFirstBidTime().getAverage();
+			return uf.getFirstBidTime().average();
 		}
 	},
 	FirstBidTimes13Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log(uf.getFirstBidTime().getAverage());
+			return FastMath.log(uf.getFirstBidTime().average());
 		}
 	},
 	FirstBidTimes13SD {
@@ -237,7 +237,7 @@ public enum Features {
 	AvgFinalBidAmountPropMax14 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgFinalBidComparedToMax().getAverage();
+			return uf.getAvgFinalBidComparedToMax().average();
 		}
 	},
 	AvgFinalBidAmountPropMax14SD {
@@ -261,7 +261,7 @@ public enum Features {
 	SelfBidInterval16 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getSelfBidInterval().getAverage();
+			return uf.getSelfBidInterval().average();
 		}
 	},
 	SelfBidInterval16SD {
@@ -276,7 +276,7 @@ public enum Features {
 	AnyBidInterval17 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAnyBidInterval().getAverage();
+			return uf.getAnyBidInterval().average();
 		}
 	},
 	AnyBidInterval17SD {
@@ -304,13 +304,13 @@ public enum Features {
 	AvgLastBidAmount19 {
 		@Override
 		public double value(UserFeatures uf) {
-			return uf.getAvgFinalBidAmount().getAverage();
+			return uf.getAvgFinalBidAmount().average();
 		}
 	},
 	AvgLastBidAmount19Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log(uf.getAvgFinalBidAmount().getAverage());
+			return FastMath.log(uf.getAvgFinalBidAmount().average());
 		}
 	},
 	AvgLastBidAmount19SD {

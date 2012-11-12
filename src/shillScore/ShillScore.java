@@ -105,7 +105,7 @@ public class ShillScore {
 	}
 	
 	public double getBeta() {
-		return bidProportion.getAverage();
+		return bidProportion.average();
 	}
 	
 	public double getGamma() {
@@ -116,15 +116,15 @@ public class ShillScore {
 	}
 	
 	public double getDelta() {
-		return 1 - interBidTime.getAverage();
+		return 1 - interBidTime.average();
 	}
 	
 	public double getEpsilon() {
-		return 1 - bidIncrement.getAverage();
+		return 1 - bidIncrement.average();
 	}
 	
 	public double getZeta() {
-		return firstBidTime.getAverage();
+		return firstBidTime.average();
 	}
 	
 	/**

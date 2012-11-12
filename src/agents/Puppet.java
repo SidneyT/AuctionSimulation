@@ -36,7 +36,7 @@ public class Puppet extends SimpleUser {
 	}
 
 	@Override
-	protected void loseAction(Auction auction, long time) {
+	protected void lossAction(Auction auction, long time) {
 		master.loseAuction(this, auction);
 	}
 

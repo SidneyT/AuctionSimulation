@@ -81,16 +81,16 @@ public class ShillWinLossPrice {
 			bw.append(",");
 			
 			// number of auctions won by the shill, and the price
-			bw.append(shillWinAvg.getNumElements() + ",").append(shillWinAvg.getAverage() + ",");
+			bw.append(shillWinAvg.numElements() + ",").append(shillWinAvg.average() + ",");
 			
 			// number of auctions won by a non-shill, and the price
-			bw.append(shillLossAvg.getNumElements() + "," + shillLossAvg.getAverage() + ",");
+			bw.append(shillLossAvg.numElements() + "," + shillLossAvg.average() + ",");
 			
 			// number of non-shill auctions won by the shill, and the price
-			bw.append(nonShillShillWinAvg.getNumElements() + "," + nonShillShillWinAvg.getAverage() + ",");
+			bw.append(nonShillShillWinAvg.numElements() + "," + nonShillShillWinAvg.average() + ",");
 			
 			// number of non-shill auctions won by a non-shill, and the price
-			bw.append(nonShillNonShillWinAvg.getNumElements() + "," + nonShillNonShillWinAvg.getAverage());
+			bw.append(nonShillNonShillWinAvg.numElements() + "," + nonShillNonShillWinAvg.average());
 			
 			bw.newLine();
 			bw.flush();

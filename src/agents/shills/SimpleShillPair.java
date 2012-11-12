@@ -51,8 +51,6 @@ public class SimpleShillPair extends EventListener implements Controller {
 
 	private final Strategy strategy;
 	
-//	private final Random r;
-	
 	public SimpleShillPair(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy) {
 		super(bh);
 		this.bh = bh;
@@ -63,12 +61,10 @@ public class SimpleShillPair extends EventListener implements Controller {
 		
 		// set up the shill seller
 		PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, this, types);
-//		SimpleUser ss = new SimpleUser(bh, ps, is, ah);
 		ur.addUser(ss);
 		this.ss = ss;
 		
 		// set up the shill bidder
-//		SimpleUser sb = new SimpleUser(bh, ps, is, ah);
 		PuppetBidder sb = new PuppetBidder(bh, ps, is, ah, this);
 		ur.addUser(sb);
 		this.sb = sb;
@@ -79,11 +75,8 @@ public class SimpleShillPair extends EventListener implements Controller {
 		setNumberOfAuctions(10);
 
 		this.strategy = strategy;
-		
-//		r = new Random();
 	}
 	
-//	private final Set<Auction> shillAuctionsFirstNo = new HashSet<>();
 	private final Set<Auction> waiting = new HashSet<>();
 	private final Map<Long, List<Auction>> futureBid = new HashMap<>();
 	@Override
@@ -103,11 +96,6 @@ public class SimpleShillPair extends EventListener implements Controller {
 			if (waiting.contains(shillAuction))
 				continue;
 			
-//			if (someoneJustBid == true) {
-//				System.out.println("are you bidding?");
-//				someoneJustBid = false;
-//			}
-
 			if (this.strategy.shouldBid(shillAuction, currentTime)) {
 				long wait = strategy.wait(shillAuction); 
 				if (wait > 0) {
@@ -156,7 +144,6 @@ public class SimpleShillPair extends EventListener implements Controller {
 		if (shillAuctions.containsKey(auction)) {
 //			ah.registerForAuction(sb, auction);
 			ah.registerForAuction(this, auction);
-//			sb.registerForAuction(auction);
 			shillAuctions.put(auction, true);
 		}
 	}
@@ -170,7 +157,17 @@ public class SimpleShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void loseAction(Auction auction, long time) {
+	public void winAction(SimpleUser agent, Auction auction) {
+//		winAction(auction, bh.getTime());
+	}
+
+	@Override
+	public void lossAction(SimpleUser agent, Auction auction) {
+//		lossAction(auction, bh.getTime());
+	}
+	
+	@Override
+	protected void lossAction(Auction auction, long time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;
@@ -246,14 +243,6 @@ public class SimpleShillPair extends EventListener implements Controller {
 				return "SimpleShillPair." + numberOfGroups + "." + strategy.toString();
 			}
 		};
-	}
-	
-	@Override
-	public void winAction(SimpleUser agent, Auction auction) {
-	}
-
-	@Override
-	public void lossAction(SimpleUser agent, Auction auction) {
 	}
 	
 }
