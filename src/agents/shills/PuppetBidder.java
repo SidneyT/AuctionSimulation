@@ -14,7 +14,10 @@ import simulator.objects.Bid;
 import agents.SimpleUser;
 
 /**
- * Does nothing; does not react to any events. Actions are made by a controller through this class.
+ * Sends events given to it to the controller. 
+ * Does not react to any events by itself. 
+ * Actions are made by a controller through this class.
+ * 
  * Makes bids when told to do so.
  */
 public class PuppetBidder extends SimpleUser {
@@ -60,10 +63,6 @@ public class PuppetBidder extends SimpleUser {
 	protected void lossAction(Auction auction, long time) {
 		super.lossAction(auction, time);
 		controller.lossAction(this, auction);
-		
-//		logger.info(this + " got LOSS message for " + auction);
-//		if (!lostAuctions.add(auction))
-//			System.out.println("repeated message");
 	}
 	
 }

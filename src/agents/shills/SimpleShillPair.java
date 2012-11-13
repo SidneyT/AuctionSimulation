@@ -142,28 +142,24 @@ public class SimpleShillPair extends EventListener implements Controller {
 	protected void newAction(Auction auction, long time) {
 		super.newAction(auction, time);
 		if (shillAuctions.containsKey(auction)) {
-//			ah.registerForAuction(sb, auction);
-			ah.registerForAuction(this, auction);
+			ah.registerForAuction(sb, auction);
 			shillAuctions.put(auction, true);
 		}
 	}
 
-	boolean someoneJustBid; 
 	@Override
 	protected void priceChangeAction(Auction auction, long time) {
 		super.priceChangeAction(auction, time);
-		if (auction.getWinner() != sb)
-			someoneJustBid = true;
 	}
 
 	@Override
 	public void winAction(SimpleUser agent, Auction auction) {
-//		winAction(auction, bh.getTime());
+		winAction(auction, bh.getTime());
 	}
 
 	@Override
 	public void lossAction(SimpleUser agent, Auction auction) {
-//		lossAction(auction, bh.getTime());
+		lossAction(auction, bh.getTime());
 	}
 	
 	@Override
