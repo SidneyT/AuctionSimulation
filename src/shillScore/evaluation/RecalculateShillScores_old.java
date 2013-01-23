@@ -18,7 +18,7 @@ import com.google.common.collect.ImmutableList;
  * scores using sets of weights given.
  * Scores of fraud and normal users are written in different files.
  */
-public class RecalculateShillScores {
+public class RecalculateShillScores_old {
 	public static void main(String[] args) throws IOException {
 //		List<Integer> wantedColumns = ImmutableList.of(4,5,6,7,8,9);
 		List<Integer> wantedColumns = ImmutableList.of(3,4,5,6,7,8);
@@ -31,7 +31,7 @@ public class RecalculateShillScores {
 				);
 
 		File synDataFolder = new File("F:/workstuff2011/AuctionSimulation/shillingResults/Trevathan");
-		new RecalculateShillScores(wantedColumns, weightSets, synDataFolder).recalculate();
+		new RecalculateShillScores_old(wantedColumns, weightSets, synDataFolder).recalculate();
 	}
 
 	private final List<Integer> ratingColumns;
@@ -42,7 +42,7 @@ public class RecalculateShillScores {
 	 * column numbers start at 0.
 	 * @param ratingColumns
 	 */
-	public RecalculateShillScores(List<Integer> ratingColumns, Collection<List<Double>> weights, File inputDirectory) {
+	public RecalculateShillScores_old(List<Integer> ratingColumns, Collection<List<Double>> weights, File inputDirectory) {
 		this.ratingColumns = ratingColumns;
 		this.weightSets = weights;
 		this.inputDirectory = inputDirectory;
