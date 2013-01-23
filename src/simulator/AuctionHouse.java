@@ -9,9 +9,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
+import org.hamcrest.core.IsInstanceOf;
 
 import agents.EventListener;
 import agents.SimpleUser;
+import agents.puppets.Puppet;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.Message;
 import simulator.buffers.MessageType;
@@ -151,7 +153,6 @@ public class AuctionHouse implements Runnable {
 		Map<Auction, List<Bid>> allBids = this.buffers.getBidMessageToAh().get();
 		MessagesToUsers buffer = this.buffers.getMessagesToUsers();
 
-		// synchronized(allBids) { // necessary? single thread.
 		for (Auction auction : allBids.keySet()) {
 			// if (auctionRecord.expiresThisTurn(this.time, auction)) {
 			// // do nothing. auction end method will take care of messages
@@ -161,7 +162,6 @@ public class AuctionHouse implements Runnable {
 
 			// assert testAllBiddersRegisteredInterest(allBids.get(auction), interestRecord.getInterested(auction));
 			// if (!testAllBiddersRegisteredInterest(allBids.get(auction), interestRecord.getInterested(auction))) {
-			//
 			// testAllBiddersRegisteredInterest(allBids.get(auction), interestRecord.getInterested(auction));
 			// }
 			assert this.auctionRecord.isCurrent(auction) : "Bids " + allBids.get(auction) + " received at " + time
@@ -184,7 +184,6 @@ public class AuctionHouse implements Runnable {
 			extendIfCloseToEnd(auction);
 			// }
 		}
-		// }
 	}
 
 	private void extendIfCloseToEnd(Auction auction) {
@@ -215,7 +214,7 @@ public class AuctionHouse implements Runnable {
 	}
 
 	/**
-	 * For telling agents who want to snipe, auctions that are about to end.
+	 * For telling agents who want to snipe, all auctions that are about to end.
 	 */
 	private void giveSnipeWarning() {
 		long time = this.time + 3; // get auctions that will end at this time

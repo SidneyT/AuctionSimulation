@@ -6,6 +6,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import agents.puppets.Puppet;
+
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;

@@ -1,10 +1,12 @@
-package agents;
+package agents.puppets;
 
 import java.util.Collection;
 import java.util.Set;
 
 
 import org.apache.log4j.Logger;
+
+import agents.SimpleUser;
 
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
@@ -24,45 +26,54 @@ public class Puppet extends SimpleUser {
 		super(bh, ps, is, ah);
 		this.master = master;
 	}
+	
+	@Override
+	public void run() {
+		super.run();
+	}
 
 	@Override
 	protected void newAction(Auction auction, long time) {
-		master.newAction(this, auction);
+		master.puppetNewAction(this, auction);
 	}
 
 	@Override
 	protected void priceChangeAction(Auction auction, long time) {
-		master.priceChangeAction(this, auction);
+		master.puppetPriceChangeAction(this, auction);
 	}
 
 	@Override
 	protected void lossAction(Auction auction, long time) {
-		master.loseAuction(this, auction);
+		master.puppetLossAction(this, auction);
 	}
 
 	@Override
 	protected void winAction(Auction auction, long time) {
-		master.winAuction(this, auction);
+		master.puppetWinAction(this, auction);
 	}
 
 	@Override
 	protected void expiredAction(Auction auction, long time) {
-		master.expiredAuction(this, auction);
+		master.puppetExpiredAction(this, auction);
 	}
 
 	@Override
 	protected void soldAction(Auction auction, long time) {
-		master.soldAuction(this, auction);
+		master.puppetSoldAction(this, auction);
 	}
 	
 	@Override
 	protected void gotPaidAction(Collection<Payment> paymentSet) {
-		master.gotPaidAction(this, paymentSet);
+		master.puppetGotPaidAction(this, paymentSet);
 	}
 
 	@Override
 	protected void itemReceivedAction(Set<ItemSold> itemSet) {
-		master.itemReceivedAction(this, itemSet);
+		master.puppetItemReceivedAction(this, itemSet);
 	}
 	
+	@Override
+	protected void endSoonAction(Auction auction, long time) {
+		master.puppetEndSoonAction(this, auction);
+	}
 }

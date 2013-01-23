@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.common.collect.TreeMultimap;
+
 import simulator.categories.CategoryNode;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
@@ -288,8 +290,11 @@ public class SaveToDatabase implements SaveObjects {
 	}
 	
 	private List<Feedback> feedbackStore = new ArrayList<>();
+//	TreeMultimap<Integer, Boolean> uniqueTest = TreeMultimap.create();
 	public void saveFeedback(Feedback feedback) {
 		feedbackStore.add(feedback);
+//		if (!uniqueTest.put(feedback.getAuction().getId(), feedback.forSeller()))
+//			System.out.println("not unique");
 		if (feedbackStore.size() >= 500)
 			flushFeedback();
 	}

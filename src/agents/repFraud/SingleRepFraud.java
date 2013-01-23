@@ -31,6 +31,7 @@ public class SingleRepFraud extends EventListener {
 	final protected ItemSender is;
 	final protected AuctionHouse ah;
 	private final List<ItemType> types;
+	private final int repTarget;
 	
 	private final Puppet puppet;
 	private final ExponentialDistribution exp;
@@ -38,7 +39,7 @@ public class SingleRepFraud extends EventListener {
 	
 	private final PuppetMaster master;
 	
-	public SingleRepFraud(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types) {
+	public SingleRepFraud(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, int repTarget) {
 		super(bh);
 		this.bh = bh;
 		this.ps = ps;
@@ -46,15 +47,16 @@ public class SingleRepFraud extends EventListener {
 		this.ah = ah;
 		this.types = types;
 		
+		this.repTarget = repTarget;
+		
 		master = createMaster();
 		
 		puppet = new Puppet(bh, ps, is, ah, master);
 		ur.addUser(puppet);
 		ah.registerForSniping(puppet); // to get notifications when the auctions are about to end, for bidding on low priced items
-		ah.addEventListener(puppet);
 		
-		int numberOfAuctions = 20;
-		exp = new ExponentialDistribution((double) (100 * 24 * 60 / 5) / numberOfAuctions);
+		// on average, try to get 1 rep every 3 days.
+		exp = new ExponentialDistribution(3 * 24 * 60 / 5);
 		nextBidTime = Math.round(exp.sample());
 	}
 
@@ -72,34 +74,42 @@ public class SingleRepFraud extends EventListener {
 					boolean awaiting = awaitingItem.remove(item.getAuction());
 					assert awaiting;
 					
-					bh.getFeedbackToAh().put(new Feedback(Val.POS, puppet, item.getAuction()));
+					Feedback feedback = new Feedback(Val.POS, puppet, item.getAuction());
+					bh.getFeedbackToAh().put(feedback);
 				}
 			}
 
 			@Override
 			public void puppetEndSoonAction(Puppet puppet, Auction auction) {
 				if (auction.minimumBid() <= 150) {
-					if (nextBidTime < bh.getTime()) {
-						System.out.println(puppet + " endSoon for " + auction + " at price " + auction.minimumBid() + " at time " + bh.getTime());
-						bh.getBidMessageToAh().put(auction, new Bid(puppet, auction.minimumBid()));
-						
-						nextBidTime = bh.getTime() + Math.round(exp.sample());
-					}
+					testAndBid(auction);
 				}
 			}
 			
 		};
 	}
-
-	// Fee is 7.9% of sale price with a minimum of 50 cent. 
-	private final static int MAX_PRICE = 633;
 	
-	public static AgentAdder getAgentAdder(final int numberOfGroups) {
+	/**
+	 * Tests whether bidding criteria are met. If yes, bid. If not, do nothing.
+	 * The criteria are: if target netRep has not been met, if nextBidTime has passed. 
+	 * @param auction
+	 */
+	private void testAndBid(Auction auction) {
+		if (puppet.getReputationRecord().getNetRep() < repTarget && nextBidTime < bh.getTime()) {
+			if (auction.getWinner() == puppet)
+				return;
+			bh.getBidMessageToAh().put(auction, new Bid(puppet, auction.minimumBid()));
+
+			nextBidTime = bh.getTime() + Math.round(exp.sample());
+		}
+	}
+
+	public static AgentAdder getAgentAdder(final int numberOfGroups, final int repTarget) {
 		return new AgentAdder() {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfGroups; i++) {
-					SingleRepFraud rf = new SingleRepFraud(bh, ps, is, ah, ur, types);
+					SingleRepFraud rf = new SingleRepFraud(bh, ps, is, ah, ur, types, repTarget);
 					ah.addEventListener(rf);
 				}
 			}

@@ -1,6 +1,5 @@
 package shillScore.evaluation;
 
-import java.io.BufferedWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.io.Files;
 
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.Features;
@@ -18,6 +16,8 @@ import createUserFeatures.SimAuctionIterator;
 import createUserFeatures.SimAuctionMemoryIterator;
 import createUserFeatures.UserFeatures;
 
+import agents.repFraud.MultipleRepFraud;
+import agents.repFraud.SingleRepFraud;
 import agents.shills.Hybrid;
 import agents.shills.LowBidShillPair;
 import agents.shills.ModifiedHybrid;
@@ -29,7 +29,7 @@ import agents.shills.strategies.LowPriceStrategy;
 import agents.shills.strategies.LateStartTrevathanStrategy;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
-import agents.shills.strategies.WaitStartTrevathanStrategy;
+import agents.shills.strategies.WaitStartStrategy;
 import shillScore.BuildCollusiveShillScore;
 import shillScore.BuildShillScore;
 import shillScore.CollusiveShillScore;
@@ -38,10 +38,16 @@ import shillScore.WriteScores;
 import shillScore.BuildShillScore.ShillScoreInfo;
 import shillScore.CollusiveShillScore.ScoreType;
 import simulator.AgentAdder;
+import simulator.AuctionHouse;
 import simulator.Main;
+import simulator.buffers.BufferHolder;
+import simulator.buffers.ItemSender;
+import simulator.buffers.PaymentSender;
+import simulator.categories.ItemType;
 import simulator.database.DBConnection;
 import simulator.database.KeepObjectsInMemory;
 import simulator.database.SaveToDatabase;
+import simulator.records.UserRecord;
 
 public class GenerateShillData {
 
@@ -50,11 +56,11 @@ public class GenerateShillData {
 		Strategy travethan = new TrevathanStrategy(0.95, 0.85, 0.85);
 		Strategy lateStart = new LateStartTrevathanStrategy(0.95, 0.85, 0.85);
 		Strategy lowPrice = new LowPriceStrategy();
-		Strategy waitStart = new WaitStartTrevathanStrategy(0.95, 0.85, 0.85);
+		Strategy waitStart = new WaitStartStrategy(0.95, 0.85, 0.85);
 
 		// adders
 //		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethan); // can use 20, since each submits 10 auctions.
-		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(1, travethan); // can use 20, since each submits 10 auctions.
+		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethan); // can use 20, since each submits 10 auctions.
 		AgentAdder simplePairAdderB = SimpleShillPair.getAgentAdder(20, lateStart);
 		AgentAdder simplePairAdderC = LowBidShillPair.getAgentAdder(20, travethan, lowPrice);
 		AgentAdder simplePairAdderD = SimpleShillPair.getAgentAdder(20, waitStart);
@@ -64,12 +70,17 @@ public class GenerateShillData {
 		AgentAdder randomHybridAdderA = RandomHybrid.getAgentAdder(5, travethan, 4);
 		AgentAdder multisellerHybridAdderA = MultiSellerHybrid.getAgentAdder(5, travethan, 3, 4);
 		
+		AgentAdder repFraudA = SingleRepFraud.getAgentAdder(1, 20);
+		AgentAdder repFraudB = MultipleRepFraud.getAgentAdder(1, 10, 20);
+		
 		AgentAdder nonAltHybridA = NonAltHybrid.getAgentAdder(5, travethan, 4);
 
-		int numberOfRuns = 20;
+		int numberOfRuns = 1000;
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
 		run(simplePairAdderA, numberOfRuns);
+//		run(repFraudB, 1);
+//		run(doNothingAdder(), numberOfRuns);
 //		run(simplePairAdderD, numberOfRuns);
 //		run(simplePairAdderA, numberOfRuns, new double[]{0.0820,0.0049,-0.0319,0.5041,0.2407,0.2003});
 //		writeSSandPercentiles(simplePairAdderB, numberOfRuns);
@@ -82,8 +93,22 @@ public class GenerateShillData {
 //		collusiveShillPairMultipleRuns(nonAltHybridA, numberOfRuns);
 	}
 	
+	private static AgentAdder doNothingAdder() {
+		return new AgentAdder() {
+			@Override
+			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur,
+					ArrayList<ItemType> types) {
+			}
+			
+			@Override
+			public String toString() {
+				return "NoAdder";
+			}
+		};
+	}
+	
 	private static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
-		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
+		for (int runNumber = 818; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("starting run " + runNumber);
 			
 //			List<Features> featuresSelected = Features.defaultFeatures;
@@ -95,7 +120,7 @@ public class GenerateShillData {
 			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator); // build features
 			
 //			SimAuctionIterator simAuctionIterator = new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true);
-//			Main.run(new SaveToDatabase(), adder);
+//			Main.run(SaveToDatabase.instance(), adder);
 //			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator);
 			
 			BuildSimFeatures.writeToFile(userFeatures.values(), // write features

@@ -15,39 +15,54 @@ import java.nio.file.Paths;
  */
 public class CombineFiles {
 	public static void main(String[] args) throws IOException {
-		File synDataFolder = new File("F:/workstuff2011/AuctionSimulation/single_feature_shillvsnormal/TMSeller");
+//		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/single_feature_shillvsnormal/waitStart");
+		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/shillingResults/waitStart");
+		Path outputFolder = Paths.get(synDataFolder.toString(), "combined");
 		
-		String filename = "syn_waitStart_normal";
-		String suffix = ".csv";
-		Path outputFolder = Paths.get(synDataFolder.getPath(), "combined");
-		BufferedWriter bw = Files.newBufferedWriter(Paths.get(outputFolder.toString(), filename + suffix), Charset.defaultCharset());
+		writeSelectively(synDataFolder, "Puppet", "1", outputFolder, "ratings_waitStart_fraud_forNNweightsEval.csv");
+		writeSelectively(synDataFolder, "Cluster", "0", outputFolder, "ratings_waitStart_normal_forNNweightsEval.csv");
+		
+		System.out.println("Finished.");
+	}
+	
+	private static void writeSelectively(Path inputFolder, String lineStartsWith, String classLabel, Path outputFolder, String outputFilename) throws IOException {
+		BufferedWriter bw = Files.newBufferedWriter(Paths.get(outputFolder.toString(), outputFilename), Charset.defaultCharset());
 		int lineCount = 0;
-		for (File file : synDataFolder.listFiles(new FilenameFilter() {
+		
+		boolean first = true;
+		
+		for (File file : inputFolder.toFile().listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith("syn_") && name.endsWith(".csv");
+				return name.startsWith("ShillScores_") && name.endsWith(".csv");
 //				return name.startsWith("ShillScore_") && name.endsWith(".csv");
 			}
 		})) {
 
 			BufferedReader br = Files.newBufferedReader(file.toPath(), Charset.defaultCharset());
 
-			if (br.ready()) // skip the first line with the column headings
+			if (first) { // copy the first line with the column headings
+				first = false;
+				bw.append(br.readLine()).append(",isFraud");
+				bw.newLine();
+			} else { // skip the first line with the column headings
 				br.readLine();
+			}
+			
 			while(br.ready()) {
 				String line = br.readLine();
-				if (!line.startsWith("Puppet")) {
+				if (line.startsWith(lineStartsWith)) {
 					lineCount++;
 					if (lineCount != 0 && lineCount % 1048576 == 0) {
 						bw.flush();
 						bw.close();
-						bw = Files.newBufferedWriter(Paths.get(outputFolder.toString(), filename + lineCount / 1048576 + suffix), Charset.defaultCharset());
+						bw = Files.newBufferedWriter(Paths.get(outputFolder.toString(), outputFilename + lineCount / 1048576), Charset.defaultCharset());
 					}
-					bw.append(line).append(",0").append("\r\n");
+					bw.append(line).append(",").append(classLabel);
+					bw.newLine();
 				}
 			}
 		}
 		bw.flush();
-		System.out.println("Done.");
 	}
 }

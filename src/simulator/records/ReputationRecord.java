@@ -15,10 +15,12 @@ public class ReputationRecord {
 //	private long reputation;
 	private int pos, posUnique, neu, neg, negUnique;
 //	private List<Feedback> repHistory;
-	private final Set<Integer> receivedFeedback; // for keeping track of unique positive or negative reputations
+	private final Set<Integer> receivedPosFeedback; // for keeping track of unique positive or negative reputations
+	private final Set<Integer> receivedNegFeedback; // for keeping track of unique positive or negative reputations
 	
 	public ReputationRecord() {
-		this.receivedFeedback = new HashSet<Integer>();
+		this.receivedPosFeedback = new HashSet<Integer>();
+		this.receivedNegFeedback = new HashSet<Integer>();
 		this.pos = 0;
 		this.posUnique = 0;
 		this.neu = 0;
@@ -45,6 +47,10 @@ public class ReputationRecord {
 	public int getNegUnique() {
 		return negUnique;
 	}
+	
+	public int getNetRep() {
+		return getPosUnique() - getNegUnique();
+	}
 
 	public void addFeedback(int userId, Feedback feedback) {
 		assert(feedback.timeIsSet());
@@ -52,17 +58,17 @@ public class ReputationRecord {
 		// find out whether this reputation record is for this user as a seller or winner
 		int winnerId = feedback.getAuction().getWinner().getId();
 		int sellerId = feedback.getAuction().getSeller().getId();
-		boolean firstFeedback;
+		int feedbackGiverId;
 		if (userId != winnerId) {
-			firstFeedback = receivedFeedback.add(winnerId);
+			feedbackGiverId = winnerId;
 		} else {
-			firstFeedback = receivedFeedback.add(sellerId);
+			feedbackGiverId = sellerId;
 		}
 		
 		switch (feedback.getVal()) {
 			case POS:
 				this.pos++;
-				if (firstFeedback)
+				if (receivedPosFeedback.add(feedbackGiverId))
 					this.posUnique++;
 				break;
 			case NEU:
@@ -70,7 +76,7 @@ public class ReputationRecord {
 				break;
 			case NEG:
 				this.neg++;
-				if (firstFeedback)
+				if (receivedNegFeedback.add(feedbackGiverId))
 					this.negUnique++;
 				break;
 		}

@@ -102,8 +102,7 @@ public class ShillVsNormalSS {
 	}
 	
 	/**
-	 * For each value in values2, calculate the percentile that value falls in for
-	 * values1.
+	 * For each value in values2, calculate the percentile that value falls in in values1.
 	 * @param values1
 	 * @param values2
 	 * @return number between 0 and 1.
@@ -150,6 +149,15 @@ public class ShillVsNormalSS {
 		}
 	}
 	
+	/**
+	 * 
+	 * Write the lists of percentiles into a csv file, with the i-th element from each list in the i-th line of the file
+	 * E.g. (1,2), (3,4) gives 1,3 \n 2,4
+	 * 
+	 * @param path
+	 * @param runLabel
+	 * @param percentiless
+	 */
 	public static <T> void writePercentiles(Path path, String runLabel, final List<List<T>> percentiless) {
 		assert !percentiless.isEmpty();
 		

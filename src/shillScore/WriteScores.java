@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -23,8 +24,9 @@ public class WriteScores {
 	 * @param auctionCounts map containing sellerIds mapped to number of auctions they submitted
 	 * @param suffix string added to the end of the filename
 	 */
-	public static void writeShillScores(Map<Integer, ShillScore> shillScores, Map<Integer, Integer> auctionCounts, String suffix, double[]... reweights) {
-		try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("shillingResults/ShillScores_" + suffix + ".csv"), Charset.defaultCharset())) {
+	public static Path writeShillScores(Map<Integer, ShillScore> shillScores, Map<Integer, Integer> auctionCounts, String suffix, double[]... reweights) {
+		Path ssFile = Paths.get("shillingResults", "ShillScores_" + suffix + ".csv");
+		try (BufferedWriter bw = Files.newBufferedWriter(ssFile, Charset.defaultCharset())) {
 			bw.append(shillScoreHeadings(reweights));
 			bw.newLine();
 			
@@ -38,8 +40,10 @@ public class WriteScores {
 			}
 			
 			bw.flush();
+			
+			return ssFile;
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 

@@ -1,4 +1,4 @@
-package agents;
+package agents.puppets;
 
 import java.util.Collection;
 import java.util.Set;
@@ -9,20 +9,21 @@ import simulator.objects.Auction;
 
 public interface PuppetMaster {
 
-	void newAction(Puppet puppet, Auction auction);
+	void puppetNewAction(Puppet puppet, Auction auction);
 
-	void priceChangeAction(Puppet puppet, Auction auction);
+	void puppetPriceChangeAction(Puppet puppet, Auction auction);
 
-	void expiredAuction(Puppet puppet, Auction auction);
+	void puppetExpiredAction(Puppet puppet, Auction auction);
 
-	void loseAuction(Puppet puppet, Auction auction);
+	void puppetLossAction(Puppet puppet, Auction auction);
 
-	void winAuction(Puppet puppet, Auction auction);
+	void puppetWinAction(Puppet puppet, Auction auction);
 
-	void soldAuction(Puppet puppet, Auction auction);
+	void puppetSoldAction(Puppet puppet, Auction auction);
 
-	void gotPaidAction(Puppet puppet, Collection<Payment> paymentSet);
+	void puppetGotPaidAction(Puppet puppet, Collection<Payment> paymentSet);
 
-	void itemReceivedAction(Puppet puppet, Set<ItemSold> itemSet);
+	void puppetItemReceivedAction(Puppet puppet, Set<ItemSold> itemSet);
 
+	void puppetEndSoonAction(Puppet puppet, Auction auctions);
 }

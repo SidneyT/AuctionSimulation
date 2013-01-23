@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.math3.util.Pair;
+
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 
@@ -24,7 +26,9 @@ import util.IncrementalSD;
  */
 public class BuyerSellerTrends {
 	public static void main(String[] args) throws SQLException {
-		new BuyerSellerTrends().buyerCategorySpread();
+		System.out.println("Start.");
+		new BuyerSellerTrends().buyerAndSellerSpread();
+		System.out.println("Finished.");
 	}
 	
 	private void countSuccessfulAuctions() {
@@ -84,12 +88,64 @@ public class BuyerSellerTrends {
 		}
 	}
 	
+	private void buyerAndSellerSpread() {
+		try {
+			Pair<Multimap<Integer, String>, HashMap<Integer, IncrementalSD>> sellerInfo = sellerCategorySpread();
+			Pair<Multimap<Integer, String>, HashMap<Integer, IncrementalSD>> buyerInfo = buyerCategorySpread();
+			
+			Set<Integer> users = new HashSet<>();
+			users.addAll(sellerInfo.getKey().keySet());
+			users.addAll(buyerInfo.getKey().keySet());
+			
+			try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("buyerAndsellerCategorySpread.csv"), Charset.defaultCharset())) {
+				bw.append("userId,sellerAuctions,sellerAveragePrice,sellerPriceSD,sellerCategories,buyerAuctions,buyerAveragePrice,buyerPriceSD,buyerCategories");
+				bw.newLine();
+				
+				HashMap<Integer, IncrementalSD> sellerAveragePrices = sellerInfo.getValue();
+				HashMap<Integer, IncrementalSD> buyerAveragePrices = buyerInfo.getValue();
+				
+				for (Integer userId : users) {
+					bw.append(userId + ",");
+					
+					if (sellerAveragePrices.containsKey(userId)) {
+						IncrementalSD sellerAveragePrice = sellerAveragePrices.get(userId);
+						bw.append(sellerAveragePrice.numElements() + ",");
+						bw.append(sellerAveragePrice.average() + ",");
+						bw.append(sellerAveragePrice.getSD() + ",");
+						bw.append(sellerInfo.getKey().get(userId).size() + ",");
+					} else {
+						bw.append("0,,,0,");
+					}
+
+					if (buyerAveragePrices.containsKey(userId)) {
+						IncrementalSD buyerAveragePrice = buyerAveragePrices.get(userId);
+						bw.append(buyerAveragePrice.numElements() + ",");
+						bw.append(buyerAveragePrice.average() + ",");
+						bw.append(buyerAveragePrice.getSD() + ",");
+						bw.append(buyerInfo.getKey().get(userId).size() + "");
+					} else {
+						bw.append("0,,,0");
+					}
+
+					bw.newLine();
+				}
+				
+				bw.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * Finds (sellerId, auctions, averagePrice, priceSD, categories) for each seller.
 	 * For finding trends in category compared to number of auctions or average auction price.
 	 * @throws SQLException
 	 */
-	private void sellerCategorySpread() throws SQLException {
+	private Pair<Multimap<Integer, String>, HashMap<Integer, IncrementalSD>> sellerCategorySpread() throws SQLException {
 		Connection conn = DBConnection.getTrademeConnection();
 		Statement stmt = conn.createStatement();
 
@@ -135,9 +191,11 @@ public class BuyerSellerTrends {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		return new Pair<Multimap<Integer, String>, HashMap<Integer, IncrementalSD>>(categoryCount, averagePrices);
 	}
 	
-	private void buyerCategorySpread() throws SQLException {
+	private Pair<Multimap<Integer, String>, HashMap<Integer, IncrementalSD>> buyerCategorySpread() throws SQLException {
 		Connection conn = DBConnection.getTrademeConnection();
 		Statement stmt = conn.createStatement();
 
@@ -183,6 +241,8 @@ public class BuyerSellerTrends {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		return new Pair<Multimap<Integer, String>, HashMap<Integer, IncrementalSD>>(categoryCount, averagePrices);
 	}
 
 }

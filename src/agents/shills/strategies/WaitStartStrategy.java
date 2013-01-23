@@ -9,7 +9,7 @@ import simulator.objects.Bid;
 /**
  *	Similar to TrevathanStrategy, except starts bidding later, and makes bids that are not always the minimum required.
  */
-public class WaitStartTrevathanStrategy implements Strategy {
+public class WaitStartStrategy implements Strategy {
 
 	private final double theta;
 	private final double alpha;
@@ -17,16 +17,13 @@ public class WaitStartTrevathanStrategy implements Strategy {
 	
 	private final Random r = new Random();
 	
-	public WaitStartTrevathanStrategy(double theta, double alpha, double mu) {
+	public WaitStartStrategy(double theta, double alpha, double mu) {
 		this.theta = theta;
 		this.alpha = alpha;
 		this.mu = mu;
 	}
 	
 	@Override
-	/**
-	 * Always bid immediately.
-	 */
 	public long wait(Auction auction) {
 		return r.nextInt(50) + 50;
 	}

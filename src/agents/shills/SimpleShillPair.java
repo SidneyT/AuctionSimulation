@@ -37,17 +37,17 @@ public class SimpleShillPair extends EventListener implements Controller {
 	
 	private static final Logger logger = Logger.getLogger(SimpleShillPair.class); 
 	
-	protected BufferHolder bh;
-	protected PaymentSender ps;
-	protected ItemSender is;
-	protected AuctionHouse ah;
+	protected final BufferHolder bh;
+	protected final PaymentSender ps;
+	protected final ItemSender is;
+	protected final AuctionHouse ah;
+	private final List<ItemType> types;
 	
 	private final PuppetSeller ss;
 	private final PuppetBidder sb;
 	// Map<Auction, Registered>
 	private final Map<Auction, Boolean> shillAuctions;
 	private final Set<Auction> expiredShillAuctions;
-	List<ItemType> types;
 
 	private final Strategy strategy;
 	
@@ -83,7 +83,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 	public void run() {
 		super.run();
 		
-		long currentTime = bh.getTimeMessage().getTime();
+		long currentTime = bh.getTime();
 		
 		// TODO: can make another set "toCheckShillAuctions" which only needs to be checked
 		// after that auction receives a message about a new bid.
@@ -142,7 +142,8 @@ public class SimpleShillPair extends EventListener implements Controller {
 	protected void newAction(Auction auction, long time) {
 		super.newAction(auction, time);
 		if (shillAuctions.containsKey(auction)) {
-			ah.registerForAuction(sb, auction);
+//			ah.registerForAuction(sb, auction);
+			ah.registerForAuction(this, auction);
 			shillAuctions.put(auction, true);
 		}
 	}
@@ -154,12 +155,11 @@ public class SimpleShillPair extends EventListener implements Controller {
 
 	@Override
 	public void winAction(SimpleUser agent, Auction auction) {
-		winAction(auction, bh.getTime());
+//		winAction(auction, bh.getTime());
 	}
 
 	@Override
 	public void lossAction(SimpleUser agent, Auction auction) {
-		lossAction(auction, bh.getTime());
 	}
 	
 	@Override

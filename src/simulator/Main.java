@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableSet;
 
 import createUserFeatures.ClusterAnalysis;
 
@@ -135,16 +135,16 @@ public class Main {
 				Executors.callable(ps),
 				Executors.callable(is)
 				);
-		final Builder<Callable<Object>> userCallablesBuilder = ImmutableList.builder();
+		final ImmutableSet.Builder<Callable<Object>> userCallablesBuilder = ImmutableSet.builder();
 		for (SimpleUser user : userRecord.getUsers()) {
 			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(user)));
 //			userCallablesBuilder.add(Executors.callable(user));
 		}
 		for (EventListener listeners : ah.getEventListeners()) {
-//			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(listeners)));
-			userCallablesBuilder.add(Executors.callable(listeners));
+			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(listeners)));
+//			userCallablesBuilder.add(Executors.callable(listeners));
 		}
-		ImmutableList<Callable<Object>> userCallables = userCallablesBuilder.build();
+		ImmutableSet<Callable<Object>> userCallables = userCallablesBuilder.build();
 		
 		// starting the loops - each loop is 1 time unit
 		// 24 * 60 / 5 == 1 day

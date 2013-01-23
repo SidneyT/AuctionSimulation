@@ -36,8 +36,6 @@ public abstract class EventListener implements Runnable {
 		this.id = userIdCount.getAndIncrement();
 		
 		this.bh = bh;
-//		this.id = uniqueId;
-//		System.out.println("setting id as " + id);
 		this.awaitingPayment = new HashSet<Auction>();
 		this.awaitingItem = new HashSet<Auction>();
 	}
@@ -46,16 +44,13 @@ public abstract class EventListener implements Runnable {
 		return id;
 	}
 
-//	@Override
-//	public void setId(int id) {
-//		assert(this.id == -1); // id can only be set once
-//		this.id = id;
-//	}
-	
 	public String toString() {
 		return this.getClass().getSimpleName() + ":" + this.getId();
 	}
 
+	/**
+	 * All subclasses must call this method if overriding.
+	 */
 	public void run() {
 		List<Message> messages = this.bh.getMessagesToUsers().getMessages(id);
 		for (Message message : messages) {
@@ -92,7 +87,7 @@ public abstract class EventListener implements Runnable {
 	 * @param auction
 	 */
 	protected void newAction(Auction auction, long time) {
-		logger.debug(id + " received " + auction + " " + MessageType.NEW + " at " + time);
+		logger.debug(this + " received " + auction + " " + MessageType.NEW + " at " + time);
 	}
 
 	/**
@@ -100,7 +95,7 @@ public abstract class EventListener implements Runnable {
 	 * @param auction
 	 */
 	protected void priceChangeAction(Auction auction, long time) {
-		logger.debug(id + " received " + auction + " " + MessageType.PRICE_CHANGE + " at " + time);
+		logger.debug(this + " received " + auction + " " + MessageType.PRICE_CHANGE + " at " + time);
 	}
 
 	/**
@@ -108,7 +103,7 @@ public abstract class EventListener implements Runnable {
 	 * @param auction
 	 */
 	protected void lossAction(Auction auction, long time) {
-		logger.debug(id + " received " + auction + " " + MessageType.LOSS + " at " + time);
+		logger.debug(this + " received " + auction + " " + MessageType.LOSS + " at " + time);
 	}
 
 	/**
@@ -116,7 +111,7 @@ public abstract class EventListener implements Runnable {
 	 * @param auction
 	 */
 	protected void winAction(Auction auction, long time) {
-		logger.debug(id + " received " + auction + " " + MessageType.WIN + " at " + time);
+		logger.debug(this + " received " + auction + " " + MessageType.WIN + " at " + time);
 	}
 
 	/**
@@ -124,7 +119,7 @@ public abstract class EventListener implements Runnable {
 	 * @param auction
 	 */
 	protected void expiredAction(Auction auction, long time) {
-		logger.debug(id + " received " + auction + " " + MessageType.EXPIRED + " at " + time);
+		logger.debug(this + " received " + auction + " " + MessageType.EXPIRED + " at " + time);
 	}
 
 	/**
@@ -132,7 +127,7 @@ public abstract class EventListener implements Runnable {
 	 * @param auction
 	 */
 	protected void soldAction(Auction auction, long time) {
-		logger.debug(id + " received " + auction + " " + MessageType.SOLD + " at " + time);
+		logger.debug(this + " received " + auction + " " + MessageType.SOLD + " at " + time);
 	}
 	
 	/**
@@ -140,7 +135,7 @@ public abstract class EventListener implements Runnable {
 	 * @param auction
 	 */
 	protected void endSoonAction(Auction auction, long time) {
-		logger.debug(id + " received " + auction + " " + MessageType.END_SOON + " at " + time);
+		logger.debug(this + " received " + auction + " " + MessageType.END_SOON + " at " + time);
 	}
 	
 	/**
@@ -148,7 +143,7 @@ public abstract class EventListener implements Runnable {
 	 * @param auction
 	 */
 	protected void gotPaidAction(Collection<Payment> paymentSet) {
-		logger.debug(id + " received payments " + paymentSet);
+		logger.debug(this + " received payments " + paymentSet);
 	}
 
 	/**
@@ -156,7 +151,7 @@ public abstract class EventListener implements Runnable {
 	 * @param auction
 	 */
 	protected void itemReceivedAction(Set<ItemSold> itemSet) {
-		logger.debug(id + " received items " + itemSet);
+		logger.debug(this + " received items " + itemSet);
 	}
 	
 	/**
