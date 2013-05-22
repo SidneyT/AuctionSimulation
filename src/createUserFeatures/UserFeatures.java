@@ -152,4 +152,9 @@ public class UserFeatures {
 		return avgFinalBidAmount;
 	}
 
+	@Override
+	public String toString() {
+		return "userId: " + userId;
+	}
+	
 }

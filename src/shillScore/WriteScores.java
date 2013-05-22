@@ -11,12 +11,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.common.collect.Multiset;
+
+import shillScore.BuildShillScore.ShillScoreInfo;
+
 import createUserFeatures.BuildUserFeatures;
 
 public class WriteScores {
 
 	private static final String delimiter = ",";
 
+	public static void main(String[] args) {
+		ShillScoreInfo tmScoreInfo = BuildShillScore.buildTM();
+//		writeShillScores(tmScoreInfo.shillScores, tmScoreInfo.auctionCounts, "tm");
+		writeMoreThanTwo(tmScoreInfo.shillScores, tmScoreInfo.auctionCounts, "tm_gt2");
+	}
+	
+	static interface KeepTest {
+		public boolean keep(ShillScore ss);
+	}
+	
+	private static Path writeMoreThanTwo(Map<Integer, ShillScore> shillScores, Multiset<Integer> auctionCounts, String suffix, double[]... reweights) {
+		KeepTest moreThanTwoAuctions = new KeepTest(){
+			public boolean keep(ShillScore ss) {
+				return ss.lossCount + ss.winCount > 2;
+			};
+		};
+
+		return writeShillScores(shillScores, auctionCounts, suffix, moreThanTwoAuctions, reweights);
+	}
+	
+	public static Path writeShillScores(Map<Integer, ShillScore> shillScores, Multiset<Integer> auctionCounts, String suffix, double[]... reweights) {
+		KeepTest alwaysYes = new KeepTest(){public boolean keep(ShillScore ss) {return true;};};
+		return writeShillScores(shillScores, auctionCounts, suffix, alwaysYes, reweights);
+	}
 	/**
 	 * Writes shill scores of all users to a file.
 	 * 
@@ -24,14 +52,14 @@ public class WriteScores {
 	 * @param auctionCounts map containing sellerIds mapped to number of auctions they submitted
 	 * @param suffix string added to the end of the filename
 	 */
-	public static Path writeShillScores(Map<Integer, ShillScore> shillScores, Map<Integer, Integer> auctionCounts, String suffix, double[]... reweights) {
+	public static Path writeShillScores(Map<Integer, ShillScore> shillScores, Multiset<Integer> auctionCounts, String suffix, KeepTest condition, double[]... reweights) {
 		Path ssFile = Paths.get("shillingResults", "ShillScores_" + suffix + ".csv");
 		try (BufferedWriter bw = Files.newBufferedWriter(ssFile, Charset.defaultCharset())) {
 			bw.append(shillScoreHeadings(reweights));
 			bw.newLine();
 			
 			for (ShillScore ss : shillScores.values()) {
-				if (ss.getLossCount() != 0) {
+				if (ss.getLossCount() != 0 && condition.keep(ss)) {
 					bw.append(ss.userType + delimiter);
 					bw.append(ss.getId() + delimiter);
 					bw.append(SSRatingsString(ss, auctionCounts, reweights).toString());
@@ -47,7 +75,7 @@ public class WriteScores {
 		}
 	}
 
-	private static StringBuilder SSRatingsString(ShillScore ss, Map<Integer, Integer> auctionCounts, double[]... reweights) {
+	private static StringBuilder SSRatingsString(ShillScore ss, Multiset<Integer> auctionCounts, double[]... reweights) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(ss.getWinCount()).append(delimiter);
 		sb.append(ss.getLossCount()).append(delimiter);
@@ -95,7 +123,7 @@ public class WriteScores {
 			Map<Integer, ShillScore> shillScores,
 			Map<BuildUserFeatures.AuctionObject, 
 			List<Integer>> auctionBidders, 
-			Map<Integer, Integer> auctionCounts, 
+			Multiset<Integer> auctionCounts, 
 			String suffix
 			) {
 		

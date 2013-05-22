@@ -1,4 +1,4 @@
-package createUserFeatures;
+package createUserFeatures.evaluation;
 
 import java.io.BufferedReader;
 import java.io.File;

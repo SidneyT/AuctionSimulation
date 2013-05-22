@@ -54,7 +54,7 @@ public class AnalyseAuctionCategories {
 //				for (double price : Util.getSample(prices.iterator(), 100)) {
 //					loggedPrices.add(FastMath.log(price));
 //				}
-				List<Integer> loggedPrices = Util.getSample(prices.iterator(), 100);
+				List<Integer> loggedPrices = Util.<Integer>getSample(prices, 100);
 				Collections.sort(loggedPrices);
 				chart.addSeries(loggedPrices, category);
 			}

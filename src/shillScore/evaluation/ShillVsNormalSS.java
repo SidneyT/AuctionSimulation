@@ -23,7 +23,11 @@ import java.util.Set;
 
 import org.apache.commons.math3.stat.Frequency;
 
+import com.google.common.collect.Multiset;
+import com.google.common.primitives.Doubles;
+
 import createUserFeatures.BuildUserFeatures;
+import createUserFeatures.BuildUserFeatures.AuctionObject;
 import createUserFeatures.BuildUserFeatures.SimAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
 
@@ -94,7 +98,7 @@ public class ShillVsNormalSS {
 		// get the runNumber
 		String[] bitsOfName = file.getName().replaceAll(".csv", "").split("\\.");
 		System.out.println(file.getName());
-		int runNum = Integer.parseInt(bitsOfName[bitsOfName.length - 1]);
+//		int runNum = Integer.parseInt(bitsOfName[bitsOfName.length - 1]);
 
 //		writePercentiles(Paths.get("shillingResults/comparisons/normal" + runNum + ".csv"), normalShillScores);
 //		writePercentiles(Paths.get("shillingResults/comparisons/shill" + runNum + ".csv"), shillerShillScores);
@@ -107,17 +111,46 @@ public class ShillVsNormalSS {
 	 * @param values2
 	 * @return number between 0 and 1.
 	 */
-	public static List<Double> percentiles(List<Double> values1, List<Double> values2) {
+	public static List<Double> percentiles2(List<Double> values1, List<Double> values2) {
 		Frequency frequency = new Frequency();
 		for (double v : values1) {
 			frequency.addValue(v);
 		}
+
+		System.out.println((double) frequency.getCumFreq(2.146465461) / values1.size() + "");
 		
-		List<Double> percentiles = new ArrayList<>(); 
+		List<Double> percentiles = new ArrayList<>(values2.size());
+		int i = 0;
 		for (double v : values2) {
 			double percentile = (double) frequency.getCumFreq(v) / values1.size();
 			percentiles.add(percentile);
+			i++;
+			System.out.println(i + " " + percentile);
+			
 		}
+		return percentiles;
+	}
+	
+	public static List<Double> percentiles(List<Double> values1, List<Double> values2) {
+		double[] valuesA = Doubles.toArray(values1);
+		Arrays.sort(valuesA);
+		double[] valuesB = Doubles.toArray(values2);
+		Arrays.sort(valuesB);
+		
+		List<Double> percentiles = new ArrayList<>(values2.size());
+		
+//		int i = 1;
+		for (double vB : valuesB) {
+//			System.out.println("value " + vB);
+			int insIndex = Arrays.binarySearch(valuesA, vB);
+			if (insIndex < 0)
+				insIndex = -insIndex + 1;
+			double percentile = (double) insIndex / valuesA.length;
+			percentiles.add(percentile);
+//			System.out.println(i++ + " " + percentile);
+			
+		}
+		
 		return percentiles;
 	}
 	
@@ -200,8 +233,8 @@ public class ShillVsNormalSS {
 	 * @param map 
 	 * @param path
 	 */
-	public static void ssRankForShills(Map<Integer, ShillScore> shillScores, Map<SimAuction, List<Integer>> auctionBidders, 
-			Map<Integer, Integer> auctionCounts, 
+	public static void ssRankForShills(Map<Integer, ShillScore> shillScores, Map<? extends AuctionObject, List<Integer>> auctionBidders, 
+			Multiset<Integer> auctionCounts, 
 			Map<Integer, UserObject> users, 
 			Path path, String label, double[]... reweights) {		
 		writeRanks(shillScores, auctionBidders, auctionCounts, users, path, label, ShillScore.DEFAULT_WEIGHTS);
@@ -242,15 +275,15 @@ public class ShillVsNormalSS {
 	 * @param weights
 	 */
 	private static void writeRanks(Map<Integer, ShillScore> shillScores, 
-			Map<SimAuction, List<Integer>> auctionBidders, 
-			Map<Integer, Integer> auctionCounts, 
+			Map<? extends AuctionObject, List<Integer>> auctionBidders, 
+			Multiset<Integer> auctionCounts, 
 			Map<Integer, UserObject> users, 
 			Path path, String label, double[] weights) {
 		int shillFirstCount = 0;
 		int normalFirstCount = 0;
 		
-		for (Entry<SimAuction, List<Integer>> auctionBidderEntry : auctionBidders.entrySet()) {
-			SimAuction auction = auctionBidderEntry.getKey();
+		for (Entry<? extends AuctionObject, List<Integer>> auctionBidderEntry : auctionBidders.entrySet()) {
+			AuctionObject auction = auctionBidderEntry.getKey();
 			List<Integer> bidders = auctionBidderEntry.getValue();
 			
 			if (users.get(auction.sellerId).userType.toLowerCase().contains("puppet")) {
@@ -318,15 +351,15 @@ public class ShillVsNormalSS {
 	 */
 	public static void writeRanks(Map<Integer, ShillScore> shillScores, 
 			BayseanSS bayseanSS, 
-			Map<SimAuction, List<Integer>> auctionBidders, 
-			Map<Integer, Integer> auctionCounts, 
+			Map<? extends AuctionObject, List<Integer>> auctionBidders, 
+			Multiset<Integer> auctionCounts, 
 			Map<Integer, UserObject> users, 
 			Path path, String label) {
 		int shillFirstCount = 0;
 		int normalFirstCount = 0;
 		
-		for (Entry<SimAuction, List<Integer>> auctionBidderEntry : auctionBidders.entrySet()) {
-			SimAuction auction = auctionBidderEntry.getKey();
+		for (Entry<? extends AuctionObject, List<Integer>> auctionBidderEntry : auctionBidders.entrySet()) {
+			AuctionObject auction = auctionBidderEntry.getKey();
 			List<Integer> bidders = auctionBidderEntry.getValue();
 			
 			if (users.get(auction.sellerId).userType.toLowerCase().contains("puppet")) {

@@ -18,7 +18,9 @@ import java.util.TreeMap;
 import agents.SimpleUser;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multiset;
 
+import shillScore.ShillScore;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import util.Util;
@@ -40,14 +42,28 @@ public abstract class BuildUserFeatures {
 		return this.trim;
 	}
 
+	static interface KeepTest {
+		public boolean keep(UserFeatures uf);
+	}
+	
+	public static KeepTest AlwaysKeep = new KeepTest() {
+		@Override
+		public boolean keep(UserFeatures uf) {
+			return true;
+		}
+	};
+	
 	public static void writeToFile(Collection<UserFeatures> userFeaturesCollection, List<Features> featuresToPrint, Path path) {
+		writeToFile(userFeaturesCollection, featuresToPrint, AlwaysKeep, path);
+	}
+	public static void writeToFile(Collection<UserFeatures> userFeaturesCollection, List<Features> featuresToPrint, KeepTest condition, Path path) {
 		try (BufferedWriter w = Files.newBufferedWriter(path, Charset.defaultCharset())) {
 			// print headings
 			w.append(Features.labels(featuresToPrint));
 			w.newLine();
 	
 			for (UserFeatures uf : userFeaturesCollection) { // for each set of user features
-				if (uf.isComplete()) {
+				if (uf.isComplete() && condition.keep(uf)) {
 					w.append(Features.values(featuresToPrint, uf));
 					w.newLine();
 				}

@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Multiset;
+
 import createUserFeatures.BuildUserFeatures.UserObject;
 import createUserFeatures.SimAuctionIterator;
 
@@ -93,8 +95,8 @@ public class BayseanAverageSS {
 		private final IncrementalMean avgNumLoss = new IncrementalMean(); 
 		private final IncrementalMean avgShillScore = new IncrementalMean();
 		
-		private final Map<Integer, Integer> auctionCounts; 
-		public BayseanSS(Collection<ShillScore> shillScores, Map<Integer, Integer> auctionCounts) {
+		private final Multiset<Integer> auctionCounts; 
+		public BayseanSS(Collection<ShillScore> shillScores, Multiset<Integer> auctionCounts) {
 			for (ShillScore ss : shillScores) {
 				if (ss.getLossCount() == 0)
 					continue;

@@ -45,8 +45,10 @@ public class WaitStartStrategy implements Strategy {
 	 * Bid the minimum amount possible.
 	 */
 	public int bidAmount(Auction auction) {
-		int amount = (int) ((1 - auction.proportionOfTrueValuation()/0.7) * 0.1 * auction.trueValue());
-		return Math.max(auction.minimumBid(), amount);
+		int amount = auction.minimumBid();
+		if (r.nextDouble() > 0.8)
+			amount += (int) ((1 - auction.proportionOfTrueValuation()) * 0.1 * auction.trueValue());
+		return amount;
 	}
 	
 	/**

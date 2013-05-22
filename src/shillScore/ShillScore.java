@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.common.collect.Multiset;
+
 import util.IncrementalMean;
 import util.Util;
 
@@ -43,6 +45,13 @@ public class ShillScore {
 		return this.lossCount;
 	}
 	
+	/**
+	 * @return returns userType String or <code>null</code>.
+	 */
+	public String getUserType() {
+		return this.userType;
+	}
+	
 	@Override
 	public String toString() {
 		return "(" + id + ", "+ winCount + ", " + lossCount + ", " + lossCounts + ", " + bidProportion + ", " + interBidTime + ", " + bidIncrement + ", " + firstBidTime + ")";
@@ -68,12 +77,12 @@ public class ShillScore {
 	 * @param auctionCounts the number of auctions submitted by a seller (sellerId, number of auctions)
 	 * @return
 	 */
-	public Thing getAlpha(Map<Integer, Integer> auctionCounts) {
+	public Thing getAlpha(Multiset<Integer> auctionCounts) {
 		double maxAlpha = Double.MIN_VALUE;
 		List<Integer> maxSellerIds = new ArrayList<Integer>(1);
 		for (Entry<Integer, Integer> countEntry : lossCounts.entrySet()) {
 			int sellerId = countEntry.getKey();
-			double alpha = (double) countEntry.getValue() / auctionCounts.get(sellerId);
+			double alpha = (double) countEntry.getValue() / auctionCounts.count(sellerId);
 			if (alpha > maxAlpha) {
 				maxAlpha = alpha;
 				if (alpha == maxAlpha)
@@ -100,8 +109,8 @@ public class ShillScore {
 	 * @param sellerId
 	 * @return
 	 */
-	public double getAlpha(Map<Integer, Integer> auctionCounts, int sellerId) {
-		return (double) lossCounts.get(sellerId) / auctionCounts.get(sellerId);
+	public double getAlpha(Multiset<Integer> auctionCounts, int sellerId) {
+		return (double) lossCounts.get(sellerId) / auctionCounts.count(sellerId);
 	}
 	
 	public double getBeta() {
@@ -132,7 +141,7 @@ public class ShillScore {
 	 * bidder/seller pairs, given this bidder.
 	 */
 	public static final double[] DEFAULT_WEIGHTS = {9, 2, 5, 2, 2, 2}; //22
-	public double getShillScore(Map<Integer, Integer> auctionCounts, double[] weights) {
+	public double getShillScore(Multiset<Integer> auctionCounts, double[] weights) {
 		double score = 0;
 		score += this.getAlpha(auctionCounts).maxAlpha * weights[0];
 		score += this.getBeta() * weights[1];
@@ -152,7 +161,7 @@ public class ShillScore {
 	 * Get the shill score. The alpha score used is the one calculated for
 	 * the sellerId given.
 	 */
-	public double getShillScore(Map<Integer, Integer> auctionCounts, int sellerId, double[] weights) {
+	public double getShillScore(Multiset<Integer> auctionCounts, int sellerId, double[] weights) {
 		double score = 0;
 		score += this.getAlpha(auctionCounts, sellerId) * weights[0];
 		score += this.getBeta() * weights[1];
@@ -169,18 +178,18 @@ public class ShillScore {
 		return score / weightSum * 10;
 	}
 	
-	public double getShillScore(Map<Integer, Integer> auctionCounts) {
+	public double getShillScore(Multiset<Integer> auctionCounts) {
 		return getShillScore(auctionCounts, DEFAULT_WEIGHTS);
 	}
-	public double getShillScore(Map<Integer, Integer> auctionCounts, int sellerId) {
+	public double getShillScore(Multiset<Integer> auctionCounts, int sellerId) {
 		return getShillScore(auctionCounts, sellerId, DEFAULT_WEIGHTS);
 	}
 	
-	public double bayseanSS(double groupSize, double mean, Map<Integer, Integer> auctionCounts, int sellerId) {
+	public double bayseanSS(double groupSize, double mean, Multiset<Integer> auctionCounts, int sellerId) {
 		return Util.bayseanAverage(groupSize, mean, lossCount, this.getShillScore(auctionCounts, sellerId));
 	}
 	
-	public double bayseanSS(double groupSize, double mean, Map<Integer, Integer> auctionCounts) {
+	public double bayseanSS(double groupSize, double mean, Multiset<Integer> auctionCounts) {
 		return Util.bayseanAverage(groupSize, mean, lossCount, this.getShillScore(auctionCounts));
 	}
 	

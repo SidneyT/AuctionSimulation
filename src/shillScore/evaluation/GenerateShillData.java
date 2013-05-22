@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Multiset;
+
 
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.Features;
@@ -171,7 +173,7 @@ public class GenerateShillData {
 //		WriteScores.writeShillScoresForAuctions(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, runLabel);
 	}
 
-	public static List<Double> splitAndCalculatePercentiles(Collection<ShillScore> sss, Map<Integer, Integer> auctionCounts, double[] weights) {
+	public static List<Double> splitAndCalculatePercentiles(Collection<ShillScore> sss, Multiset<Integer> auctionCounts, double[] weights) {
 		List<Double> shillSS = new ArrayList<>();
 		List<Double> normalSS = new ArrayList<>();
 		

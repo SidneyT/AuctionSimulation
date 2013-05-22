@@ -6,11 +6,13 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import weka.clusterers.ClusterEvaluation;
 import weka.clusterers.RandomizableClusterer;
+import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.unsupervised.attribute.PrincipalComponents;
@@ -23,8 +25,8 @@ public class Weka {
 		pca(pca_input, pca_output);
 		
 //		String filename = "UserFeatures_pca.arff";
-//		RandomizableClusterer clusterer = new XMeans();
-//		w.cluster(clusterer, filename, clusterer.getClass().getSimpleName() + "_" + filename + ".centers");
+//		RandomizableClusterer clusterer = new SimpleKMeans();
+//		cluster(clusterer, filename, clusterer.getClass().getSimpleName() + "_" + filename + ".centers");
 		
 		System.out.println("Finished.");
 	}
@@ -107,6 +109,7 @@ public class Weka {
 				clusterAssignments.add((int) clusAssign[i]);
 			}
 			infoWriter.write(ce.clusterResultsToString());
+			
 			infoWriter.newLine();
 			infoWriter.flush();
 		} catch (Exception e) {

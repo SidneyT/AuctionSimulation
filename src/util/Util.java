@@ -121,6 +121,9 @@ public class Util {
 	}
 	
 	public static double normalise(double value, double min, double max) {
+		if (min == max) {
+			throw new IllegalArgumentException("Cannot normalise if min & max values are the same.");
+		}
 		return (value - min)/(max - min);
 	}
 	
@@ -129,12 +132,11 @@ public class Util {
 		return average;
 	}
 	
-	public static <T> List<T> getSample(Iterator<T> it, int sampleSize) {
+	public static <T> List<T> getSample(Iterable<T> iterable, int sampleSize) {
 		List<T> sample = new ArrayList<>(sampleSize);
 		int seen = 0;
 		Random r = new Random();
-		while(it.hasNext()) {
-			T item = it.next();
+		for (T item : iterable) {
 			seen++;
 			if (seen <= sampleSize) {
 				sample.add(item);

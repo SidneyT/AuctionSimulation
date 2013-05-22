@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Multiset;
+
 
 
 import shillScore.BuildShillScore.ShillScoreInfo;
@@ -115,7 +117,7 @@ public class BuildCollusiveShillScore {
 	 * @return
 	 */
 	private static Map<Integer, CollusiveShillScore> calculateBindingFactors(Map<Integer, CollusiveShillScore> collusionScores, 
-			List<List<Integer>> etaGroups, Map<Integer, ShillScore> shillScores, Map<Integer, Integer> auctionCounts, Mapping mapping) {
+			List<List<Integer>> etaGroups, Map<Integer, ShillScore> shillScores, Multiset<Integer> auctionCounts, Mapping mapping) {
 		for (List<Integer> group : etaGroups) {
 			for (int i = 0; i < group.size(); i++) {
 				int iId = mapping.toId(group.get(i));

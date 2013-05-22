@@ -13,9 +13,16 @@ import java.util.Set;
 import org.apache.commons.math3.util.Pair;
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+
+import createUserFeatures.BuildTMFeatures.TMAuctionGroupIterator;
+import createUserFeatures.BuildUserFeatures.AuctionObject;
 import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.BuildUserFeatures.SimAuction;
+import createUserFeatures.BuildUserFeatures.TMAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
+import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.SimAuctionDBIterator;
 import createUserFeatures.SimAuctionIterator;
 
@@ -32,11 +39,12 @@ public class BuildShillScore {
 	
 	public static class ShillScoreInfo {
 		public final Map<Integer, ShillScore> shillScores; // Map(bidderId, shill score object)
-		public final Map<SimAuction, List<Integer>> auctionBidders; // Map(seller, bidderlist)
-		public final Map<Integer, Integer> auctionCounts; // Map(sellerId, number of auctions)
+		public final Map<? extends AuctionObject, List<Integer>> auctionBidders; // Map(seller, bidderlist)
+		public final Multiset<Integer> auctionCounts; // Multiset<sellerIds>
 		
 		public ShillScoreInfo(Map<Integer, ShillScore> shillScores,
-				Map<SimAuction, List<Integer>> auctionBidders, Map<Integer, Integer> auctionCounts) {
+				Map<? extends AuctionObject, List<Integer>> auctionBidders, 
+						Multiset<Integer> auctionCounts) {
 			this.shillScores = shillScores;
 			this.auctionBidders = auctionBidders;
 			this.auctionCounts = auctionCounts;
@@ -49,11 +57,41 @@ public class BuildShillScore {
 
 		Map<Integer, ShillScore> shillScores = new HashMap<>();
 		Map<SimAuction, List<Integer>> auctionBidders = new HashMap<>(); // Map(seller, bidderlist)
-		Map<Integer, Integer> auctionCounts = new HashMap<>();
+		Multiset<Integer> auctionCounts = HashMultiset.create();
 		Map<Integer, UserObject> users = simAuctionIterator.users();
 		while (it.hasNext()) {
 			Pair<SimAuction, List<BidObject>> pair = it.next();
 			processBids(shillScores, auctionBidders, auctionCounts, users, pair.getKey(), pair.getValue());
+		}
+		
+		return new ShillScoreInfo(shillScores, auctionBidders, auctionCounts);
+	}
+	
+	public static ShillScoreInfo buildTM() {
+		return buildTM(BuildTMFeatures.DEFAULT_QUERY);
+	}
+	public static ShillScoreInfo buildTM(String query) {
+		
+		TMAuctionGroupIterator tmIterator = new BuildTMFeatures.TMAuctionGroupIterator(DBConnection.getTrademeConnection(), query);
+		Iterator<Pair<TMAuction, List<BidObject>>> it = tmIterator.iterator();
+		
+		Map<Integer, ShillScore> shillScores = new HashMap<>();
+		Map<TMAuction, List<Integer>> auctionBidders = new HashMap<>(); // Map(seller, bidderlist)
+		Multiset<Integer> auctionCounts = HashMultiset.create();
+		Map<Integer, UserObject> users = tmIterator.users();
+		while (it.hasNext()) {
+			Pair<TMAuction, List<BidObject>> pair = it.next();
+			if (pair.getKey().listingId == 487782655)
+				System.out.println();
+			processBids(shillScores, auctionBidders, auctionCounts, users, pair.getKey(), pair.getValue());
+		}
+		
+		Iterator<Entry<Integer, ShillScore>> ssIter = shillScores.entrySet().iterator();
+		while (ssIter.hasNext()) {
+			Entry<Integer, ShillScore> ssEntry = ssIter.next();
+//			if ("phantom".equals(ssEntry.getValue().userType))
+			if (!users.containsKey(ssEntry.getValue().getId()))
+				ssIter.remove();
 		}
 		
 		return new ShillScoreInfo(shillScores, auctionBidders, auctionCounts);
@@ -73,29 +111,32 @@ public class BuildShillScore {
 	 * @param auction the auction associated with the bids being processed
 	 * @param bids bids of the same auction ordered by ascending time (or amount)
 	 */
-	static void processBids(
+	static <T extends AuctionObject> void processBids(
 			Map<Integer, ShillScore> shillScores, 
-			Map<SimAuction, List<Integer>> auctionBidders, 
-			Map<Integer, Integer> auctionCounts, 
+			Map<T, List<Integer>> auctionBidders, 
+			Multiset<Integer> auctionCounts, 
 			Map<Integer, UserObject> users, 
-			SimAuction auction, List<BidObject> bids
+			T auction, List<BidObject> bids
 			) {
 		
 		if (bids.isEmpty()) {
 			logger.warn("bids list is empty in processBids. It shouldn't be.");
+			System.out.println("bids list is empty in processBids. It shouldn't be.");
 			return;
 		}
 		
 		for (BidObject bid : bids) {
 			int bidderId = bid.bidderId;
-			String bidderType = users.get(bidderId).userType;
 			
-			ShillScore ss;
+			String bidderType;
+			if (users.containsKey(bidderId))
+				bidderType = users.get(bidderId).userType;
+			else // if this user does not have a user profile and a userType, make up one. 
+				bidderType = "phantom"; // THESE USERS MUST BE REMOVED AFTERWARDS. they have not been completely crawled.
+			
 			if (!shillScores.containsKey(bidderId)) {
-				ss = new ShillScore(bidderId, bidderType);
+				ShillScore ss = new ShillScore(bidderId, bidderType);
 				shillScores.put(bidderId, ss);
-			} else {
-				ss = shillScores.get(bidderId);
 			}
 		}
 		
@@ -119,16 +160,10 @@ public class BuildShillScore {
 		epsilonOp(shillScores, bids);
 		zetaOp(shillScores, auction.endTime, bids);
 
-//		System.out.println("shillScores: " + shillScores);
 	}
 	
-	private static void omegaOp(Map<Integer, Integer> sellerCounts, int sellerId) {
-		Integer count = sellerCounts.get(sellerId);
-		if (count == null) {
-			sellerCounts.put(sellerId, 1);
-		} else {
-			sellerCounts.put(sellerId, count + 1);
-		}
+	private static void omegaOp(Multiset<Integer> sellerCounts, int sellerId) {
+		sellerCounts.add(sellerId);
 	}
 	
 	// Record the number of losses by the bidder for each seller.
@@ -290,7 +325,10 @@ public class BuildShillScore {
 		
 		for (Entry<Integer, Long> firstBidTimeEntry : firstBidTimes.entrySet()) {
 //			System.out.println(firstBidTimeEntry.getKey() + " normalised firstBidTime:" + normalise((firstBidTimeEntry.getValue()), min, max));
-			shillScores.get(firstBidTimeEntry.getKey()).firstBidTime.addNext(Util.normalise((firstBidTimeEntry.getValue()), min, max));
+			double zeta = normalise((firstBidTimeEntry.getValue()), min, max);
+//			if (Double.isNaN(zeta))
+//				Util.normalise((firstBidTimeEntry.getValue()), min, max);
+			shillScores.get(firstBidTimeEntry.getKey()).firstBidTime.addNext(zeta);
 		}
 	}
 	

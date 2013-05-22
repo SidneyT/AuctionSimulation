@@ -15,6 +15,9 @@ import java.util.Set;
 
 import org.apache.commons.math3.util.Pair;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
+
 import simulator.database.DBConnection;
 
 /**
@@ -23,17 +26,28 @@ import simulator.database.DBConnection;
 public class BuildTMFeatures extends BuildUserFeatures {
 	
 	public static void main(String[] args) {
-//		String features = "-0-1-1ln-2-2ln-3-3ln-10-4-4ln-5-6-6ln-11-9-12-8-13-14-15"; // all
-//		String features = "-1ln-2ln-3ln-4ln-6ln-13-9-5-10-11";
-		
+//		run();
+		moreThanTwo();
+		System.out.println("Finished.");
+	}
+
+	private static void moreThanTwo() {
 		List<Features> featureList = Features.ALL_FEATURES_MINUS_TYPE;
-//		List<Features> featureList = Features.defaultFeatures;
-		
 		BuildTMFeatures bf = new BuildTMFeatures();
 		
-//		writeToFile(bf.build().values(), bf.getFeaturesToPrint(), Paths.get("TradeMeUserFeatures" + features + ".csv"));
-//		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
-//		reclustering(features, 4);
+		KeepTest moreThanTwo = new KeepTest() {
+			@Override
+			public boolean keep(UserFeatures uf) {
+				return uf.auctionCount > 2 && uf.auctionCount != uf.auctionsWon;
+			}
+		};
+		
+		writeToFile(bf.build().values(), featureList, moreThanTwo, Paths.get("TradeMeUserFeatures_" + Features.fileLabels(featureList) + "_gt2.csv"));
+	}
+	
+	private static void run() {
+		List<Features> featureList = Features.ALL_FEATURES_MINUS_TYPE;
+		BuildTMFeatures bf = new BuildTMFeatures();
 		
 //		int minimumFinalPrice = 10000;
 //		int maximumFinalPrice = 999999999;
@@ -42,8 +56,8 @@ public class BuildTMFeatures extends BuildUserFeatures {
 		
 		writeToFile(bf.build().values(), featureList, Paths.get("TradeMeUserFeatures_" + Features.fileLabels(featureList) + ".csv"));
 		
-		System.out.println("Finished.");
 	}
+	
 	
 	public static final String DEFAULT_QUERY = 
 			"SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount bidAmount, b.time bidTime " +
@@ -136,12 +150,18 @@ public class BuildTMFeatures extends BuildUserFeatures {
 		return this.userFeaturesMap;
 	}
 	
+	/**
+	 * Gives an iterator going through DB, giving a pair with Auction & Bids belonging to that auction.
+	 *
+	 */
 	public static class TMAuctionGroupIterator {
 		private int listingId = -1; // id of the current one being processed
 		private final ResultSet rs;
 		private boolean hasNext;
+		private Connection conn;
 		public TMAuctionGroupIterator(Connection conn, String query) {
 			try {
+				this.conn = conn;
 				Statement stmt = conn.createStatement();
 				rs = stmt.executeQuery(query);
 				
@@ -215,12 +235,34 @@ public class BuildTMFeatures extends BuildUserFeatures {
 				}
 			};
 		}
+		
+		public Map<Integer, UserObject> users() {
+			Builder<Integer, UserObject> userObjects = ImmutableMap.builder();
+			try {
+				PreparedStatement usersQuery = conn.prepareStatement(
+						"SELECT DISTINCT userId, posUnique, negUnique " +
+						"FROM users as u " +
+						";"
+				);
+				ResultSet usersResultSet = usersQuery.executeQuery();
+				while (usersResultSet.next()) {
+					
+					int userId = usersResultSet.getInt("userId");
+					UserObject user = new UserObject(userId, usersResultSet.getInt("posUnique"), usersResultSet.getInt("negUnique"), "TMUser");
+					userObjects.put(userId, user);
+				}
+				
+				return userObjects.build();
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			} 
+		}
 	}
 
 	/**
 	 * Finds the POS, NEU and NEG reputation for a user. Records those values
 	 * into UserFeatures objects with the same userId.  If userFeaturesMap does
-	 * not contain such an object, those values are discarded.
+	 * not contain such a user, those values are discarded.
 	 * 
 	 * @param conn
 	 * @throws SQLException
