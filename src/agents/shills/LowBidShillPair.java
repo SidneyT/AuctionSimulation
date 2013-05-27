@@ -182,15 +182,15 @@ public class LowBidShillPair extends EventListener implements Controller {
 		assert isNew;
 	}
 
-	// can remove...
+	
+	/**
+	 * This class is a controller and can never bid, and so, can never win.
+	 * This method will never be called.
+	 */
 	@Override
 	protected void winAction(Auction auction, long time) {
 		super.winAction(auction, time);
-		logger.debug("Shill auction " + auction + " has expired. Removing.");
-		boolean removed = shillAuctions.remove(auction);
-		assert removed;
-		boolean isNew = expiredShillAuctions.add(auction);
-		assert isNew;
+		assert(false) : "This method should never be called, since this class can never bid/win.";
 	}
 
 	@Override
@@ -287,6 +287,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 
 	@Override
 	public void winAction(SimpleUser agent, Auction auction) {
+//		System.out.println(agent + " won the auction : " + auction);
 		assert agent == sb;
 		if (shillAuctions.containsKey(auction))
 			shillWinCount++;
@@ -296,6 +297,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 
 	@Override
 	public void lossAction(SimpleUser agent, Auction auction) {
+//		System.out.println(agent + " lost the auction : " + auction);
 		assert agent == sb;
 		if (auction.getSeller() == ss)
 			shillLossCount++;

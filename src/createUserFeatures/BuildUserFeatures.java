@@ -168,6 +168,7 @@ public abstract class BuildUserFeatures {
 		if (previousBid > 0) { // test whether there's a previous bid
 			int increment = bid - previousBid; // find the difference between this and the previous bid amount
 //			uf.avgBidInc = Util.incrementalAvg(uf.avgBidInc, uf.bidIncCount, increment);
+			assert(increment > 0) : "Bid increment must be positive.";
 			uf.getAvgBidInc().addNext(increment);
 			
 

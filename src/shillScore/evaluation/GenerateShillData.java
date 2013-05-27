@@ -77,7 +77,7 @@ public class GenerateShillData {
 		
 		AgentAdder nonAltHybridA = NonAltHybrid.getAgentAdder(5, travethan, 4);
 
-		int numberOfRuns = 1000;
+		int numberOfRuns = 1;
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
 		run(simplePairAdderA, numberOfRuns);
@@ -110,7 +110,7 @@ public class GenerateShillData {
 	}
 	
 	private static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
-		for (int runNumber = 818; runNumber < numberOfRuns; runNumber++) {
+		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("starting run " + runNumber);
 			
 //			List<Features> featuresSelected = Features.defaultFeatures;
@@ -125,11 +125,12 @@ public class GenerateShillData {
 //			Main.run(SaveToDatabase.instance(), adder);
 //			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator);
 			
-			BuildSimFeatures.writeToFile(userFeatures.values(), // write features
-					featuresSelected, 
-					Paths.get("single_feature_shillvsnormal", "syn_" + adder + "_" + Features.fileLabels(featuresSelected) + "_" + runNumber + ".csv")
-					);
-			writeSSandPercentiles(simAuctionIterator, adder, runNumber, weightSets); // build and write shill scores
+			// write results to file
+//			BuildSimFeatures.writeToFile(userFeatures.values(), // write features
+//					featuresSelected, 
+//					Paths.get("single_feature_shillvsnormal", "syn_" + adder + "_" + Features.fileLabels(featuresSelected) + "_" + runNumber + ".csv")
+//					);
+//			writeSSandPercentiles(simAuctionIterator, adder, runNumber, weightSets); // build and write shill scores
 			
 //			return;
 		}

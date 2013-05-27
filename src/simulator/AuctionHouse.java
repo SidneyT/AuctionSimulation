@@ -256,7 +256,8 @@ public class AuctionHouse implements Runnable {
 
 			// notify losers
 			for (EventListener interested : interestedSet) {
-				msgToUsers.putMessages(interested.getId(), new Message(MessageType.LOSS, expired));
+				if (interested != winner) // winner won, don't notify as loss.
+					msgToUsers.putMessages(interested.getId(), new Message(MessageType.LOSS, expired));
 			}
 
 			// notify seller

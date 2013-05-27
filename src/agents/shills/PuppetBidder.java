@@ -53,13 +53,13 @@ public class PuppetBidder extends SimpleUser {
 	@Override
 	protected void winAction(Auction auction, long time) {
 //		super.winAction(auction, time);
-//		controller.winAction(this, auction);
+		controller.winAction(this, auction);
 	}
 
 	@Override
 	protected void lossAction(Auction auction, long time) {
 //		super.lossAction(auction, time);
-//		controller.lossAction(this, auction);
+		controller.lossAction(this, auction);
 	}
 	
 }

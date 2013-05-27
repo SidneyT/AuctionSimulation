@@ -155,7 +155,6 @@ public class SimpleShillPair extends EventListener implements Controller {
 
 	@Override
 	public void winAction(SimpleUser agent, Auction auction) {
-//		winAction(auction, bh.getTime());
 	}
 
 	@Override
@@ -173,11 +172,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 
 	@Override
 	protected void winAction(Auction auction, long time) {
-		logger.debug("Shill auction " + auction + " has expired. Removing.");
-		boolean removed = shillAuctions.remove(auction);
-		assert removed;
-		boolean isNew = expiredShillAuctions.add(auction);
-		assert isNew;
+		assert(false) : "This method should never be called, since this class can never bid/win.";
 	}
 
 	@Override
