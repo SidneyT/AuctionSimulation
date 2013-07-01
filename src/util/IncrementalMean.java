@@ -17,12 +17,6 @@ public class IncrementalMean {
 	public void addNext(double newValue) {
 		this.average = this.average + (newValue - this.average)/(++numElements);
 	}
-	public void addNext(int newValue) {
-		addNext((double) newValue);
-	}
-	public void addNext(long newValue) {
-		addNext((double) newValue);
-	}
 	
 	public void addAverage(int numElements, double average) {
 		this.average = this.average + (average - this.average) * numElements / (this.numElements + numElements);

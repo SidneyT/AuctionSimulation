@@ -8,6 +8,7 @@ import simulator.objects.Bid;
 
 /**
  *	Similar to TrevathanStrategy, except starts bidding later, and makes bids that are not always the minimum required.
+ *	Does not start bidding of no one else has bid. Therefore, may not bid at all in an auction (by a collaborating seller).
  */
 public class WaitStartStrategy implements Strategy {
 

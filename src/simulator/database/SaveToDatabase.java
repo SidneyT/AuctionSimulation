@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.google.common.collect.TreeMultimap;
-
 import simulator.categories.CategoryNode;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
@@ -23,12 +21,19 @@ public class SaveToDatabase implements SaveObjects {
 	private final Connection conn;
 	private SaveToDatabase() {
 		conn = DBConnection.getSimulationConnection();
-
+		emptyTables(conn); // first empty everything else.
+	}
+	
+	private SaveToDatabase(String databaseName) {
+		conn = DBConnection.getConnection(databaseName);
 		emptyTables(conn); // first empty everything else.
 	}
 	
 	public static SaveToDatabase instance() {
 		return new SaveToDatabase();
+	}
+	public static SaveToDatabase instance(String databaseName) {
+		return new SaveToDatabase(databaseName);
 	}
 	
 	private void emptyTables(Connection conn) {

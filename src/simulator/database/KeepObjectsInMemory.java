@@ -55,7 +55,7 @@ public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
 	public void cleanup() {
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see simulator.database.SavedObjects#getUserStore()
 	 */
 	@Override
@@ -63,7 +63,7 @@ public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
 		return userStore;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see simulator.database.SavedObjects#getCategories()
 	 */
 	@Override
@@ -71,7 +71,7 @@ public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
 		return categories;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see simulator.database.SavedObjects#getTypes()
 	 */
 	@Override
@@ -79,7 +79,7 @@ public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
 		return types;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see simulator.database.SavedObjects#getExpiredStore()
 	 */
 	@Override
@@ -87,7 +87,7 @@ public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
 		return expiredStore;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see simulator.database.SavedObjects#getBidStore()
 	 */
 	@Override
@@ -95,7 +95,7 @@ public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
 		return bidStore;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see simulator.database.SavedObjects#getFeedbackStore()
 	 */
 	@Override

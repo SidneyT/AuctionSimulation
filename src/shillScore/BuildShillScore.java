@@ -73,12 +73,12 @@ public class BuildShillScore {
 	public static ShillScoreInfo buildTM(String query) {
 		
 		TMAuctionGroupIterator tmIterator = new BuildTMFeatures.TMAuctionGroupIterator(DBConnection.getTrademeConnection(), query);
-		Iterator<Pair<TMAuction, List<BidObject>>> it = tmIterator.iterator();
+		Iterator<Pair<TMAuction, List<BidObject>>> it = tmIterator.getIterator();
 		
 		Map<Integer, ShillScore> shillScores = new HashMap<>();
 		Map<TMAuction, List<Integer>> auctionBidders = new HashMap<>(); // Map(seller, bidderlist)
 		Multiset<Integer> auctionCounts = HashMultiset.create();
-		Map<Integer, UserObject> users = tmIterator.users();
+		Map<Integer, UserObject> users = BuildTMFeatures.users(DBConnection.getTrademeConnection());
 		while (it.hasNext()) {
 			Pair<TMAuction, List<BidObject>> pair = it.next();
 			if (pair.getKey().listingId == 487782655)

@@ -34,7 +34,7 @@ public class FrequencyByPrice {
 		ArrayListMultimap<Integer, Integer> amountsById = ArrayListMultimap.create();
 		
 		Connection conn = DBConnection.getTrademeConnection();
-		Iterator<Pair<TMAuction, List<BidObject>>> iterator = new TMAuctionGroupIterator(conn, BuildTMFeatures.DEFAULT_QUERY).iterator();
+		Iterator<Pair<TMAuction, List<BidObject>>> iterator = new TMAuctionGroupIterator(conn, BuildTMFeatures.DEFAULT_QUERY).getIterator();
 		
 		while(iterator.hasNext()) {
 			Pair<TMAuction, List<BidObject>> pair = iterator.next();

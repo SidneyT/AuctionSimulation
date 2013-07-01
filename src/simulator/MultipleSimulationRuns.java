@@ -23,7 +23,7 @@ import createUserFeatures.UserFeatures;
 public class MultipleSimulationRuns {
 	public static void main(String[] args) {
 		System.out.println("Started.");
-		for (int i = 20; i < 30; i++) {
+		for (int i = 0; i < 1; i++) {
 			run(i + "");
 			System.out.println("Run " + i + " done.");
 		}

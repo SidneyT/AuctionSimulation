@@ -132,9 +132,8 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	 * order. Key is the userId.
 	 */
 	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
-		try {
-			Connection conn = DBConnection.getTrademeConnection();
-			Iterator<Pair<TMAuction, List<BidObject>>> auctionIterator = new TMAuctionGroupIterator(conn, query).iterator();
+		try (Connection conn = DBConnection.getTrademeConnection()) {
+			Iterator<Pair<TMAuction, List<BidObject>>> auctionIterator = new TMAuctionGroupIterator(conn, query).getIterator();
 			
 			while(auctionIterator.hasNext()) {
 				Pair<TMAuction, List<BidObject>> pair = auctionIterator.next();
@@ -144,7 +143,7 @@ public class BuildTMFeatures extends BuildUserFeatures {
 			userRep(conn);
 			conn.close();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 		
 		return this.userFeaturesMap;
@@ -155,55 +154,61 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	 *
 	 */
 	public static class TMAuctionGroupIterator {
-		private int listingId = -1; // id of the current one being processed
+		private final Connection conn;
 		private final ResultSet rs;
-		private boolean hasNext;
-		private Connection conn;
 		public TMAuctionGroupIterator(Connection conn, String query) {
+			this.conn = conn;
 			try {
-				this.conn = conn;
-				Statement stmt = conn.createStatement();
+				Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery(query);
-				
-				this.hasNext = rs.first(); // see if there's anything in result set
-				rs.beforeFirst(); // put the cursor back
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}
 		}
 		
-		private List<BidObject> bids;
-		private TMAuction auction;
-
-		public Iterator<Pair<TMAuction, List<BidObject>>> iterator() {
-			return new Iterator<Pair<TMAuction,List<BidObject>>>() {
+		static class TMIteratorInstance implements Iterator<Pair<TMAuction, List<BidObject>>> {
+			private int listingId = -1; // id of the current one being processed
+			private boolean hasNext;
+			private List<BidObject> bids;
+			private TMAuction auction;
+			private final ResultSet rss;
+			TMIteratorInstance(ResultSet rss) {
+				try {
+					this.rss = rss;
+					this.hasNext = rss.first(); // see if there's anything in result set
+					rss.beforeFirst(); // put the cursor back
+				} catch (SQLException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			
 				@Override
 				public boolean hasNext() {
 					return hasNext;
 				}
-
+				
 				@Override
 				public Pair<TMAuction, List<BidObject>> next() {
 					try {
-						while (rs.next()) {
-							int nextId = rs.getInt("listingId");
+						while (rss.next()) {
+							int nextId = rss.getInt("listingId");
 							if (listingId != nextId) {
 								if (listingId == -1) {
 									listingId = nextId;
-									auction = new TMAuction(rs.getInt("listingId"), rs.getInt("winnerId"),
-											rs.getInt("sellerId"), rs.getTimestamp("endTime"),
-											BuildTMFeatures.simpleCategory(rs.getString("category")));
+									auction = new TMAuction(rss.getInt("listingId"), rss.getInt("winnerId"),
+											rss.getInt("sellerId"), rss.getTimestamp("endTime"),
+											BuildTMFeatures.simpleCategory(rss.getString("category")));
 									bids = new ArrayList<>();
 								} else {
 									listingId = nextId;
 									Pair<TMAuction, List<BidObject>> result = new Pair<>(auction, bids);
-									auction = new TMAuction(rs.getInt("listingId"), rs.getInt("winnerId"),
-											rs.getInt("sellerId"), rs.getTimestamp("endTime"),
-											BuildTMFeatures.simpleCategory(rs.getString("category")));
+									auction = new TMAuction(rss.getInt("listingId"), rss.getInt("winnerId"),
+											rss.getInt("sellerId"), rss.getTimestamp("endTime"),
+											BuildTMFeatures.simpleCategory(rss.getString("category")));
 									bids = new ArrayList<>();
-									BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"),
-											rs.getTimestamp("bidTime"),
-											rs.getInt("bidAmount"));
+									BidObject bid = new BidObject(rss.getInt("bidderId"), rss.getInt("listingId"),
+											rss.getTimestamp("bidTime"),
+											rss.getInt("bidAmount"));
 									bids.add(bid);
 									
 									if (auction == null) {
@@ -213,9 +218,9 @@ public class BuildTMFeatures extends BuildUserFeatures {
 								}
 							}
 							// still going through bids from the same auction
-							BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"),
-									rs.getTimestamp("bidTime"),
-									rs.getInt("bidAmount"));
+							BidObject bid = new BidObject(rss.getInt("bidderId"), rss.getInt("listingId"),
+									rss.getTimestamp("bidTime"),
+									rss.getInt("bidAmount"));
 							bids.add(bid);
 						}
 						hasNext = false;
@@ -233,30 +238,34 @@ public class BuildTMFeatures extends BuildUserFeatures {
 				public void remove() {
 					throw new UnsupportedOperationException();
 				}
-			};
 		}
 		
-		public Map<Integer, UserObject> users() {
-			Builder<Integer, UserObject> userObjects = ImmutableMap.builder();
-			try {
-				PreparedStatement usersQuery = conn.prepareStatement(
-						"SELECT DISTINCT userId, posUnique, negUnique " +
-						"FROM users as u " +
-						";"
-				);
-				ResultSet usersResultSet = usersQuery.executeQuery();
-				while (usersResultSet.next()) {
-					
-					int userId = usersResultSet.getInt("userId");
-					UserObject user = new UserObject(userId, usersResultSet.getInt("posUnique"), usersResultSet.getInt("negUnique"), "TMUser");
-					userObjects.put(userId, user);
-				}
-				
-				return userObjects.build();
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
-			} 
+		public Iterator<Pair<TMAuction, List<BidObject>>> getIterator() {
+			return new TMIteratorInstance(rs);
 		}
+		
+	}
+
+	public static Map<Integer, UserObject> users(Connection conn) {
+		Builder<Integer, UserObject> userObjects = ImmutableMap.builder();
+		try {
+			PreparedStatement usersQuery = conn.prepareStatement(
+					"SELECT DISTINCT userId, posUnique, negUnique " +
+					"FROM users as u " +
+					";"
+			);
+			ResultSet usersResultSet = usersQuery.executeQuery();
+			while (usersResultSet.next()) {
+				
+				int userId = usersResultSet.getInt("userId");
+				UserObject user = new UserObject(userId, usersResultSet.getInt("posUnique"), usersResultSet.getInt("negUnique"), "TMUser");
+				userObjects.put(userId, user);
+			}
+			
+			return userObjects.build();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		} 
 	}
 
 	/**

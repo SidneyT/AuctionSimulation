@@ -8,6 +8,7 @@ import simulator.objects.Bid;
 
 /**
  *	Similar to TrevathanStrategy, except starts bidding later, and makes bids that are not always the minimum required.
+ *	Does not start bidding if no one else has bid, UNLESS 70% of the auction has elapsed
  */
 public class LateStartTrevathanStrategy implements Strategy {
 

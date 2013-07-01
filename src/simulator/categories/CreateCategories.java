@@ -65,6 +65,8 @@ public class CreateCategories {
 			category.setWeight(categoryWeights.get(i));
 			root.addChild(category);
 			category.setParent(root);
+			
+			cr.addCategory(category);
 		}
 		
 		return cr;

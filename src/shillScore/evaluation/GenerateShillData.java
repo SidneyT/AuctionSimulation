@@ -62,7 +62,7 @@ public class GenerateShillData {
 
 		// adders
 //		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethan); // can use 20, since each submits 10 auctions.
-		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethan); // can use 20, since each submits 10 auctions.
+		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(30, travethan); // can use 20, since each submits 10 auctions.
 		AgentAdder simplePairAdderB = SimpleShillPair.getAgentAdder(20, lateStart);
 		AgentAdder simplePairAdderC = LowBidShillPair.getAgentAdder(20, travethan, lowPrice);
 		AgentAdder simplePairAdderD = SimpleShillPair.getAgentAdder(20, waitStart);
@@ -109,7 +109,7 @@ public class GenerateShillData {
 		};
 	}
 	
-	private static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
+	public static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
 		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("starting run " + runNumber);
 			
