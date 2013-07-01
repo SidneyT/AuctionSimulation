@@ -23,8 +23,10 @@ import simulator.categories.CategoryRecord;
 import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
 import simulator.categories.CreateCategories;
+import simulator.database.DBConnection;
 import simulator.database.SaveToDatabase;
 import simulator.database.SaveObjects;
+import simulator.database.SimulationCreateTableStmts;
 import simulator.objects.Auction;
 import simulator.objects.Feedback;
 import simulator.records.UserRecord;
@@ -36,6 +38,12 @@ import agents.bidders.ClusterEarly;
 import agents.bidders.ClusterSnipe;
 import agents.sellers.TMSeller;
 import agents.sellers.TimedSeller;
+import agents.shills.SimpleShillPair;
+import agents.shills.strategies.LateStartTrevathanStrategy;
+import agents.shills.strategies.LowPriceStrategy;
+import agents.shills.strategies.Strategy;
+import agents.shills.strategies.TrevathanStrategy;
+import agents.shills.strategies.WaitStartStrategy;
 
 public class Main {
 
@@ -44,10 +52,46 @@ public class Main {
 
 	public static void main(String[] args) throws InterruptedException {
 		System.out.println("Start.");
+//		normalsOnly();
+		withFraudsIntoDiffDatabases();
+		System.out.println("Finished.");
+	}
+
+
+	public static void withFraudsIntoDiffDatabases() {
+		Strategy travethan = new TrevathanStrategy(0.95, 0.85, 0.85);
+		Strategy waitStart = new WaitStartStrategy(0.95, 0.85, 0.85);
+
+		AgentAdder trevathan = SimpleShillPair.getAgentAdder(30, travethan); // can use 20, since each submits 10 auctions.
+		for (int i = 0; i < 30; i++) {
+			String databaseName = "auction_simulation_simple" + i;
+			// construct database and tables to store simulation data
+			DBConnection.createDatabase(databaseName);
+			SimulationCreateTableStmts.createSimulationTables(databaseName);
+			
+			// run the simulation and store everything into the database
+			Main.run(SaveToDatabase.instance(databaseName), trevathan);
+		}
+
+		AgentAdder delayedStart = SimpleShillPair.getAgentAdder(20, waitStart);
+		for (int i = 0; i < 30; i++) {
+			String databaseName = "auction_simulation_delayedStart" + i;
+			// construct database and tables to store simulation data
+			DBConnection.createDatabase(databaseName);
+			SimulationCreateTableStmts.createSimulationTables(databaseName);
+			
+			// run the simulation and store everything into the database
+			Main.run(SaveToDatabase.instance(databaseName), delayedStart);
+		}
 		
+	}
+	
+	/**
+	 * Generates synthetic data with only normal users.
+	 */
+	public static void normalsOnly() {
 		Main.run(SaveToDatabase.instance());
 //		ClusterAnalysis.clusterSimData("");
-		System.out.println("Finished.");
 	}
 	
 	/**
