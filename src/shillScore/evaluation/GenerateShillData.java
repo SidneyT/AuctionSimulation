@@ -13,9 +13,9 @@ import com.google.common.collect.Multiset;
 
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.Features;
-import createUserFeatures.SimAuctionDBIterator;
+import createUserFeatures.SimDBAuctionIterator;
 import createUserFeatures.SimAuctionIterator;
-import createUserFeatures.SimAuctionMemoryIterator;
+import createUserFeatures.SimMemoryAuctionIterator;
 import createUserFeatures.UserFeatures;
 
 import agents.repFraud.MultipleRepFraud;
@@ -117,7 +117,7 @@ public class GenerateShillData {
 			List<Features> featuresSelected = Features.ALL_FEATURES;
 
 			KeepObjectsInMemory objInMem = KeepObjectsInMemory.instance();
-			SimAuctionIterator simAuctionIterator = new SimAuctionMemoryIterator(objInMem, true);
+			SimAuctionIterator simAuctionIterator = new SimMemoryAuctionIterator(objInMem, true);
 			Main.run(objInMem, adder); // run simulator
 			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator); // build features
 			

@@ -16,14 +16,14 @@ import org.apache.log4j.Logger;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
-import createUserFeatures.BuildTMFeatures.TMAuctionGroupIterator;
+import createUserFeatures.BuildTMFeatures.TMAuctionIterator;
 import createUserFeatures.BuildUserFeatures.AuctionObject;
 import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.BuildUserFeatures.SimAuction;
 import createUserFeatures.BuildUserFeatures.TMAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
 import createUserFeatures.BuildTMFeatures;
-import createUserFeatures.SimAuctionDBIterator;
+import createUserFeatures.SimDBAuctionIterator;
 import createUserFeatures.SimAuctionIterator;
 
 
@@ -53,7 +53,7 @@ public class BuildShillScore {
 	
 	public static ShillScoreInfo build(SimAuctionIterator simAuctionIterator) {
 		
-		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getAuctionIterator();
+		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getIterator();
 
 		Map<Integer, ShillScore> shillScores = new HashMap<>();
 		Map<SimAuction, List<Integer>> auctionBidders = new HashMap<>(); // Map(seller, bidderlist)
@@ -72,7 +72,7 @@ public class BuildShillScore {
 	}
 	public static ShillScoreInfo buildTM(String query) {
 		
-		TMAuctionGroupIterator tmIterator = new BuildTMFeatures.TMAuctionGroupIterator(DBConnection.getTrademeConnection(), query);
+		TMAuctionIterator tmIterator = new BuildTMFeatures.TMAuctionIterator(DBConnection.getTrademeConnection(), query);
 		Iterator<Pair<TMAuction, List<BidObject>>> it = tmIterator.getIterator();
 		
 		Map<Integer, ShillScore> shillScores = new HashMap<>();
@@ -98,7 +98,7 @@ public class BuildShillScore {
 	}
 	
 	public static ShillScoreInfo build() {
-		return build(new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true));
+		return build(new SimDBAuctionIterator(DBConnection.getSimulationConnection(), true));
 	}
 	
 	/**

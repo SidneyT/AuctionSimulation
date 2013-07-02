@@ -23,26 +23,26 @@ import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.BuildUserFeatures.SimAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
 
-public class SimAuctionMemoryIterator implements SimAuctionIterator {
+public class SimMemoryAuctionIterator implements SimAuctionIterator {
 
 	private final SavedObjects savedObjects;
 	private final boolean trim;
 	
-	public SimAuctionMemoryIterator(SavedObjects savedObjects, boolean trim) {
+	public SimMemoryAuctionIterator(SavedObjects savedObjects, boolean trim) {
 		this.savedObjects = savedObjects;
 		this.trim = trim;
 	}
 	
 	@Override
-	public Iterator<Pair<SimAuction, List<BidObject>>> getAuctionIterator() {
-		return new IteratorThing(savedObjects, trim);
+	public Iterator<Pair<SimAuction, List<BidObject>>> getIterator() {
+		return new AuctionIterator(savedObjects, trim);
 	}
 	
-	private class IteratorThing implements Iterator<Pair<SimAuction, List<BidObject>>> {
+	private class AuctionIterator implements Iterator<Pair<SimAuction, List<BidObject>>> {
 		private final Iterator<Auction> it;
 		private boolean hasNext;
 
-		public IteratorThing(SavedObjects savedObjects, boolean trim) {
+		public AuctionIterator(SavedObjects savedObjects, boolean trim) {
 			it = savedObjects.getBidStore().keySet().iterator();
 			hasNext = !savedObjects.getBidStore().isEmpty();
 		}

@@ -54,7 +54,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	}
 	
 	public Map<Integer, UserFeatures> build(SimAuctionIterator simAuctionIterator) {
-		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getAuctionIterator();
+		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getIterator();
 		Map<Integer, ItemType> itemTypes = simAuctionIterator.itemTypes();
 		while (it.hasNext()) {
 			Pair<SimAuction, List<BidObject>> pair = it.next();
@@ -94,7 +94,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	public Map<Integer, UserFeatures> build() {
 		try {
 			Connection conn = DBConnection.getSimulationConnection();
-			Map<Integer, UserFeatures> result = build(new SimAuctionDBIterator(conn, trim));
+			Map<Integer, UserFeatures> result = build(new SimDBAuctionIterator(conn, trim));
 			conn.close();
 			return result;
 		} catch (SQLException e) {

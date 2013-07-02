@@ -133,7 +133,7 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	 */
 	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
 		try (Connection conn = DBConnection.getTrademeConnection()) {
-			Iterator<Pair<TMAuction, List<BidObject>>> auctionIterator = new TMAuctionGroupIterator(conn, query).getIterator();
+			Iterator<Pair<TMAuction, List<BidObject>>> auctionIterator = new TMAuctionIterator(conn, query).getIterator();
 			
 			while(auctionIterator.hasNext()) {
 				Pair<TMAuction, List<BidObject>> pair = auctionIterator.next();
@@ -153,11 +153,9 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	 * Gives an iterator going through DB, giving a pair with Auction & Bids belonging to that auction.
 	 *
 	 */
-	public static class TMAuctionGroupIterator {
-		private final Connection conn;
+	public static class TMAuctionIterator {
 		private final ResultSet rs;
-		public TMAuctionGroupIterator(Connection conn, String query) {
-			this.conn = conn;
+		public TMAuctionIterator(Connection conn, String query) {
 			try {
 				Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 				rs = stmt.executeQuery(query);

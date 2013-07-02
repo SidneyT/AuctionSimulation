@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableMap.Builder;
 import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.BuildUserFeatures.SimAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
-import createUserFeatures.SimAuctionDBIterator;
+import createUserFeatures.SimDBAuctionIterator;
 import createUserFeatures.SimAuctionIterator;
 
 import simulator.categories.ItemType;
@@ -55,7 +55,7 @@ public class ShillWinLossPrice {
 
 		Map<Integer, UserObject> users = simAuctionIterator.users();
 		
-		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getAuctionIterator();
+		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getIterator();
 		while (it.hasNext()) {
 			Pair<SimAuction, List<BidObject>> pair = it.next();
 			SimAuction auction = pair.getKey();

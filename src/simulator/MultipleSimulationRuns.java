@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableList;
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildUserFeatures;
 import createUserFeatures.Features;
-import createUserFeatures.SimAuctionMemoryIterator;
+import createUserFeatures.SimMemoryAuctionIterator;
 import createUserFeatures.UserFeatures;
 
 /**
@@ -54,7 +54,7 @@ public class MultipleSimulationRuns {
 			// run the simulator
 			KeepObjectsInMemory savedObjects = KeepObjectsInMemory.instance();
 			Main.run(savedObjects);
-			Map<Integer, UserFeatures> userFeatureMap = buildFeatures.build(new SimAuctionMemoryIterator(savedObjects, trim));
+			Map<Integer, UserFeatures> userFeatureMap = buildFeatures.build(new SimMemoryAuctionIterator(savedObjects, trim));
 			
 			String folder = "synData";
 			for (List<Features> featureSet : featureSets) {

@@ -16,7 +16,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import createUserFeatures.BuildTMFeatures;
-import createUserFeatures.BuildTMFeatures.TMAuctionGroupIterator;
+import createUserFeatures.BuildTMFeatures.TMAuctionIterator;
 import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.BuildUserFeatures.TMAuction;
 
@@ -34,7 +34,7 @@ public class FrequencyByPrice {
 		ArrayListMultimap<Integer, Integer> amountsById = ArrayListMultimap.create();
 		
 		Connection conn = DBConnection.getTrademeConnection();
-		Iterator<Pair<TMAuction, List<BidObject>>> iterator = new TMAuctionGroupIterator(conn, BuildTMFeatures.DEFAULT_QUERY).getIterator();
+		Iterator<Pair<TMAuction, List<BidObject>>> iterator = new TMAuctionIterator(conn, BuildTMFeatures.DEFAULT_QUERY).getIterator();
 		
 		while(iterator.hasNext()) {
 			Pair<TMAuction, List<BidObject>> pair = iterator.next();

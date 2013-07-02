@@ -25,21 +25,27 @@ import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.BuildUserFeatures.SimAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
 
-public class SimAuctionDBIterator implements SimAuctionIterator {
+public class SimDBAuctionIterator implements SimAuctionIterator {
 	private Connection conn;
 	private final boolean trim;
-	public SimAuctionDBIterator(Connection conn, boolean trim) {
+
+	/**
+	 * @param conn
+	 * @param trim true if truncate auction bids to 20, similar to TM.
+	 */
+	public SimDBAuctionIterator(Connection conn, boolean trim) {
 		this.conn = conn;
 		this.trim = trim;
 	}
 	
 	private List<BidObject> bids;
 	private SimAuction auction = null;
-	/* (non-Javadoc)
+	
+	/**
 	 * @see createUserFeatures.SimAuctionIterator#iterator()
 	 */
 	@Override
-	public Iterator<Pair<SimAuction, List<BidObject>>> getAuctionIterator() {
+	public Iterator<Pair<SimAuction, List<BidObject>>> getIterator() {
 		return new AuctionIterator();
 	}
 	
