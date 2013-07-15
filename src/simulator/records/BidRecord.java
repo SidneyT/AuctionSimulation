@@ -31,8 +31,7 @@ public class BidRecord {
 		List<Bid> highestBids = sortBidsAndReturnHighest(auctionBids);
 		
 		// assert that all bids are higher than the minimum increment by testing the lowest in the ordered list
-		assert auctionBids.isEmpty() || auction.hasNoBids() || auction.getCurrentPrice() + Util.minIncrement(auction.getCurrentPrice()) <= auctionBids.get(0).getPrice() :
-			"brokenBids:" + auctionBids;
+		assert auctionBids.get(0).getPrice() >= auction.minimumBid() : "bid lower than minimum required: " + auctionBids.get(0).getPrice() + " vs " + auction.minimumBid() + ".";  
 		
 		Bid winningBid;
 		if (highestBids.size() == 1) {

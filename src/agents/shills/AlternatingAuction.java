@@ -33,9 +33,9 @@ public class AlternatingAuction extends CollusiveShillController {
 	 * Assign auctions to shills according to the alternating auction strategy
 	 */
 	@Override
-	protected PuppetBidder pickBidder(Auction auction, List<PuppetBidder> bidders) {
+	protected PuppetBidder pickBidder(Auction auction) {
 		if (!AuctionsAssigned.containsKey(auction)) {
-			PuppetBidder chosen = bidders.get(bidderIndex % bidders.size());
+			PuppetBidder chosen = cbs.get(bidderIndex % cbs.size());
 			AuctionsAssigned.put(auction, chosen);
 //			System.out.println("new: picked " + chosen);
 			bidderIndex++;

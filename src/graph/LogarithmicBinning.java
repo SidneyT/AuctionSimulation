@@ -46,6 +46,19 @@ public class LogarithmicBinning {
 		binStarts = createBins();
 	}
 	
+	public LogarithmicBinning emptyCopy() {
+		return new LogarithmicBinning(this);
+	}
+
+	public LogarithmicBinning(LogarithmicBinning logBins) {
+		this.startingBinValue = logBins.startingBinValue;
+		this.firstBinWidth = logBins.firstBinWidth;
+		this.binWidthGrowth = logBins.binWidthGrowth;
+		this.maximumBinValue = logBins.maximumBinValue;
+		
+		binStarts = createBins();
+	}
+	
 	/**
 	 * Creates logarithmic bins.
 	 * Calling with constructor parameters (1, 0.4, 2, 240) gives bins [1.0, 1.4, 2.2, 3.8, 7.0, 13.4, 26.23, 51.8, 103.0, 205.4, 410.2].
@@ -96,8 +109,8 @@ public class LogarithmicBinning {
 		binsContents.put(binIndex, v2);
 	}
 
-	public void addValues(List<int[]> valuePairs) {
-		for (int[] pair : valuePairs)
+	public void addValues(List<double[]> valuePairs) {
+		for (double[] pair : valuePairs)
 			addValue(pair[0], pair[1]);
 	}
 

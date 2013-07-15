@@ -1,6 +1,7 @@
 package shillScore.evaluation;
 
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,7 +68,7 @@ public class GenerateShillData {
 		AgentAdder simplePairAdderC = LowBidShillPair.getAgentAdder(20, travethan, lowPrice);
 		AgentAdder simplePairAdderD = SimpleShillPair.getAgentAdder(20, waitStart);
 		AgentAdder hybridAdderA = Hybrid.getAgentAdder(5, travethan, 4); // use only 5 groups, since each group submits 40 auctions. if too many will affect normal auctions too much. 
-		AgentAdder hybridAdderB = Hybrid.getAgentAdder(5, lateStart, 4);
+		AgentAdder hybridAdderB = Hybrid.getAgentAdder(1, waitStart, 4);
 		AgentAdder hybridAdderC = ModifiedHybrid.getAgentAdder(5, lateStart, lowPrice, 4);
 		AgentAdder randomHybridAdderA = RandomHybrid.getAgentAdder(5, travethan, 4);
 		AgentAdder multisellerHybridAdderA = MultiSellerHybrid.getAgentAdder(5, travethan, 3, 4);
@@ -80,7 +81,7 @@ public class GenerateShillData {
 		int numberOfRuns = 1;
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
-		run(simplePairAdderA, numberOfRuns);
+//		run(simplePairAdderA, numberOfRuns);
 //		run(repFraudB, 1);
 //		run(doNothingAdder(), numberOfRuns);
 //		run(simplePairAdderD, numberOfRuns);
@@ -88,7 +89,7 @@ public class GenerateShillData {
 //		writeSSandPercentiles(simplePairAdderB, numberOfRuns);
 //		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
 		
-//		collusiveShillPairMultipleRuns(hybridAdderB, numberOfRuns);
+		collusiveShillPairMultipleRuns(hybridAdderB, numberOfRuns);
 //		collusiveShillPairMultipleRuns(randomHybridAdderA, numberOfRuns);
 //		collusiveShillPairMultipleRuns(multisellerHybridAdderA, numberOfRuns);
 //		collusiveShillPairMultipleRuns(hybridAdderC, numberOfRuns);
@@ -198,8 +199,11 @@ public class GenerateShillData {
 			
 			String runLabel = adder.toString() + "." + i;
 
+			Connection conn = DBConnection.getSimulationConnection();
+			SimAuctionIterator simIt = new SimDBAuctionIterator(conn, true);
+
 			// build shillScores
-			ShillScoreInfo ssi = BuildShillScore.build();
+			ShillScoreInfo ssi = BuildShillScore.build(simIt);
 			Map<Integer, CollusiveShillScore> css = BuildCollusiveShillScore.build(ssi);
 
 			// write out shill scores
@@ -207,7 +211,7 @@ public class GenerateShillData {
 			WriteScores.writeCollusiveShillScore(ssi.shillScores, css, runLabel);
 			
 			// write out how many wins/losses by shills, and the normalised final price compared to non-shill auctions
-			ShillWinLossPrice.writeToFile(null, runLabel);
+			ShillWinLossPrice.writeToFile(simIt, runLabel);
 			
 			
 			List<Double> ssPercentiles = BuildCollusiveShillScore.getPercentiles(ScoreType.Hybrid, ssi, css, runLabel);

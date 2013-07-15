@@ -35,16 +35,19 @@ public class PuppetBidder extends SimpleUser {
 	 */
 	public void makeBid(Auction auction, int bidPrice) {
 		ah.registerForAuction(this, auction);
-		this.bh.getBidMessageToAh().put(auction, new Bid(this, bidPrice));
+		Bid bid = new Bid(this, bidPrice);
+		System.out.println(this + " made bid " + bid);
+		this.bh.getBidMessageToAh().put(auction, bid);
 	}
 	
 	/**
 	 * Makes the lowest valid bid for this auction.
+	 * Calls {@link #makeBid(Auction, int)} with the minimum possible bid.
 	 * @param auction
 	 */
-	public void makeBid(Auction auction) {
-		this.makeBid(auction, auction.minimumBid());
-	}
+//	public void makeBid(Auction auction) {
+//		this.makeBid(auction, auction.minimumBid());
+//	}
 
 	protected void itemReceivedAction(Set<ItemSold> itemSet) {
 		super.itemReceivedAction(itemSet);

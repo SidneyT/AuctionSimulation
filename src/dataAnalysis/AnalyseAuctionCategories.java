@@ -35,7 +35,7 @@ public class AnalyseAuctionCategories {
 			map.put(shortened, price);
 		}
 		
-		Chart<Integer> chart = new Chart<>();
+		Chart chart = new Chart();
 		StandardDeviation sd = new StandardDeviation(true);
 		Mean mean = new Mean();
 		for (String category : new TreeSet<>(map.keySet())) {

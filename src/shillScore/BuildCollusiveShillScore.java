@@ -14,6 +14,9 @@ import java.util.Set;
 
 import com.google.common.collect.Multiset;
 
+import createUserFeatures.SimAuctionIterator;
+import createUserFeatures.SimDBAuctionIterator;
+
 
 
 import shillScore.BuildShillScore.ShillScoreInfo;
@@ -36,8 +39,11 @@ public class BuildCollusiveShillScore {
 //		for (int i = 0; i < 20; i++) {
 //			System.out.println("run " + i);
 
-			ShillScoreInfo ssi = BuildShillScore.build();
-			Map<Integer, CollusiveShillScore> collusionScores = new BuildCollusiveShillScore().build(ssi);
+			Connection conn = DBConnection.getSimulationConnection();
+			SimAuctionIterator simIt = new SimDBAuctionIterator(conn, true);
+			
+			ShillScoreInfo ssi = BuildShillScore.build(simIt);
+			Map<Integer, CollusiveShillScore> collusionScores = BuildCollusiveShillScore.build(ssi);
 			WriteScores.writeCollusiveShillScore(ssi.shillScores, collusionScores, "suffix");
 
 //			Main.run(AlternatingAuction.getAgentAdder(5));

@@ -43,8 +43,7 @@ import simulator.objects.Item;
 import simulator.objects.ItemCondition;
 import simulator.objects.Feedback.Val;
 import simulator.records.UserRecord;
-import util.Util;
-import util.Util.Sampler;
+import util.Sample;
 
 public class MultipleRepFraud extends EventListener {
 
@@ -190,20 +189,20 @@ public class MultipleRepFraud extends EventListener {
 	}
 	
 	private Puppet pickUninteractedPuppet(SimpleUser puppet) {
-		Sampler<Integer> sampler = new Util.Sampler<>(1);
+		Sample<Integer> sampler = new Sample<>(1);
 		
 		int puppetIndex = puppets.get(puppet);
 		for (int i = 0; i < interactionMatrix.length; i++) { 
 			if (!interactionMatrix[puppetIndex][i] && i != puppetIndex)
-				sampler.addItem(i);
+				sampler.add(i);
 		}
 		
 		Puppet chosenPuppet;
-		if (sampler.sample().isEmpty()) {
+		if (sampler.getSample().isEmpty()) {
 			chosenPuppet = null;
 			throw new RuntimeException("Execution should never reach here.");
 		} else {
-			chosenPuppet = puppets.inverse().get(sampler.sample().get(0));
+			chosenPuppet = puppets.inverse().get(sampler.getSample().get(0));
 		}
 		
 		return chosenPuppet;

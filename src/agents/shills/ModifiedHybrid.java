@@ -78,17 +78,17 @@ public class ModifiedHybrid extends CollusiveShillController {
 	private Map<Auction, List<PuppetBidder>> auctionsAssigned = new HashMap<>();
 	private final int numberPerAuction = 2; // number of bidders to use in an auction
 	@Override
-	protected PuppetBidder pickBidder(Auction auction, List<PuppetBidder> bidders) {
+	protected PuppetBidder pickBidder(Auction auction) {
 		// pick the set of users to use for this auction
 		List<PuppetBidder> selected;
 		if (!auctionsAssigned.containsKey(auction)) {
 			if (cb == null || !cb.hasMore())
-				cb = new CombinationGenerator(bidders.size(), numberPerAuction);
+				cb = new CombinationGenerator(cbs.size(), numberPerAuction);
 			
 			int[] combination = cb.getNext();
 			selected = new ArrayList<>(numberPerAuction);
 			for (int i = 0; i < combination.length; i++) {
-				selected.add(bidders.get(combination[i]));
+				selected.add(cbs.get(combination[i]));
 			}
 			
 			auctionsAssigned.put(auction, selected);

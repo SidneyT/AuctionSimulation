@@ -56,33 +56,12 @@ public class SimDBAuctionIterator implements SimAuctionIterator {
 			private AuctionIterator() {
 				try {
 				Statement stmt = conn.createStatement();
-				if (!trim)
 				this.rs = stmt.executeQuery(
 									"SELECT a.listingId, a.itemTypeId, a.sellerId, a.winnerId " +
-		//							", u2.userType as sellerType" +
 									", a.endTime, b.time as bidTime, b.amount as bidAmount, b.bidderId " +
-//									", u1.userType as bidderType " +
 									"FROM auctions as a " +
-										"JOIN bids as b ON a.listingId=b.listingId " + 
-//									"JOIN users as u1 ON b.bidderId=u1.userId " +
-//									"JOIN users as u2 ON a.sellerId=u2.userId " +
+									"JOIN bids as b ON a.listingId=b.listingId " + 
 									"WHERE endTime IS NOT NULL ORDER BY a.listingId, time ASC;"
-							);
-				else
-					this.rs = stmt.executeQuery(
-									"SELECT a.listingId, a.itemTypeId, a.sellerId, a.winnerId " +
-//									", u2.userType sellerType, " +
-									", a.endTime, b.time bidTime, b.amount as bidAmount, b.bidderId " +
-//									", u1.userType as bidderType " +  
-									"FROM bids b " +
-									"JOIN auctions a ON a.listingId=b.listingId " +   
-//									"JOIN users u1 ON b.bidderId=u1.userId " +
-//									"JOIN users u2 ON a.sellerId=u2.userId " +
-									"LEFT OUTER JOIN bids b2 ON (b.listingId = b2.listingId AND b.amount < b2.amount) " +
-									"WHERE endTime IS NOT NULL " +
-									"GROUP BY b.listingId, b.amount " + 
-									"HAVING COUNT(*) < 20 " +
-									"ORDER BY b.listingId ASC, b.amount ASC;"
 							);
 				this.hasNext = rs.first(); // see if there's anything in result set
 				rs.beforeFirst(); // put the cursor back
@@ -112,9 +91,14 @@ public class SimDBAuctionIterator implements SimAuctionIterator {
 							bids = new ArrayList<>();
 							BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), rs.getInt("bidAmount"));
 							bids.add(bid);
-								
+							
+							int resultPairBidCount = resultPair.getValue().size();
+							if (trim && resultPairBidCount > 20) { // logic for keeping the last 20 bids in the auction, like in TradeMe
+								resultPair.getValue().subList(resultPairBidCount - 20, resultPairBidCount);
+							}
+							
 							if (auction == null) {
-								throw new RuntimeException();
+								throw new RuntimeException("auction should never be null here.");
 							}
 							return resultPair;
 						}
@@ -125,8 +109,9 @@ public class SimDBAuctionIterator implements SimAuctionIterator {
 				}
 				hasNext = false;
 				if (auction == null) {
-					throw new RuntimeException();
+					throw new RuntimeException("To reach here, rs must've been empty to begin with.");
 				}
+				
 				return new Pair<>(auction, bids);
 				
 			} catch (SQLException e) {

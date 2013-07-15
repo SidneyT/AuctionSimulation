@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,6 +18,7 @@ import com.google.common.collect.Multiset;
 
 import createUserFeatures.BuildUserFeatures.UserObject;
 import createUserFeatures.SimAuctionIterator;
+import createUserFeatures.SimDBAuctionIterator;
 
 
 import agents.shills.SimpleShillPair;
@@ -27,6 +29,7 @@ import shillScore.BuildShillScore;
 import shillScore.ShillScore;
 import shillScore.BuildShillScore.ShillScoreInfo;
 import simulator.AgentAdder;
+import simulator.database.DBConnection;
 import util.IncrementalMean;
 
 
@@ -41,13 +44,14 @@ public class BayseanAverageSS {
 			
 			String label = simplePairAdderA.toString() + "." + i;
 			
-			SimAuctionIterator simAuctionIterator = null;
+			Connection conn = DBConnection.getSimulationConnection();
+			SimAuctionIterator simIt = new SimDBAuctionIterator(conn, true);
 			
 			// run simulation
 //			Main.run(simplePairAdderA);
 			
 			//build shill scores and baysean SS
-			ShillScoreInfo ssi = BuildShillScore.build();
+			ShillScoreInfo ssi = BuildShillScore.build(simIt);
 			
 			BayseanSS bayseanSS = new BayseanSS(ssi.shillScores.values(), ssi.auctionCounts);
 
@@ -56,7 +60,7 @@ public class BayseanAverageSS {
 			
 			// record rank information
 			Path rankFile = Paths.get("shillingResults", "comparisons", "rank.csv");
-			Map<Integer, UserObject> users = simAuctionIterator.users();
+			Map<Integer, UserObject> users = simIt.users();
 			ShillVsNormalSS.writeRanks(ssi.shillScores, bayseanSS, ssi.auctionBidders, ssi.auctionCounts, users, rankFile, label + ".BSS");
 			ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, users, rankFile, label);
 		}

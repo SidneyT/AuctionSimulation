@@ -36,16 +36,16 @@ public class AlternatingBid extends CollusiveShillController {
 	 * Bidder index keeps track of who should make the first bid in this auction.
 	 */
 	@Override
-	protected PuppetBidder pickBidder(Auction auction, List<PuppetBidder> bidders) { 
+	protected PuppetBidder pickBidder(Auction auction) { 
 		if (!alternatingBidderAssigned.containsKey(auction)) {
-			PuppetBidder chosen = bidders.get(bidderIndex % bidders.size());
-			bidderIndex = (bidderIndex + 1) % bidders.size();
+			PuppetBidder chosen = cbs.get(bidderIndex % cbs.size());
+			bidderIndex = (bidderIndex + 1) % cbs.size();
 			alternatingBidderAssigned.put(auction, bidderIndex);
 //			System.out.println("chosen " + chosen);
 			return chosen;
 		} else {
-			int index = alternatingBidderAssigned.put(auction, (alternatingBidderAssigned.get(auction) + 1)  % bidders.size());
-			return bidders.get(index);
+			int index = alternatingBidderAssigned.put(auction, (alternatingBidderAssigned.get(auction) + 1)  % cbs.size());
+			return cbs.get(index);
 		}
 	}
 	

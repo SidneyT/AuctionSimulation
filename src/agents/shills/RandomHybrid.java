@@ -22,6 +22,9 @@ import simulator.objects.Auction;
 import simulator.records.UserRecord;
 import util.Util;
 
+/**
+ * Extends Hybrid, but uses a random number of shill bidders to work together in each auction
+ */
 public class RandomHybrid extends Hybrid {
 	
 	private static Logger logger = Logger.getLogger(RandomHybrid.class);
@@ -40,14 +43,14 @@ public class RandomHybrid extends Hybrid {
 
 	private Map<Auction, List<PuppetBidder>> auctionsAssigned = new HashMap<>();
 	@Override
-	protected PuppetBidder pickBidder(Auction auction, List<PuppetBidder> bidders) {
+	protected PuppetBidder pickBidder(Auction auction) {
 		// pick the set of users to use for this auction
 		List<PuppetBidder> selected;
 		if (!auctionsAssigned.containsKey(auction)) {
 			// randomly choose number of bidders to use
-			int num = Util.randomInt(r.nextDouble(), 1, bidders.size());
+			int num = Util.randomInt(r.nextDouble(), 1, cbs.size());
 			// randomly choose users
-			selected = new ArrayList<>(randomSample4(bidders, num));
+			selected = new ArrayList<>();
 			auctionsAssigned.put(auction, selected);
 		} else {
 			selected = auctionsAssigned.get(auction);
