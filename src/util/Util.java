@@ -147,29 +147,4 @@ public class Util {
 		}
 		return sample;
 	}
-	
-	public static class Sampler<T> {
-		private int seen = 0;
-		private final Random r = new Random();
-		private final List<T> sample;
-		private final int sampleSize;
-		public Sampler(int sampleSize) {
-			this.sampleSize = sampleSize;
-			sample = new ArrayList<>(sampleSize);
-		}
-		
-		public void addItem(T item) {
-			seen++;
-			if (seen <= sampleSize) {
-				sample.add(item);
-			} else if (r.nextInt(seen) < sampleSize) { // element kept with p=1/seen
-				// remove a random element
-				sample.set(r.nextInt(sampleSize), item);
-			}
-		}
-		
-		public List<T> sample() {
-			return sample;
-		}
-	}
 }
