@@ -9,8 +9,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
-import util.Util.Sampler;
-
 /**
  * For a given file, return a random set of rows, up to the number specified.
  * Returned rows are sorted in lexographical order. 
@@ -31,14 +29,14 @@ public class UndersampleFile {
 //			System.out.println(reader.readLine()); // print first line
 
 		
-		Sampler<String> sampler = new Sampler<>(50);
+		Sample<String> sampler = new Sample<>(50);
 		String line = null;
 		while(reader.ready()) {
 			line = reader.readLine();
-			sampler.addItem(line);
+			sampler.add(line);
 		}
 		
-		List<String> rows = sampler.sample();
+		List<String> rows = sampler.getSample();
 		Collections.sort(rows);
 		
 		for (int i = 0; i < rows.size(); i++) {

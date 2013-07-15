@@ -28,10 +28,10 @@ import createUserFeatures.SimAuctionIterator;
 
 
 import shillScore.ShillScore;
+import simulator.categories.ItemType;
 import simulator.database.DBConnection;
 import util.IncrementalMean;
 import util.Util;
-
 
 public class BuildShillScore {
 
@@ -41,10 +41,9 @@ public class BuildShillScore {
 		public final Map<Integer, ShillScore> shillScores; // Map(bidderId, shill score object)
 		public final Map<? extends AuctionObject, List<Integer>> auctionBidders; // Map(seller, bidderlist)
 		public final Multiset<Integer> auctionCounts; // Multiset<sellerIds>
-		
-		public ShillScoreInfo(Map<Integer, ShillScore> shillScores,
+		public ShillScoreInfo(Map<Integer, ShillScore> shillScores, 
 				Map<? extends AuctionObject, List<Integer>> auctionBidders, 
-						Multiset<Integer> auctionCounts) {
+				Multiset<Integer> auctionCounts) {
 			this.shillScores = shillScores;
 			this.auctionBidders = auctionBidders;
 			this.auctionCounts = auctionCounts;
@@ -52,7 +51,6 @@ public class BuildShillScore {
 	}
 	
 	public static ShillScoreInfo build(SimAuctionIterator simAuctionIterator) {
-		
 		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getIterator();
 
 		Map<Integer, ShillScore> shillScores = new HashMap<>();
@@ -81,8 +79,6 @@ public class BuildShillScore {
 		Map<Integer, UserObject> users = BuildTMFeatures.users(DBConnection.getTrademeConnection());
 		while (it.hasNext()) {
 			Pair<TMAuction, List<BidObject>> pair = it.next();
-			if (pair.getKey().listingId == 487782655)
-				System.out.println();
 			processBids(shillScores, auctionBidders, auctionCounts, users, pair.getKey(), pair.getValue());
 		}
 		
@@ -95,10 +91,6 @@ public class BuildShillScore {
 		}
 		
 		return new ShillScoreInfo(shillScores, auctionBidders, auctionCounts);
-	}
-	
-	public static ShillScoreInfo build() {
-		return build(new SimDBAuctionIterator(DBConnection.getSimulationConnection(), true));
 	}
 	
 	/**

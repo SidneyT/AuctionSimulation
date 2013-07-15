@@ -73,7 +73,7 @@ public class Main {
 			Main.run(SaveToDatabase.instance(databaseName), trevathan);
 		}
 
-		AgentAdder delayedStart = SimpleShillPair.getAgentAdder(20, waitStart);
+		AgentAdder delayedStart = SimpleShillPair.getAgentAdder(30, waitStart);
 		for (int i = 0; i < 30; i++) {
 			String databaseName = "auction_simulation_delayedStart" + i;
 			// construct database and tables to store simulation data
