@@ -13,7 +13,6 @@ import agents.shills.strategies.LowPriceStrategy;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
 
-
 import simulator.AgentAdder;
 import simulator.AuctionHouse;
 import simulator.Main;
@@ -24,14 +23,13 @@ import simulator.categories.ItemType;
 import simulator.database.SaveToDatabase;
 import simulator.objects.Auction;
 import simulator.records.UserRecord;
-import util.CombinationGenerator;
 
 /**
  * Does what Hybrid does, except bidding agents also bid in non-shill
  * auctions using the given strategy. E.g. bidding in low priced
  * auctions to improve reputations
  */
-public class ModifiedHybrid extends CollusiveShillController {
+public class ModifiedHybrid extends Hybrid {
 	
 	private static Logger logger = Logger.getLogger(ModifiedHybrid.class);
 
@@ -74,48 +72,7 @@ public class ModifiedHybrid extends CollusiveShillController {
 	}
 	
 	
-	private CombinationGenerator cb;
-	private Map<Auction, List<PuppetBidder>> auctionsAssigned = new HashMap<>();
-	private final int numberPerAuction = 2; // number of bidders to use in an auction
-	@Override
-	protected PuppetBidder pickBidder(Auction auction) {
-		// pick the set of users to use for this auction
-		List<PuppetBidder> selected;
-		if (!auctionsAssigned.containsKey(auction)) {
-			if (cb == null || !cb.hasMore())
-				cb = new CombinationGenerator(cbs.size(), numberPerAuction);
-			
-			int[] combination = cb.getNext();
-			selected = new ArrayList<>(numberPerAuction);
-			for (int i = 0; i < combination.length; i++) {
-				selected.add(cbs.get(combination[i]));
-			}
-			
-			auctionsAssigned.put(auction, selected);
-		} else {
-			selected = auctionsAssigned.get(auction);
-		}
-		
-		// pick the bidder to bid for this auction
-		return simplePickBidder(auction, selected);
-	}
 	
-	/*
-	 * Copied from Alternating Bid class
-	 */
-	Map<Auction, Integer> alternatingBidderAssigned = new HashMap<>(); // Map<auction, index of next bidder who should bid in that auction>
-	public PuppetBidder simplePickBidder(Auction auction, List<PuppetBidder> bidders) {
-		if (!alternatingBidderAssigned.containsKey(auction)) {
-			PuppetBidder chosen = bidders.get(0);
-			alternatingBidderAssigned.put(auction, 1 % bidders.size());
-//			System.out.println("chosen " + chosen);
-			return chosen;
-		} else {
-			int index = alternatingBidderAssigned.put(auction, (alternatingBidderAssigned.get(auction) + 1) % bidders.size());
-			return bidders.get(index);
-		}
-	}
-
 	@Override
 	public void winAction(SimpleUser agent, Auction auction) {
 		super.winAction(agent, auction);

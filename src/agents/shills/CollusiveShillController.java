@@ -34,7 +34,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 	
 	protected final List<PuppetSeller> css;
 	protected final List<PuppetBidder> cbs;
-	// Map<Auction, Registered>
+	// Map<Auction, Registered>. Registered == true if the auction is ready to be bid on by controlled shills, false otherwise.
 	protected final Map<Auction, Boolean> shillAuctions;
 	protected final Set<Auction> expiredShillAuctions;
 	protected List<ItemType> types;
@@ -80,7 +80,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 		
 		long currentTime = bh.getTimeMessage().getTime();
 		
-		// TODO: can make another set "toCheckShillAuctions" which only needs to be checked
+		// TODO: can make another set "shillAuctionsToCheck" which only needs to be checked
 		// after that auction receives a message about a new bid.
 		
 		// look through the shill auctions to see if any require action
@@ -94,17 +94,17 @@ public abstract class CollusiveShillController extends EventListener implements 
 				continue;
 			
 			if (this.strategy.shouldBid(shillAuction, currentTime)) {
-				long wait = strategy.wait(shillAuction); 
-				if (wait > 0) {
-					// record when to bid in the future
+				long wait = strategy.wait(shillAuction); // the wait is expected to possibly give a value of 0. 
+//				if (wait > 0) {
+//					// record when to bid in the future
 					waiting.add(shillAuction);
 					Util.mapListAdd(futureBid, currentTime + wait, shillAuction);
 //					System.out.println(currentTime + ": delay by " + wait + " to " + (currentTime + wait) + " at " + shillAuction + " for " + shillAuction.getId());
-				} else {
-					PuppetBidder chosen = pickBidder(shillAuction);
-					System.out.println("making now at " + currentTime + " by " + chosen + " for " + shillAuction.getId());
-					chosen.makeBid(shillAuction, this.strategy.bidAmount(shillAuction));
-				}
+//				} else {
+//					PuppetBidder chosen = pickBidder(shillAuction);
+////					System.out.println("making now at " + currentTime + " by " + chosen + " for " + shillAuction.getId());
+//					chosen.makeBid(shillAuction, this.strategy.bidAmount(shillAuction));
+//				}
 			}
 		}
 		
@@ -117,7 +117,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 			}
 			for (Auction shillAuction : finishedWaiting) {
 				PuppetBidder chosen = pickBidder(shillAuction);
-				System.out.println(currentTime + ": making bid at time " + currentTime + " by " + chosen + " for " + shillAuction.getId());
+//				System.out.println(currentTime + ": making bid at time " + currentTime + " by " + chosen + " for " + shillAuction.getId());
 				chosen.makeBid(shillAuction, this.strategy.bidAmount(shillAuction));
 			}
 			this.waiting.removeAll(finishedWaiting);
@@ -153,8 +153,6 @@ public abstract class CollusiveShillController extends EventListener implements 
 		super.newAction(auction, time);
 		if (shillAuctions.containsKey(auction)) {
 			ah.registerForAuction(this, auction);
-//			sb.registerForAuction(auction);
-			
 			shillAuctions.put(auction, true);
 		}
 	}
@@ -175,7 +173,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 
 	@Override
 	protected void winAction(Auction auction, long time) {
-		assert(false) : "This method should never be called, since this class can never bid/win.";
+		assert(false) : "This method should never be called, since this class can neither bid nor win.";
 	}
 
 	@Override
