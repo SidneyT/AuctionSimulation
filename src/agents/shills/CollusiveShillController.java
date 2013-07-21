@@ -39,9 +39,10 @@ public abstract class CollusiveShillController extends EventListener implements 
 	protected final Set<Auction> expiredShillAuctions;
 	protected List<ItemType> types;
 	
-	protected final Strategy strategy;
+	protected final int numberOfAuctions; // number of auctions submitted by the shill seller
 	
-	public CollusiveShillController(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numSeller, int bidderPerAgent) {
+	protected final Strategy strategy;
+	public CollusiveShillController(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numSeller, int biddersPerSeller, int numberOfAuctions) {
 		super(bh);
 		this.bh = bh;
 		this.ps = ps;
@@ -58,8 +59,8 @@ public abstract class CollusiveShillController extends EventListener implements 
 			css.add(ss);
 		}
 		
-		cbs = new ArrayList<>(bidderPerAgent);
-		for (int i = 0; i < bidderPerAgent; i++) {
+		cbs = new ArrayList<>(biddersPerSeller);
+		for (int i = 0; i < biddersPerSeller; i++) {
 			PuppetBidder cb = new PuppetBidder(bh, ps, is, ah, this);
 			ur.addUser(cb);
 			this.cbs.add(cb);
@@ -68,8 +69,8 @@ public abstract class CollusiveShillController extends EventListener implements 
 		shillAuctions = new HashMap<>();
 		expiredShillAuctions = new HashSet<>();
 		
-		setNumberOfAuctions(40);
-		
+		this.numberOfAuctions = numberOfAuctions;
+		setNumberOfAuctions(numberOfAuctions);
 	}
 	
 	private final Set<Auction> waiting = new HashSet<>();
@@ -131,10 +132,6 @@ public abstract class CollusiveShillController extends EventListener implements 
 		}
 	}
 	
-	protected PuppetSeller pickSeller() {
-		return css.get(0);
-	}
-	
 	private List<Integer> auctionTimes;
 	private void setNumberOfAuctions(int numberOfAuctions) {
 		auctionTimes = new ArrayList<>();
@@ -193,6 +190,8 @@ public abstract class CollusiveShillController extends EventListener implements 
 	}
 	
 	protected abstract PuppetBidder pickBidder(Auction auction);
+	protected abstract PuppetSeller pickSeller();
+	
 	
 	@Override
 	public void winAction(SimpleUser agent, Auction auction) {

@@ -1,6 +1,7 @@
 package agents.shills;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,22 +30,15 @@ import simulator.records.UserRecord;
  * auctions using the given strategy. E.g. bidding in low priced
  * auctions to improve reputations
  */
-public class ModifiedHybrid extends Hybrid {
+public class HybridLowPrice extends HybridTVaryCollusion {
 	
-	private static Logger logger = Logger.getLogger(ModifiedHybrid.class);
+	private static Logger logger = Logger.getLogger(HybridLowPrice.class);
 
 	private final Strategy strategy2;
-	private final Map<PuppetBidder, WinLoss> winLossMap;
-	private final Random r;
+	private final Map<PuppetBidder, int[]> winLossMap; // Map<agent, [win, shillAuctionWin, loss, shillAuctionLoss]>
 	
-	public ModifiedHybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy1, Strategy strategy2, int numBidder) {
-		this(bh, ps, is, ah, ur, types, strategy1, strategy2, 1, numBidder);
-	}
-	
-	protected ModifiedHybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy1, Strategy strategy2, int numSeller, int numBidder) {
-		super(bh, ps, is, ah, ur, types, strategy1, numSeller, numBidder);
-		
-		r = new Random();
+	public HybridLowPrice(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy1, Strategy strategy2) {
+		super(bh, ps, is, ah, ur, types, strategy1);
 		
 		// define strategy and register for sniping events
 		this.strategy2 = strategy2;
@@ -53,22 +47,13 @@ public class ModifiedHybrid extends Hybrid {
 		// make winLoss count objects for each bidder
 		winLossMap = new HashMap<>();
 		for (PuppetBidder puppet : cbs) {
-			winLossMap.put(puppet, new WinLoss());
+			winLossMap.put(puppet, new int[4]);
 		}
 	}
 
-	private static class WinLoss {
-		private int winCount = 0;
-		private int shillWinCount = 0;
-		private int lossCount = 0;
-		private int shillLossCount = 0;
-	}
-	
 	@Override
 	public void run() {
 		super.run();
-		
-		// now find auctions to snipe in...
 	}
 	
 	
@@ -76,19 +61,23 @@ public class ModifiedHybrid extends Hybrid {
 	@Override
 	public void winAction(SimpleUser agent, Auction auction) {
 		super.winAction(agent, auction);
-		if (shillAuctions.containsKey(auction))
-			winLossMap.get(agent).shillWinCount++;
+		if (shillAuctions.containsKey(auction)) // count shill/non-shill auctions seperately
+			winLossMap.get(agent)[1]++;
+		else if (expiredShillAuctions.contains(auction))
+			winLossMap.get(agent)[1]++;
 		else
-			winLossMap.get(agent).winCount++;
+			winLossMap.get(agent)[0]++;
 	}
 	
 	@Override
 	public void lossAction(SimpleUser agent, Auction auction) {
 		super.lossAction(agent, auction);
-		if (shillAuctions.containsKey(auction))
-			winLossMap.get(agent).shillLossCount++;
+		if (shillAuctions.containsKey(auction)) // count shill/non-shill auctions seperately
+			winLossMap.get(agent)[3]++;
+		else if (expiredShillAuctions.contains(auction))
+			winLossMap.get(agent)[1]++;
 		else
-			winLossMap.get(agent).lossCount++;
+			winLossMap.get(agent)[2]++;
 	}
 	
 	@Override
@@ -104,9 +93,9 @@ public class ModifiedHybrid extends Hybrid {
 			int index = r.nextInt(size); // starting index
 			PuppetBidder chosen = null;
 			for (int i = index; i < index + size; i++ ) {
-				WinLoss wl = winLossMap.get(cbs.get(i % size));
+				int[] counts = winLossMap.get(cbs.get(i % size));
 //				if (wl.winCount + wl.shillWinCount < wl.lossCount + wl.shillLossCount) {
-				if (wl.winCount < wl.shillLossCount) {
+				if (counts[0] < counts[3]) {
 					chosen = cbs.get(i % size);
 					break; // found a suitable bidder, so break.
 				}
@@ -124,28 +113,28 @@ public class ModifiedHybrid extends Hybrid {
 		return true;
 	}
 		
-	public static AgentAdder getAgentAdder(final int numberOfAgents, final Strategy strategy1, final Strategy strategy2,  final int numBidder) {
+	public static AgentAdder getAgentAdder(final int numberOfAgents, final Strategy strategy1, final Strategy strategy2) {
 		return new AgentAdder() {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					ModifiedHybrid sc = new ModifiedHybrid(bh, ps, is, ah, ur, types, strategy1, strategy2, numBidder);
+					HybridLowPrice sc = new HybridLowPrice(bh, ps, is, ah, ur, types, strategy1, strategy2);
 					ah.addEventListener(sc);
 				}
 			}
 			
 			@Override
 			public String toString() {
-				return "ModifiedHybrid." + numberOfAgents + "." + strategy1 + "." + strategy2;
+				return "HybridLowPrice." + numberOfAgents + "." + strategy1 + "." + strategy2;
 			}
 		};
 	}
 
 	public static void main(String[] args) {
-		final int numberOfAgents = 1;
-		Strategy strategy = new TrevathanStrategy(0.85, 0.85, 0.85);
-		logger.info("Running hybrid with " + strategy.getClass().getSimpleName() + ".");
-		Main.run(SaveToDatabase.instance(), getAgentAdder(numberOfAgents, strategy, new LowPriceStrategy(), 4));
+//		final int numberOfAgents = 1;
+//		Strategy strategy = new TrevathanStrategy(0.85, 0.85, 0.85);
+//		logger.info("Running hybrid with " + strategy.getClass().getSimpleName() + ".");
+//		Main.run(SaveToDatabase.instance(), getAgentAdder(numberOfAgents, strategy, new LowPriceStrategy(), 4));
 	}
 	
 }
