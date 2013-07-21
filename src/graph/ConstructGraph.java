@@ -41,20 +41,15 @@ public class ConstructGraph {
 		
 //		synUniqueVsAllSellers();
 //		synUniqueVsAllBidders();
-//		synEdgeVsWeightCount(simIt);
 //		Chart.XYLINE = false;
-//		jaccardChart();
-//		tmEdgeVsWeightCount("bidIn, edgesVsWeight", tmIt, EdgeType.reverse(EdgeType.PARTICIPATE));
-//		tmEdgeVsWeightCount("bidIn, edgesVsWeight", tmIt, EdgeType.PARTICIPATE);
-//		tmEdgeVsWeightCount("bidIn, edgesVsWeight", tmIt, EdgeType.undirected(EdgeType.PARTICIPATE));
-//		tmChart("T- bidIn undirected, neighbourCountVsWeight", tmIt, EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		tmChart("T- bidIn, undirected, neighbourCountVsWeight", tmIt, EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
 //		tmChart("T- bidIn, neighbourCountVsWeight", tmIt, EdgeType.PARTICIPATE, NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
 //		tmChart("T- bidIn reversed, neighbourCountVsWeight", tmIt, EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
 //		tmChart("T- WIN undirected, neighbourCountVsWeight", tmIt, EdgeType.undirected(EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
 //		tmChart("T- bidIn, neighbourCountVsWeight", tmIt, (EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
 //		tmChart("T- bidIn reversed, neighbourCountVsWeight", tmIt, EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-		synChart("S- bidIn reversed, neighbourCountVsWeight", simIt, EdgeType.reverse(EdgeType.PARTICIPATE), "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		synChart("S- bidIn, neighbourCountVsWeight", simIt, EdgeType.PARTICIPATE, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		synChart("S- bidIn reversed, neighbourCountVsWeight", simIt, EdgeType.reverse(EdgeType.PARTICIPATE), "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+		synChart("S- bidIn, neighbourCountVsWeight", simIt, EdgeType.PARTICIPATE, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
 //		synChart("S- bidIn, undirected, neighbourCountVsEgonetWeight", simIt, EdgeType.undirected(EdgeType.PARTICIPATE), "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
 //		synChart("S- win, neighbourCountVsEgonetWeight", simIt, EdgeType.WIN, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
 //		synChart("S- win, egonetEdgeCountVsEgonetWeight", simIt, EdgeType.WIN, "Puppet", NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeight);
@@ -63,98 +58,40 @@ public class ConstructGraph {
 		synChart("S- inSameAuction, undirected, egonetWeightVsJaccardMean", simIt, EdgeType.undirected(EdgeType.IN_SAME_AUCTION), "Puppet", NodeFeature.EgonetWeight, NodeFeature.jaccard(SumStat.Mean));
 	}
 	
+	/**
+	 * Plot 2 features against each other for TM data.
+	 * @param chartTitle
+	 * @param tmIt
+	 * @param edgeType
+	 * @param xAxisFeature
+	 * @param yAxisFeature
+	 */
 	private static void tmChart(String chartTitle, TMAuctionIterator tmIt, EdgeTypeI edgeType, NodeFeatureI xAxisFeature, NodeFeatureI yAxisFeature) {
 		HashMap<Integer, HashMultiset<Integer>> graph = GraphOperations.duplicateAdjacencyList(tmIt.getIterator(), edgeType);
 		HashMap<Integer, Double> xFeature = NodeFeature.values(graph, xAxisFeature);
 		HashMap<Integer, Double> yFeature = NodeFeature.values(graph, yAxisFeature);
 		
+		List<double[]> xVsY = xVsY(xFeature, yFeature);
 		LogarithmicBinning logBins = new LogarithmicBinning(1, 0.2, 1.2, 240);
 		Chart chart = new Chart(chartTitle);
-		chartAddSeries(chart, logBins.emptyCopy(), xVsY(xFeature, yFeature), "");
+		chartAddSeries(chart, logBins.emptyCopy(), xVsY, "");
 		chart.build();
 	}
 	
-	private static void tmEdgeVsWeightCount(String chartTitle, TMAuctionIterator tmIt, EdgeTypeI edgeType) {
-		HashMap<Integer, HashMultiset<Integer>> allSellers = GraphOperations.duplicateAdjacencyList(tmIt.getIterator(), edgeType);
-		HashMap<Integer, Double> edgeCounts = NodeFeature.values(allSellers, NodeFeature.EgonetEdgeCount);
-		HashMap<Integer, Double> weights = NodeFeature.values(allSellers, NodeFeature.EgonetWeight);
-		
-		LogarithmicBinning logBins = new LogarithmicBinning(1, 0.2, 1.2, 240);
-		Chart chart = new Chart();
-		chartAddSeries(chart, logBins.emptyCopy(), xVsY(edgeCounts, weights), "");
-		chart.build();
-	}
-
+	/**
+	 * Plot 2 features against each other for Syn data.
+	 * @param chartTitle
+	 * @param simIt
+	 * @param edgeType
+	 * @param fraudType
+	 * @param xAxisFeature
+	 * @param yAxisFeature
+	 */
 	private static void synChart(String chartTitle, SimDBAuctionIterator simIt, EdgeTypeI edgeType, String fraudType, NodeFeatureI xAxisFeature, NodeFeatureI yAxisFeature) {
 		HashMap<Integer, HashMultiset<Integer>> allSellers = GraphOperations.duplicateAdjacencyList(simIt.getIterator(), EdgeType.reverse(edgeType));
 		HashMap<Integer, Double> edgeCounts = NodeFeature.values(allSellers, xAxisFeature);
 		HashMap<Integer, Double> weights = NodeFeature.values(allSellers, yAxisFeature);
 		synFraudNormalChart(simIt, chartTitle, edgeCounts, weights, fraudType);
-	}
-
-	private static void synEdgeVsWeightCount(SimDBAuctionIterator simIt) {
-		HashMap<Integer, HashMultiset<Integer>> allSellers = GraphOperations.duplicateAdjacencyList(simIt.getIterator(), EdgeType.reverse(EdgeType.PARTICIPATE));
-		HashMap<Integer, Double> edgeCounts = NodeFeature.values(allSellers, NodeFeature.EgonetEdgeCount);
-		HashMap<Integer, Double> weights = NodeFeature.values(allSellers, NodeFeature.EgonetWeight);
-		synFraudNormalChart(simIt, "edgeVsWeightCount", edgeCounts, weights, "PuppetSeller");
-	}
-
-	/**
-	 * Compares the number of unique versus total number of bidders in all auctions submitted by each user.
-	 */
-	private static void synUniqueVsAllBidders() {
-		SimDBAuctionIterator simIt = new SimDBAuctionIterator(DBConnection.getConnection("auction_simulation_simple0"), true);
-		HashMap<Integer, Set<Integer>> uniqueSellers = GraphOperations.adjacencySet(simIt.getIterator(), EdgeType.reverse(EdgeType.PARTICIPATE));
-		HashMap<Integer, HashMultiset<Integer>> allSellers = GraphOperations.duplicateAdjacencyList(simIt.getIterator(), EdgeType.reverse(EdgeType.PARTICIPATE));
-		ConstructGraph.synFraudNormalChartHelper(simIt, "unique VS all sellers", uniqueSellers, allSellers, "PuppetSeller");
-	}
-	
-	/**
-	 * Compares the number of unique versus total number of sellers whose auctions each bidder made a bid in.
-	 */
-	private static void synUniqueVsAllSellers() {
-		SimDBAuctionIterator simIt = new SimDBAuctionIterator(DBConnection.getConnection("auction_simulation_simple0"), true);
-		HashMap<Integer, Set<Integer>> uniqueSellers = GraphOperations.adjacencySet(simIt.getIterator(), EdgeType.PARTICIPATE);
-		HashMap<Integer, HashMultiset<Integer>> allSellers = GraphOperations.duplicateAdjacencyList(simIt.getIterator(), EdgeType.PARTICIPATE);
-		ConstructGraph.synFraudNormalChartHelper(simIt, "unique VS all sellers", uniqueSellers, allSellers, "PuppetBidder");
-	}
-	
-	/**
-	 * Plots the average Jaccard index of a node and each of its neighbours. 
-	 * Two series are plotted: one for normal users, and one for fraudulent.  
-	 */
-	private static void jaccardChart() {
-		SimDBAuctionIterator simIt = new SimDBAuctionIterator(DBConnection.getConnection("auction_simulation_simple0"), true);
-		HashMap<Integer, HashMultiset<Integer>> edges1 = GraphOperations.duplicateAdjacencyList(simIt.getIterator(), EdgeType.IN_SAME_AUCTION);
-		HashMap<Integer, Double> jaccardIndices = jaccardIndex(edges1);
-		System.out.println(jaccardIndices);
-		Set<Integer> fraudIds = groupByUserType(simIt).get("PuppetBidder");
-		
-		HashMap<Integer, Double> jNormal = new HashMap<>(jaccardIndices);
-		itRemoveOnly(jNormal.keySet(), fraudIds);
-		System.out.println(jNormal);
-		HashMap<Integer, Double> jFraud = new HashMap<>(jaccardIndices);
-		itRetainOnly(jFraud.keySet(), fraudIds);
-		System.out.println(jFraud);
-		
-		Chart chart = new Chart("Avg jaccard");
-		chart.addSeries2(jNormal.values(), "normal");
-		chart.addSeries2(jFraud.values(), "fraud");
-		Chart.LOGAXIS = false;
-		chart.build("", "");
-	}
-	
-	private static <S extends Collection<Integer>, T  extends Collection<Integer>> void synFraudNormalChartHelper(SimDBAuctionIterator simIt, String chartTitle, HashMap<Integer, S> edges1x, HashMap<Integer, T> edges2x, String userType) {
-		HashMap<Integer, Double> edges1 = new HashMap<>();
-		for (Integer key : edges1x.keySet()) {
-			edges1.put(key, Double.valueOf(edges1x.get(key).size()));
-		}
-		HashMap<Integer, Double> edges2 = new HashMap<>();
-		for (Integer key : edges2x.keySet()) {
-			edges2.put(key, Double.valueOf(edges2x.get(key).size()));
-		}
-		
-		synFraudNormalChart(simIt, chartTitle, edges1, edges2, userType);
 	}
 
 	private static void synFraudNormalChart(SimDBAuctionIterator simIt, String chartTitle, HashMap<Integer, Double> feature1, HashMap<Integer, Double> feature2, String wantedUserType) {
