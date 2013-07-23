@@ -8,6 +8,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.HashMultimap;
+
 import distributions.Uniform;
 
 import simulator.AuctionHouse;
@@ -33,7 +35,8 @@ public class ClusterSnipe extends ClusterBidder {
 	}
 	
 	@Override
-	protected void action() {
+	public void run() {
+		super.run();
 		Set<Auction> alreadyBidOn = new HashSet<Auction>();
 		
 		long currentTime = this.bh.getTime();
@@ -59,7 +62,7 @@ public class ClusterSnipe extends ClusterBidder {
 		}
 		
 		if (revisitForRebids.containsKey(currentTime)) {
-			for (Auction auction : this.revisitForRebids.remove(currentTime)) {
+			for (Auction auction : this.revisitForRebids.removeAll(currentTime)) {
 				if (!alreadyBidOn.contains(auction)) {
 					boolean rebidMade = prepareRebid(auction);
 					if (rebidMade) 
@@ -70,12 +73,12 @@ public class ClusterSnipe extends ClusterBidder {
 	
 	}
 	
-	Map<Long, Set<Auction>> revisitForRebids = new HashMap<Long, Set<Auction>>();
+	HashMultimap<Long, Auction> revisitForRebids = HashMultimap.create();
 	private void revisitLater(Auction auction) {
 		long currentTime = this.bh.getTimeMessage().getTime();
 		int delayForRevisit = 1; // since this runs before action(), if delay is zero, auction will be revisited immediately 
 		
-		Util.mapSetAdd(this.revisitForRebids, currentTime + delayForRevisit, auction);
+		revisitForRebids.put(currentTime + delayForRevisit, auction);
 	}
 
 	/**

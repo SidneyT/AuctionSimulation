@@ -10,6 +10,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import distributions.Exponential;
@@ -47,7 +48,7 @@ public abstract class ClusterBidder extends SimpleUser {
 	
 //	protected final Set<Auction> oneBidAuctionsUnprocessed; // auctions with more than 1 bid to be processed 
 	protected final List<Auction> newAuctionsUnprocessed; // should be empty at the beginning of each time unit
-	protected final Multimap<Long, Auction> auctionsToBidIn;
+	protected final HashMultimap<Long, Auction> auctionsToBidIn;
 	
 	// Auctions for which this bidder is much more likely to bid on.
 	// Simulates motivation...
@@ -79,7 +80,7 @@ public abstract class ClusterBidder extends SimpleUser {
 		
 //		this.oneBidAuctionsUnprocessed = new HashSet<Auction>();
 		this.newAuctionsUnprocessed = new ArrayList<Auction>();
-		this.auctionsToBidIn = ArrayListMultimap.create();
+		this.auctionsToBidIn = HashMultimap.create();
 		
 		r = new Random();
 		ReputationRecord.generateRep(rr, r);
@@ -124,7 +125,6 @@ public abstract class ClusterBidder extends SimpleUser {
 //		System.out.println(interestTimes.size() + " vs " + numberOfInterestedCategories);
 	}
 	
-	protected abstract void action();
 	protected abstract long firstBidTime();
 	
 	private final int numberOfInterestedCategories; 
