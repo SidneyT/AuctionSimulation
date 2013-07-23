@@ -69,7 +69,6 @@ public abstract class SimpleUser extends EventListener {
 		if (itemSet != null && !itemSet.isEmpty())
 			itemReceivedAction(itemSet);
 		
-		this.action();
 //		long time = this.bh.getTimeMessage().getMessage(this);
 //		logger.debug("Received time message: " + time);
 	}

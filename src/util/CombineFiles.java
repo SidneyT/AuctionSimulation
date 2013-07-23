@@ -23,19 +23,22 @@ public class CombineFiles {
 		
 //		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/single_feature_shillvsnormal/waitStart");
 //		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/single_feature_shillvsnormal/trevathan");
-		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/shillingResults/trevathan");
+//		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/shillingResults/trevathan");
+//		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/single_feature_shillvsnormal/hybrid");
+		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/shillingResults/hybridlp");
 		Path outputFolder = Paths.get(synDataFolder.toString(), "combined");
-//		writeSelectively(synDataFolder, "Puppet", "1", outputFolder, "syn_", "features_trevathan_fraud.csv");
-//		writeSelectively(synDataFolder, "Cluster", "0", outputFolder, "syn_", "features_trevathan_normal.csv");
-
-		writeSelectively(synDataFolder, "Puppet", "1", outputFolder, "ShillScores_", "ratings_trevathan_fraud.csv");
-		writeSelectively(synDataFolder, "Cluster", "0", outputFolder, "ShillScores_", "ratings_trevathan_normal.csv");
-
+		
+		String ratings = "ShillScores_";
+		String features = "syn_";
+		writeSelectively(synDataFolder, features, "Puppet", "1", outputFolder, "syn_", "features_hybrid_fraud.csv");
+		writeSelectively(synDataFolder, features, "Cluster", "0", outputFolder, "syn_", "features_hybrid_normal.csv");
+		writeSelectively(synDataFolder, ratings, "Puppet", "1", outputFolder, "ShillScores_", "ratings_hybrid_fraud.csv");
+		writeSelectively(synDataFolder, ratings, "Cluster", "0", outputFolder, "ShillScores_", "ratings_hybrid_normal.csv");
 		
 		System.out.println("Finished.");
 	}
 	
-	private static void writeSelectively(Path inputFolder, String lineStartsWith, String classLabel, Path outputFolder, final String fileNameStartsWith, String outputFilename) throws IOException {
+	private static void writeSelectively(Path inputFolder, final String filenameStartsWith, String lineStartsWith, String classLabel, Path outputFolder, final String fileNameStartsWith, String outputFilename) throws IOException {
 		BufferedWriter bw = Files.newBufferedWriter(Paths.get(outputFolder.toString(), outputFilename), Charset.defaultCharset());
 		int lineCount = 0;
 		
@@ -44,8 +47,8 @@ public class CombineFiles {
 		for (File file : inputFolder.toFile().listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith(fileNameStartsWith) && name.endsWith(".csv");
-//				return name.startsWith("ShillScore_") && name.endsWith(".csv");
+//				return name.startsWith(fileNameStartsWith) && name.endsWith(".csv");
+				return name.startsWith(filenameStartsWith) && name.endsWith(".csv");
 			}
 		})) {
 

@@ -41,7 +41,8 @@ enum EdgeType implements EdgeTypeI {
 		}
 	}, 
 	/**
-	 * Edges are between all bidders of the auction
+	 * Edges are between all bidders of the auction.
+	 * Note edges are undirected (i.e. 2 directed edges).
 	 */
 	IN_SAME_AUCTION {
 		public List<int[]> getTuples(AuctionObject auction, List<BidObject> bids) {

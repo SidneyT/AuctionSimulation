@@ -1,6 +1,7 @@
 package util;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -33,10 +34,9 @@ public class Sample <T> {
 	}
 	
 	
-	public static <T> List<T> getSample(Iterator<T> it, int sampleSize) {
+	public static <T> List<T> randomSample(Iterator<T> it, int sampleSize, Random r) {
 		List<T> sample = new ArrayList<>(sampleSize);
 		int seen = 0;
-		Random r = new Random();
 		while(it.hasNext()) {
 			T item = it.next();
 			seen++;
@@ -53,11 +53,31 @@ public class Sample <T> {
 		return sample;
 	}
 	
+	/**
+	 * FloydÅfs Algorithm, from <code>http://eyalsch.wordpress.com/2010/04/01/random-sample/</code>
+	 * @param items
+	 * @param sampleSize
+	 * @return
+	 */
+	public static <T> List<T> randomSample(List<T> items, int sampleSize, Random r){
+	    HashSet<T> res = new HashSet<T>(sampleSize);
+	    int n = items.size();
+	    for(int i = n - sampleSize; i < n; i++){
+	        int pos = r.nextInt(i+1);
+	        T item = items.get(pos);
+	        if (res.contains(item))
+	            res.add(items.get(i));
+	        else
+	            res.add(item);
+	    }
+	    return new ArrayList<>(res);
+	}
+
 	public static void main(String[] args) {
 		int[] counts = new int[20];
-		
+		Random r = new Random();
 		for (int i = 0; i < 200000; i++) {
-			List<Integer> results = getSample(Arrays.asList(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19).iterator(), 10);
+			List<Integer> results = randomSample(Arrays.asList(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19).iterator(), 10, r);
 			for (int j : results) {
 				counts[j]++;
 			}

@@ -24,7 +24,7 @@ public class AlternatingBid extends CollusiveShillController {
 
 	public AlternatingBid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur,
 			List<ItemType> types, Strategy strategy, int numBidder) {
-		super(bh, ps, is, ah, ur, types, strategy, 1, numBidder);
+		super(bh, ps, is, ah, ur, types, strategy, 1, numBidder, 40);
 	}
 
 	Map<Auction, Integer> alternatingBidderAssigned = new HashMap<>(); // Map<auction, index of next bidder who should bid in that auction>
@@ -87,6 +87,11 @@ public class AlternatingBid extends CollusiveShillController {
 	public static void main(String[] args) {
 		final int numberOfGroups = 1;
 		Main.run(SaveToDatabase.instance(), getAgentAdder(numberOfGroups, new TrevathanStrategy(0.85, 0.85, 0.85), 4));
+	}
+
+	@Override
+	protected PuppetSeller pickSeller() {
+		return css.get(0);
 	}
 	
 }

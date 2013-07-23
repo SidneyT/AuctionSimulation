@@ -154,9 +154,9 @@ public abstract class EventListener implements Runnable {
 		logger.debug(this + " received items " + itemSet);
 	}
 	
-	/**
-	 * Runs after everything else is done.
-	 */
-	protected void action() {}
+//	/**
+//	 * Runs after everything else is done.
+//	 */
+//	protected void action() {}
 	
 }

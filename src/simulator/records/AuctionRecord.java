@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.collect.HashMultimap;
+
 import simulator.objects.Auction;
 import util.Util;
 
@@ -21,7 +23,7 @@ public class AuctionRecord {
 //	private final Map<Integer, Set<Auction>> submissions;
 //	private final AtomicInteger auctionCount; // number of auctions submitted.  used to give auctions an ID.
 	// Map<Auction endTime, Auction object>
-	private final Map<Long, Set<Auction>> currentAuctions;
+	private final HashMultimap<Long, Auction> currentAuctions;
 //	private final Map<Long, Set<Auction>> expiredAuctions;
 	
 	// the set of auctions that are running
@@ -31,7 +33,7 @@ public class AuctionRecord {
 //		auctionCount = new AtomicInteger();
 		
 //		this.submissions = new HashMap<Integer, Set<Auction>>();
-		this.currentAuctions = new HashMap<Long, Set<Auction>>();
+		this.currentAuctions = HashMultimap.create();
 //		this.expiredAuctions = new HashMap<Long, Set<Auction>>();
 		this.currentSet = new HashSet<Auction>();
 	}
@@ -50,7 +52,7 @@ public class AuctionRecord {
 		
 		// recording auction according to expiry date
 		long expiryTime = auction.getDuration() + time;
-		Util.mapSetAdd(this.currentAuctions, expiryTime, auction);
+		currentAuctions.put(expiryTime, auction);
 
 //		SaveToDatabase.saveAuction(auction);
 		
@@ -72,16 +74,17 @@ public class AuctionRecord {
 		// remove the auction from the currentAuctions map using the original endTime
 		boolean removed = currentAuctions.get(auction.getEndTime()).remove(auction);
 		assert(removed);
-		if (currentAuctions.get(auction.getEndTime()).isEmpty())
-			currentAuctions.remove(auction.getEndTime());
+		if (currentAuctions.get(auction.getEndTime()).isEmpty()){
+			currentAuctions.removeAll(auction.getEndTime());
+		}
 		// change the endTime of the auction
 		long newEndTime = auction.extendAuction(time);
 		// add the auction into the currentAuctions map using the new endTime
-		boolean added = Util.mapSetAdd(currentAuctions, newEndTime, auction);
+		boolean added = currentAuctions.put(newEndTime, auction);
 		assert(added);
 	}
 	
-	public Map<Long, Set<Auction>> getCurrentAuctions() {
+	public HashMultimap<Long, Auction> getCurrentAuctions() {
 		return this.currentAuctions;
 	}
 	
@@ -97,7 +100,7 @@ public class AuctionRecord {
 			return Collections.emptySet();
 		}
 		this.currentSet.removeAll(expireds);
-		return this.currentAuctions.remove(time);
+		return this.currentAuctions.removeAll(time);
 	}
 
 //	public boolean expiresThisTurn(long time, Auction auction) {

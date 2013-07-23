@@ -2,7 +2,6 @@ package graph;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -12,19 +11,17 @@ import java.util.Random;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.math3.stat.Frequency;
 import org.apache.commons.math3.util.Pair;
 import org.jfree.data.xy.XYSeries;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Sets;
-import com.google.common.primitives.Doubles;
 
 import simulator.database.DBConnection;
 import temporary.Chart;
+import temporary.Chart.ChartOpt;
+import util.Sample;
 import util.SumStat;
-import util.Util;
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.BuildTMFeatures.TMAuctionIterator;
 import createUserFeatures.BuildUserFeatures.UserObject;
@@ -42,20 +39,46 @@ public class ConstructGraph {
 //		synUniqueVsAllSellers();
 //		synUniqueVsAllBidders();
 //		Chart.XYLINE = false;
-//		tmChart("T- bidIn, undirected, neighbourCountVsWeight", tmIt, EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		tmChart("T- bidIn, neighbourCountVsWeight", tmIt, EdgeType.PARTICIPATE, NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		tmChart("T- bidIn reversed, neighbourCountVsWeight", tmIt, EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		tmChart("T- WIN undirected, neighbourCountVsWeight", tmIt, EdgeType.undirected(EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		tmChart("T- bidIn, neighbourCountVsWeight", tmIt, (EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		tmChart("T- bidIn reversed, neighbourCountVsWeight", tmIt, EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		synChart("S- bidIn reversed, neighbourCountVsWeight", simIt, EdgeType.reverse(EdgeType.PARTICIPATE), "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-		synChart("S- bidIn, neighbourCountVsWeight", simIt, EdgeType.PARTICIPATE, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		synChart("S- bidIn, undirected, neighbourCountVsEgonetWeight", simIt, EdgeType.undirected(EdgeType.PARTICIPATE), "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		synChart("S- win, neighbourCountVsEgonetWeight", simIt, EdgeType.WIN, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		synChart("S- win, egonetEdgeCountVsEgonetWeight", simIt, EdgeType.WIN, "Puppet", NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeight);
-//		synChart("S- loss, neighbourCountVsEgonetWeight", simIt, EdgeType.LOSS, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
-//		synChart("S- loss, egonetEdgeCountVsEgonetWeight", simIt, EdgeType.LOSS, "Puppet", NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeight);
-		synChart("S- inSameAuction, undirected, egonetWeightVsJaccardMean", simIt, EdgeType.undirected(EdgeType.IN_SAME_AUCTION), "Puppet", NodeFeature.EgonetWeight, NodeFeature.jaccard(SumStat.Mean));
+//		tmChart(new Chart("T- bidIn, undirected, neighbourCountVsWeight"), tmIt, EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		tmChart(new Chart("T- bidIn, neighbourCountVsWeight"), tmIt, EdgeType.PARTICIPATE, NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		tmChart(new Chart("T- bidIn reversed, neighbourCountVsWeight"), tmIt, EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		tmChart(new Chart("T- WIN undirected, neighbourCountVsWeight"), tmIt, EdgeType.undirected(EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		tmChart(new Chart("T- bidIn, neighbourCountVsWeight"), tmIt, (EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		tmChart(new Chart("T- bidIn reversed, neighbourCountVsWeight"), tmIt, EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		synChart(new Chart("S- bidIn reversed, neighbourCountVsWeight"), simIt, EdgeType.reverse(EdgeType.PARTICIPATE), "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		synChart(new Chart("S- bidIn, neighbourCountVsWeight"), simIt, EdgeType.PARTICIPATE, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		synChart(new Chart("S- bidIn, undirected, neighbourCountVsEgonetWeight"), simIt, EdgeType.undirected(EdgeType.PARTICIPATE), "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		synChart(new Chart("S- win, neighbourCountVsEgonetWeight"), simIt, EdgeType.WIN, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		synChart(new Chart("S- win, egonetEdgeCountVsEgonetWeight"), simIt, EdgeType.WIN, "Puppet", NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeight).build();
+//		synChart(new Chart("S- loss, neighbourCountVsEgonetWeight"), simIt, EdgeType.LOSS, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight).build();
+//		synChart(new Chart("S- loss, egonetEdgeCountVsEgonetWeight"), simIt, EdgeType.LOSS, "Puppet", NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeight).build();
+//		synChart(new Chart("S- inSameAuction, undirected, egonetWeightVsJaccardMean", ChartOpt.NOLOGAXIS, ChartOpt.NOXYLINE), 
+//				simIt, EdgeType.IN_SAME_AUCTION, "Puppet", NodeFeature.EgonetWeight, NodeFeature.jaccard(SumStat.Mean)).build();
+		
+		Chart chart = new Chart("T,S- loss, undirected, neighbourCountVsEgonetWeight");
+		synChart(chart, simIt, EdgeType.LOSS, "Puppet", NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeight);
+		tmChart(chart, tmIt, EdgeType.LOSS, NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeight);
+//		Chart chart = new Chart("T,S- inSameAuction, undirected, egonetWeightVsJaccardMean", ChartOpt.NOLOGAXIS, ChartOpt.NOXYLINE);
+//		synChart(chart, simIt, EdgeType.IN_SAME_AUCTION, "Puppet", NodeFeature.EgonetWeight, NodeFeature.jaccard(SumStat.Mean));
+//		tmChart(chart, tmIt, EdgeType.IN_SAME_AUCTION, NodeFeature.EgonetWeight, NodeFeature.jaccard(SumStat.Mean));
+//		Chart chart = new Chart("T,S- inSameAuction, undirected, neighbourCountVsEgonetWeight");
+//		synChart(chart, simIt, EdgeType.IN_SAME_AUCTION, "Puppet", NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeight);
+//		tmChart(chart, tmIt, EdgeType.IN_SAME_AUCTION, NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeight);
+//		Chart chart = new Chart("T,S- bidIn reversed, neighbourCountVsWeight");
+//		synChart(chart, simIt, EdgeType.reverse(EdgeType.PARTICIPATE), "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		tmChart(chart, tmIt, EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		Chart chart = new Chart("T,S- bidIn, neighbourCountVsWeight");
+//		synChart(chart, simIt, EdgeType.PARTICIPATE, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		tmChart(chart, tmIt, EdgeType.PARTICIPATE, NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		Chart chart = new Chart("T,S- win, neighbourCountVsEgonetWeight");
+//		synChart(chart, simIt, EdgeType.WIN, "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		tmChart(chart, tmIt, EdgeType.WIN, NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		Chart chart = new Chart("T,S- win, undirected, neighbourCountVsEgonetWeight");
+//		synChart(chart, simIt, EdgeType.undirected(EdgeType.WIN), "Puppet", NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+//		tmChart(chart, tmIt, EdgeType.undirected(EdgeType.WIN), NodeFeature.NodeNeighbourCount, NodeFeature.EgonetWeight);
+
+		chart.build();
+		
 	}
 	
 	/**
@@ -66,16 +89,16 @@ public class ConstructGraph {
 	 * @param xAxisFeature
 	 * @param yAxisFeature
 	 */
-	private static void tmChart(String chartTitle, TMAuctionIterator tmIt, EdgeTypeI edgeType, NodeFeatureI xAxisFeature, NodeFeatureI yAxisFeature) {
+	private static Chart tmChart(Chart chart, TMAuctionIterator tmIt, EdgeTypeI edgeType, NodeFeatureI xAxisFeature, NodeFeatureI yAxisFeature) {
 		HashMap<Integer, HashMultiset<Integer>> graph = GraphOperations.duplicateAdjacencyList(tmIt.getIterator(), edgeType);
 		HashMap<Integer, Double> xFeature = NodeFeature.values(graph, xAxisFeature);
 		HashMap<Integer, Double> yFeature = NodeFeature.values(graph, yAxisFeature);
 		
 		List<double[]> xVsY = xVsY(xFeature, yFeature);
+		xVsY = Sample.randomSample(xVsY, 2000, new Random());
 		LogarithmicBinning logBins = new LogarithmicBinning(1, 0.2, 1.2, 240);
-		Chart chart = new Chart(chartTitle);
-		chartAddSeries(chart, logBins.emptyCopy(), xVsY, "");
-		chart.build();
+		chartAddSeries(chart, logBins.emptyCopy(), xVsY, "tm");
+		return chart;
 	}
 	
 	/**
@@ -87,14 +110,14 @@ public class ConstructGraph {
 	 * @param xAxisFeature
 	 * @param yAxisFeature
 	 */
-	private static void synChart(String chartTitle, SimDBAuctionIterator simIt, EdgeTypeI edgeType, String fraudType, NodeFeatureI xAxisFeature, NodeFeatureI yAxisFeature) {
+	private static Chart synChart(Chart chart, SimDBAuctionIterator simIt, EdgeTypeI edgeType, String fraudType, NodeFeatureI xAxisFeature, NodeFeatureI yAxisFeature) {
 		HashMap<Integer, HashMultiset<Integer>> allSellers = GraphOperations.duplicateAdjacencyList(simIt.getIterator(), EdgeType.reverse(edgeType));
-		HashMap<Integer, Double> edgeCounts = NodeFeature.values(allSellers, xAxisFeature);
-		HashMap<Integer, Double> weights = NodeFeature.values(allSellers, yAxisFeature);
-		synFraudNormalChart(simIt, chartTitle, edgeCounts, weights, fraudType);
+		HashMap<Integer, Double> xValues = NodeFeature.values(allSellers, xAxisFeature);
+		HashMap<Integer, Double> yValues = NodeFeature.values(allSellers, yAxisFeature);
+		return synFraudNormalSeries(chart, simIt, xValues, yValues, fraudType);
 	}
 
-	private static void synFraudNormalChart(SimDBAuctionIterator simIt, String chartTitle, HashMap<Integer, Double> feature1, HashMap<Integer, Double> feature2, String wantedUserType) {
+	private static Chart synFraudNormalSeries(Chart chart, SimDBAuctionIterator simIt, HashMap<Integer, Double> feature1, HashMap<Integer, Double> feature2, String wantedUserType) {
 		HashMultimap<String, Integer> userTypeGroups = groupByUserType(simIt);
 		
 		Set<Integer> fraudIds = new HashSet<>();
@@ -118,66 +141,16 @@ public class ConstructGraph {
 		List<double[]> xVsYFraud = xVsY(edges1Fraud, edges2Fraud);
 		
 		LogarithmicBinning logBins = new LogarithmicBinning(1, 0.2, 1.2, 240);
-		Chart chart = new Chart(chartTitle);
-		chartAddSeries(chart, logBins.emptyCopy(), xVsYNormal, "normal");
-		chartAddSeries(chart, logBins.emptyCopy(), xVsYFraud, "fraud");
-		chart.build();
+		chartAddSeries(chart, logBins.emptyCopy(), xVsYNormal, "n");
+		chartAddSeries(chart, logBins.emptyCopy(), xVsYFraud, "f");
+		return chart;
 	}
-	
-	static HashMap<Pair<Integer, Integer>, Double> jaccardValues = new HashMap<>();
 	
 	/**
-	 * Given the neighbours for every node in edges (<node, neighbours>). 
-	 * Calculates the jaccard index for a user and all it's neighbours and calculates the mean value.
-	 * @param edges
-	 * @return
+	 * Removes elements from the given collection which are not in the set <code>retain</code>.
+	 * @param col
+	 * @param retain
 	 */
-	private static HashMap<Integer, Double> jaccardIndex(HashMap<Integer, HashMultiset<Integer>> edges) {
-		// jaccard = (A and B) / (A or B)
-		
-		HashMap<Integer, Double> meanJaccardMap = new HashMap<>();
-		for (Integer bidder : edges.keySet()) {
-			Set<Integer> bidderNeighbours = edges.get(bidder).elementSet(); // set of bidder's neighbours
-			
-			double[] neighbourJaccard = new double[bidderNeighbours.size()]; 
-			int i = 0; // index
-			
-			for (Integer neighbour : bidderNeighbours) {
-				Pair<Integer, Integer> pair;
-				if (bidder < neighbour) // order the pair to always put the user with the smaller id first
-					pair = new Pair<>(bidder, neighbour);
-				else
-					pair = new Pair<>(neighbour, bidder);
-
-				Set<Integer> neighbourNeighbours;
-				if (edges.containsKey(neighbour))
-					neighbourNeighbours = edges.get(neighbour).elementSet(); // set of neighbour's neighbours
-				else 
-					neighbourNeighbours = Collections.emptySet();
-					
-				double jaccard;
-				// calculate jaccard index
-				if (jaccardValues.containsKey(pair)) // no need to re-calculate
-					jaccard = jaccardValues.get(pair);
-				else {
-					int aAndB = Sets.intersection(bidderNeighbours, neighbourNeighbours).size();
-					int aOrB = Sets.union(bidderNeighbours, neighbourNeighbours).size();
-					jaccard = (double) aAndB / aOrB;
-					jaccardValues.put(pair, jaccard);
-				}
-				neighbourJaccard[i++] = jaccard;
-			}
-			
-			double meanJaccard = SumStat.Max.summaryValue(Doubles.asList(neighbourJaccard));
-			meanJaccardMap.put(bidder, meanJaccard);
-		}
-		
-		return meanJaccardMap;
-	}
-	
-	
-	
-	
 	public static <T> void itRetainOnly(Collection<T> col, Set<T> retain) {
 		Iterator<T>  it = col.iterator();
 		while (it.hasNext()) {
@@ -247,42 +220,6 @@ public class ConstructGraph {
 		chart.addSeries(meanSeries);
 	}
 	
-//	/**
-//	 * Given the maps <id, value_1> and <id, value_2>, match the ids of the maps and returns List<int[]> with {value_1.size(), value_2.size()}.
-//	 * @param adjacencyList1
-//	 * @param adjacencyList2
-//	 * @return
-//	 */
-//	private static <S extends Collection<Integer>, T extends Collection<Integer>> List<int[]> xVsYSize(HashMap<Integer, S> adjacencyList1, HashMap<Integer, T> adjacencyList2) {
-//		List<int[]> xyPairs = new ArrayList<>();
-//		
-//		Set<Integer> allIds = new HashSet<Integer>(adjacencyList1.keySet());
-//		allIds.addAll(adjacencyList2.keySet());
-//		
-//		for (Integer id : allIds) {
-//			int x = 0;
-//			if (adjacencyList1.containsKey(id)) {
-//				x = adjacencyList1.get(id).size();
-//			}
-//			
-//			int y = 0;
-//			if (adjacencyList2.containsKey(id)) {
-//				y = adjacencyList2.get(id).size();
-//			}
-//			
-////			if (x == 1 && y > 40)
-////				System.out.println("pause");
-//			
-//			if (x > 0 && y > 0)
-//				xyPairs.add(new int[]{x, y});
-//			
-////			xyPairs.add(new int[]{x + 1, y + 1});
-//			
-//		}
-//		
-//		return xyPairs;
-//	}
-	
 	private static List<double[]> xVsY(HashMap<Integer, Double> adjacencyList1, HashMap<Integer, Double> adjacencyList2) {
 		List<double[]> xyPairs = new ArrayList<>();
 		
@@ -311,25 +248,5 @@ public class ConstructGraph {
 		}
 		
 		return xyPairs;
-	}
-	
-	private static void charting(HashMap<Integer, HashMultiset<Integer>> adjacencyList) {
-		Frequency outgoingEdgesFreq = new Frequency();
-		for (int bidderId : adjacencyList.keySet()) {
-			int outEdges = adjacencyList.get(bidderId).size();
-			outgoingEdgesFreq.addValue(outEdges);
-		}
-		
-		Chart chart = new Chart();
-		
-		List<Integer> series = new ArrayList<Integer>();
-		for (int i = 1; i < 100; i++) {
-			int freq = (int) outgoingEdgesFreq.getCount(i);
-			if (freq > 0)
-			series.add(freq);
-		}
-			
-		chart.addSeries(series, "blabhalhb");
-		chart.build();
 	}
 }

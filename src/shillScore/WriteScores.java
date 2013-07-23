@@ -41,9 +41,16 @@ public class WriteScores {
 		return writeShillScores(shillScores, auctionCounts, suffix, moreThanTwoAuctions, reweights);
 	}
 	
+	public static final KeepTest alwaysYes = new KeepTest(){public boolean keep(ShillScore ss) {return true;};};
+	
+	public static Path writeShillScores(String outputDirectory, Map<Integer, ShillScore> shillScores, Multiset<Integer> auctionCounts, String suffix, double[]... reweights) {
+		return writeShillScores(outputDirectory, shillScores, auctionCounts, suffix, alwaysYes, reweights);
+	}
 	public static Path writeShillScores(Map<Integer, ShillScore> shillScores, Multiset<Integer> auctionCounts, String suffix, double[]... reweights) {
-		KeepTest alwaysYes = new KeepTest(){public boolean keep(ShillScore ss) {return true;};};
 		return writeShillScores(shillScores, auctionCounts, suffix, alwaysYes, reweights);
+	}
+	public static Path writeShillScores(Map<Integer, ShillScore> shillScores, Multiset<Integer> auctionCounts, String suffix, KeepTest condition, double[]... reweights) {
+		return writeShillScores("shillingResults", shillScores, auctionCounts, suffix, condition, reweights);
 	}
 	/**
 	 * Writes shill scores of all users to a file.
@@ -52,8 +59,8 @@ public class WriteScores {
 	 * @param auctionCounts map containing sellerIds mapped to number of auctions they submitted
 	 * @param suffix string added to the end of the filename
 	 */
-	public static Path writeShillScores(Map<Integer, ShillScore> shillScores, Multiset<Integer> auctionCounts, String suffix, KeepTest condition, double[]... reweights) {
-		Path ssFile = Paths.get("shillingResults", "ShillScores_" + suffix + ".csv");
+	public static Path writeShillScores(String outputDirectory, Map<Integer, ShillScore> shillScores, Multiset<Integer> auctionCounts, String suffix, KeepTest condition, double[]... reweights) {
+		Path ssFile = Paths.get(outputDirectory, "ShillScores_" + suffix + ".csv");
 		try (BufferedWriter bw = Files.newBufferedWriter(ssFile, Charset.defaultCharset())) {
 			bw.append(shillScoreHeadings(reweights));
 			bw.newLine();

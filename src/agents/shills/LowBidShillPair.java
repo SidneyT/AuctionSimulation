@@ -7,9 +7,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+
+import com.google.common.collect.ArrayListMultimap;
 
 import simulator.AgentAdder;
 import simulator.AuctionHouse;
@@ -91,7 +94,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 	
 //	private final Set<Auction> shillAuctionsFirstNo = new HashSet<>();
 	private final Set<Auction> waiting = new HashSet<>();
-	private final Map<Long, List<Auction>> futureBid = new HashMap<>();
+	private final ArrayListMultimap<Long, Auction> futureBid = ArrayListMultimap.create();
 	@Override
 	public void run() {
 		super.run();
@@ -119,7 +122,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 				if (wait > 0) {
 					// record when to bid in the future
 					waiting.add(shillAuction);
-					Util.mapListAdd(futureBid, currentTime + wait, shillAuction);
+					futureBid.put(currentTime + wait, shillAuction);
 				} else {
 					sb.makeBid(shillAuction, this.strategy1.bidAmount(shillAuction));
 				}
@@ -127,7 +130,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 		}
 		
 		// submit a bid for auctions that have finished waiting
-		List<Auction> finishedWaiting = futureBid.remove(currentTime);
+		List<Auction> finishedWaiting = futureBid.removeAll(currentTime);
 		if (finishedWaiting != null) {
 			for (Auction shillAuction : finishedWaiting) {
 				sb.makeBid(shillAuction, this.strategy1.bidAmount(shillAuction));
@@ -144,10 +147,12 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 	
 	private List<Integer> auctionTimes;
+	public final Random r = new Random();
 	private void setNumberOfAuctions(int numberOfAuctions) {
 		auctionTimes = new ArrayList<>();
+		int latest = 100 * 24 * 60 / 5;
 		for (int i = 0; i < numberOfAuctions; i++) {
-			auctionTimes.add(Util.randomInt(Math.random(), 0, (int) (100 * 24 * 60 / 5 + 0.5)));
+			auctionTimes.add(r.nextInt(latest));
 		}
 		Collections.sort(auctionTimes, Collections.reverseOrder());
 	}

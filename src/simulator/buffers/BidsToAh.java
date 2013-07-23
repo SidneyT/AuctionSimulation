@@ -1,20 +1,18 @@
 package simulator.buffers;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
 
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 
 public class BidsToAh {
 
-	private final ConcurrentHashMap<Auction, List<Bid>> map;
+	private final ListMultimap<Auction, Bid> map;
 	
 	public BidsToAh() {
-		this.map = new ConcurrentHashMap<Auction, List<Bid>>();
+		this.map = Multimaps.synchronizedListMultimap(ArrayListMultimap.<Auction, Bid>create());
 	}
 	
 	public void endAhTurn() {
@@ -28,7 +26,7 @@ public class BidsToAh {
 	 * ONLY TO BE CALLED BY AuctionHouse
 	 * Don't need to synchronise when it's a read by 1 thread...? 
 	 */
-	public Map<Auction, List<Bid>> get() {
+	public ListMultimap<Auction, Bid> get() {
 		return this.map;
 	}
 	
@@ -36,11 +34,7 @@ public class BidsToAh {
 	 * NOT TO BE CALLED BY AuctionHouse
 	 */
 	public void put(Auction auction, Bid bid) {
-		if (!this.map.containsKey(auction)) {
-			List<Bid> newAuctionBids = Collections.synchronizedList(new ArrayList<Bid>());
-			map.putIfAbsent(auction, newAuctionBids);
-		}
-		this.map.get(auction).add(bid);
+		map.put(auction, bid);
 	}
 	
 }

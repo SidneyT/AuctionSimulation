@@ -24,7 +24,7 @@ public class AlternatingAuction extends CollusiveShillController {
 
 	public AlternatingAuction(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur,
 			List<ItemType> types, Strategy strategy, int numBidder) {
-		super(bh, ps, is, ah, ur, types, strategy, 1, numBidder);
+		super(bh, ps, is, ah, ur, types, strategy, 1, numBidder, 40);
 	}
 
 	Map<Auction, PuppetBidder> AuctionsAssigned = new HashMap<>(); // Map<auction, bidder assigned to that auction> 
@@ -58,7 +58,7 @@ public class AlternatingAuction extends CollusiveShillController {
 			
 			@Override
 			public String toString() {
-				return "AgentAdderAlternatingAuction:" + numberOfGroups;
+				return "AlternatingAuction:" + numberOfGroups;
 			}
 		};
 	}
@@ -66,6 +66,11 @@ public class AlternatingAuction extends CollusiveShillController {
 	public static void main(String[] args) {
 		final int numberOfGroups = 1;
 		Main.run(SaveToDatabase.instance(), getAgentAdder(numberOfGroups, new TrevathanStrategy(0.85, 0.85, 0.85), 4));
+	}
+
+	@Override
+	protected PuppetSeller pickSeller() {
+		return css.get(0);
 	}
 	
 }

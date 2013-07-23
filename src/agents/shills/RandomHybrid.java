@@ -1,14 +1,10 @@
 package agents.shills;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
+
 import org.apache.log4j.Logger;
-
-import agents.shills.strategies.Strategy;
-
 
 import simulator.AgentAdder;
 import simulator.AuctionHouse;
@@ -16,21 +12,19 @@ import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
-import simulator.objects.Auction;
 import simulator.records.UserRecord;
 import util.Sample;
-import util.Util;
+import agents.shills.strategies.Strategy;
 
 /**
- * Extends Hybrid, but uses a random number of shill bidders to work together in each auction
+ * Extends Hybrid, but uses a random number of shill bidders to work together in each auction.
  */
 public class RandomHybrid extends Hybrid {
 	
 	private static Logger logger = Logger.getLogger(RandomHybrid.class);
-
 	
 	public RandomHybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numBidder) {
-		super(bh, ps, is, ah, ur, types, strategy, numBidder);
+		super(bh, ps, is, ah, ur, types, strategy, 1, numBidder, 2, 40);
 	}
 
 	private final Random r = new Random();
@@ -38,7 +32,7 @@ public class RandomHybrid extends Hybrid {
 	protected List<PuppetBidder> selectSet() {
 		int num = r.nextInt(cbs.size() + 1);
 		// pick users from available
-		List<PuppetBidder> selected = Sample.getSample(cbs.iterator(), num);
+		List<PuppetBidder> selected = Sample.randomSample(cbs, num, r);
 		return selected;
 	}
 

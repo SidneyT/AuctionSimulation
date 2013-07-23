@@ -38,6 +38,9 @@ import agents.bidders.ClusterEarly;
 import agents.bidders.ClusterSnipe;
 import agents.sellers.TMSeller;
 import agents.sellers.TimedSeller;
+import agents.shills.HybridLowPrice;
+import agents.shills.HybridT;
+import agents.shills.HybridTVaryCollusion;
 import agents.shills.SimpleShillPair;
 import agents.shills.strategies.LateStartTrevathanStrategy;
 import agents.shills.strategies.LowPriceStrategy;
@@ -52,8 +55,11 @@ public class Main {
 
 	public static void main(String[] args) throws InterruptedException {
 		System.out.println("Start.");
-//		normalsOnly();
-		withFraudsIntoDiffDatabases();
+		long t1 = System.nanoTime();
+		normalsOnly();
+		long delta = System.nanoTime() - t1;
+		System.out.println(delta / 1000000);
+//		withFraudsIntoDiffDatabases();
 		System.out.println("Finished.");
 	}
 
@@ -61,27 +67,38 @@ public class Main {
 	public static void withFraudsIntoDiffDatabases() {
 		Strategy travethan = new TrevathanStrategy(0.95, 0.85, 0.85);
 		Strategy waitStart = new WaitStartStrategy(0.95, 0.85, 0.85);
+		Strategy lowPrice = new LowPriceStrategy();
 
-		AgentAdder trevathan = SimpleShillPair.getAgentAdder(30, travethan); // can use 20, since each submits 10 auctions.
+//		AgentAdder trevathan = SimpleShillPair.getAgentAdder(30, travethan); // can use 20, since each submits 10 auctions.
+//		for (int i = 0; i < 30; i++) {
+//			String databaseName = "auction_simulation_simple" + i;
+//			// construct database and tables to store simulation data
+//			DBConnection.createDatabase(databaseName);
+//			SimulationCreateTableStmts.createSimulationTables(databaseName);
+//			
+//			// run the simulation and store everything into the database
+//			Main.run(SaveToDatabase.instance(databaseName), trevathan);
+//		}
+//
+//		AgentAdder delayedStart = SimpleShillPair.getAgentAdder(30, waitStart);
+//		for (int i = 0; i < 30; i++) {
+//			String databaseName = "auction_simulation_delayedStart" + i;
+//			// construct database and tables to store simulation data
+//			DBConnection.createDatabase(databaseName);
+//			SimulationCreateTableStmts.createSimulationTables(databaseName);
+//			
+//			// run the simulation and store everything into the database
+//			Main.run(SaveToDatabase.instance(databaseName), delayedStart);
+//		}
+		AgentAdder hybrid = HybridLowPrice.getAgentAdder(20, waitStart, lowPrice); // can use 20, since each submits 10 auctions.
 		for (int i = 0; i < 30; i++) {
-			String databaseName = "auction_simulation_simple" + i;
+			String databaseName = "syn_hybridLP_" + i;
 			// construct database and tables to store simulation data
-			DBConnection.createDatabase(databaseName);
-			SimulationCreateTableStmts.createSimulationTables(databaseName);
+//			DBConnection.createDatabase(databaseName);
+//			SimulationCreateTableStmts.createSimulationTables(databaseName);
 			
 			// run the simulation and store everything into the database
-			Main.run(SaveToDatabase.instance(databaseName), trevathan);
-		}
-
-		AgentAdder delayedStart = SimpleShillPair.getAgentAdder(30, waitStart);
-		for (int i = 0; i < 30; i++) {
-			String databaseName = "auction_simulation_delayedStart" + i;
-			// construct database and tables to store simulation data
-			DBConnection.createDatabase(databaseName);
-			SimulationCreateTableStmts.createSimulationTables(databaseName);
-			
-			// run the simulation and store everything into the database
-			Main.run(SaveToDatabase.instance(databaseName), delayedStart);
+			Main.run(SaveToDatabase.instance(databaseName), hybrid);
 		}
 		
 	}
@@ -142,11 +159,12 @@ public class Main {
 //		double probIsSniper = 0.33; // from tradeMeData
 		final double probIsSniper = 0.5;
 		ClusterBidder.setNumUsers(numClusterBidder);
-		for (int i = 0; i < (long) ((1 - probIsSniper) * numClusterBidder + 0.5); i++) {
-			userRecord.addUser(new ClusterEarly(bh, ps, is, ah, itemTypes));
-		}
-		for (int i = 0; i < (long) (probIsSniper * numClusterBidder + 0.5); i++) {
+		int numberOfSnipers = (int) (probIsSniper * numClusterBidder + 0.5);
+		for (int i = 0; i < numberOfSnipers; i++) {
 			userRecord.addUser(new ClusterSnipe(bh, ps, is, ah, itemTypes));
+		}
+		for (int i = 0; i < numClusterBidder - numberOfSnipers; i++) {
+			userRecord.addUser(new ClusterEarly(bh, ps, is, ah, itemTypes));
 		}
 //		System.out.println("average: " + ClusterBidder.debugAverage);
 

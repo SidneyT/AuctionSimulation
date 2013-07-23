@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+
+import com.google.common.collect.ArrayListMultimap;
 
 
 import simulator.AuctionHouse;
@@ -74,7 +77,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 	}
 	
 	private final Set<Auction> waiting = new HashSet<>();
-	private final Map<Long, List<Auction>> futureBid = new HashMap<>();
+	private final ArrayListMultimap<Long, Auction> futureBid = ArrayListMultimap.create();
 	@Override
 	public void run() {
 		super.run();
@@ -99,7 +102,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 //				if (wait > 0) {
 //					// record when to bid in the future
 					waiting.add(shillAuction);
-					Util.mapListAdd(futureBid, currentTime + wait, shillAuction);
+					futureBid.put(currentTime + wait, shillAuction);
 //					System.out.println(currentTime + ": delay by " + wait + " to " + (currentTime + wait) + " at " + shillAuction + " for " + shillAuction.getId());
 //				} else {
 //					PuppetBidder chosen = pickBidder(shillAuction);
@@ -110,7 +113,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 		}
 		
 		// submit a bid for auctions that have finished waiting
-		List<Auction> finishedWaiting = futureBid.remove(currentTime);
+		List<Auction> finishedWaiting = futureBid.removeAll(currentTime);
 		if (finishedWaiting != null) {
 			Set<Auction> finishedWaitingSet = new HashSet<>(finishedWaiting);
 			if (finishedWaitingSet.size() != finishedWaiting.size()) {
@@ -133,10 +136,12 @@ public abstract class CollusiveShillController extends EventListener implements 
 	}
 	
 	private List<Integer> auctionTimes;
+	public final Random r = new Random();
 	private void setNumberOfAuctions(int numberOfAuctions) {
 		auctionTimes = new ArrayList<>();
+		int latest = 100 * 24 * 60 / 5;
 		for (int i = 0; i < numberOfAuctions; i++) {
-			auctionTimes.add(Util.randomInt(Math.random(), 0, (int) (100 * 24 * 60 / 5 + 0.5)));
+			auctionTimes.add(r.nextInt(latest));
 		}
 		Collections.sort(auctionTimes, Collections.reverseOrder());
 	}

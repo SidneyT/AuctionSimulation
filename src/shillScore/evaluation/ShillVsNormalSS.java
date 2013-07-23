@@ -44,7 +44,8 @@ public class ShillVsNormalSS {
 	
 	public static void main(String[] args) {
 //		go("SingleShill");
-		ssPercentiles("TrevathanSimpleShill");
+//		ssPercentiles("TrevathanSimpleShill");
+		ssPercentiles("ShillScores_Hybrid");
 	}
 	
 	/**
@@ -53,7 +54,7 @@ public class ShillVsNormalSS {
 	 * @param filenamePart used for filename filter, to look for files with the names you want
 	 */
 	public static void ssPercentiles(final String filenamePart) {
-		File[] files = new File("shillingResults/").listFiles(new FilenameFilter() {
+		File[] files = new File("shillingResults/hybrid_waitStart").listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				return name.contains(filenamePart);
@@ -71,7 +72,7 @@ public class ShillVsNormalSS {
 			}
 		}
 		
-		writeTpFps(Paths.get("shillingResults", "comparisons", "TpFpsSS.csv"), generateTpFp(allPercentiles));
+//		writeTpFps(Paths.get("shillingResults", "comparisons", "TpFpsSS.csv"), generateTpFp(allPercentiles));
 		
 	}
 	
@@ -82,18 +83,22 @@ public class ShillVsNormalSS {
 		String[] nextLine;
 		List<Double> normalSS = new ArrayList<>();
 		List<Double> shillerSS = new ArrayList<>();
+		int fraudCount = 0;
 		while ((nextLine = reader.readNext()) != null) {
-			int id = Integer.parseInt(nextLine[0]);
+			int id = Integer.parseInt(nextLine[1]);
 			double ss = Double.parseDouble(nextLine[9]); // 10th element is the shill score
 			
 			// sort scores of normal/shill users into different lists
-			if (id <= 4000) {
-				normalSS.add(ss);
-			} else {
+			String userType = nextLine[0];
+			if (userType.startsWith("Puppet")) {
+				fraudCount++;
 				shillerSS.add(ss);
+			} else {
+				normalSS.add(ss);
 			}
 		}
 		reader.close();
+		System.out.println("fCount: " + fraudCount);
 		
 		// get the runNumber
 		String[] bitsOfName = file.getName().replaceAll(".csv", "").split("\\.");
@@ -111,26 +116,6 @@ public class ShillVsNormalSS {
 	 * @param values2
 	 * @return number between 0 and 1.
 	 */
-	public static List<Double> percentiles2(List<Double> values1, List<Double> values2) {
-		Frequency frequency = new Frequency();
-		for (double v : values1) {
-			frequency.addValue(v);
-		}
-
-		System.out.println((double) frequency.getCumFreq(2.146465461) / values1.size() + "");
-		
-		List<Double> percentiles = new ArrayList<>(values2.size());
-		int i = 0;
-		for (double v : values2) {
-			double percentile = (double) frequency.getCumFreq(v) / values1.size();
-			percentiles.add(percentile);
-			i++;
-			System.out.println(i + " " + percentile);
-			
-		}
-		return percentiles;
-	}
-	
 	public static List<Double> percentiles(List<Double> values1, List<Double> values2) {
 		double[] valuesA = Doubles.toArray(values1);
 		Arrays.sort(valuesA);
@@ -184,8 +169,8 @@ public class ShillVsNormalSS {
 	
 	/**
 	 * 
-	 * Write the lists of percentiles into a csv file, with the i-th element from each list in the i-th line of the file
-	 * E.g. (1,2), (3,4) gives 1,3 \n 2,4
+	 * Write the lists of percentiles into a csv file, with the i-th element from each list is written to the i-th line of the file
+	 * E.g. (1, 2, 3, 4), (5, 6, 7, 8) gives 1,5 \n 2,6 \n 3,7 \n 4,8
 	 * 
 	 * @param path
 	 * @param runLabel

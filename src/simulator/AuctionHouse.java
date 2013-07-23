@@ -4,22 +4,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
-import org.hamcrest.core.IsInstanceOf;
+
+import com.google.common.collect.ListMultimap;
 
 import agents.EventListener;
 import agents.SimpleUser;
-import agents.puppets.Puppet;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.Message;
 import simulator.buffers.MessageType;
 import simulator.buffers.MessagesToUsers;
 import simulator.database.SaveObjects;
-import simulator.database.SaveToDatabase;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.objects.Feedback;
@@ -150,7 +148,7 @@ public class AuctionHouse implements Runnable {
 	}
 
 	private void processBidMessages() {
-		Map<Auction, List<Bid>> allBids = this.buffers.getBidMessageToAh().get();
+		ListMultimap<Auction, Bid> allBids = this.buffers.getBidMessageToAh().get();
 		MessagesToUsers buffer = this.buffers.getMessagesToUsers();
 
 		for (Auction auction : allBids.keySet()) {

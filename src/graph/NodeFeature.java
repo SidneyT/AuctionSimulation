@@ -123,6 +123,10 @@ enum NodeFeature implements NodeFeatureI {
 //		}
 	};
 	
+	/**
+	 * Finds the jaccard value between this user and its neighbours.
+	 * These values are combined into 1 depending on the SumStatI parameter.
+	 */
 	public static NodeFeatureI jaccard(final SumStatI type) {
 		return new NodeFeatureI() {
 			@Override

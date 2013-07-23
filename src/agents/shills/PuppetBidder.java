@@ -1,14 +1,11 @@
 package agents.shills;
 
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
-import simulator.buffers.ItemSender.ItemSold;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import agents.SimpleUser;
@@ -36,29 +33,22 @@ public class PuppetBidder extends SimpleUser {
 	public void makeBid(Auction auction, int bidPrice) {
 		ah.registerForAuction(this, auction);
 		Bid bid = new Bid(this, bidPrice);
-		System.out.println(this + " made bid " + bid);
+//		System.out.println(this + " made bid " + bid);
 		this.bh.getBidMessageToAh().put(auction, bid);
 	}
 	
 	/**
-	 * Makes the lowest valid bid for this auction.
-	 * Calls {@link #makeBid(Auction, int)} with the minimum possible bid.
-	 * @param auction
+	 * Tell the controller when this agent wins an auction.
 	 */
-//	public void makeBid(Auction auction) {
-//		this.makeBid(auction, auction.minimumBid());
-//	}
-
-	protected void itemReceivedAction(Set<ItemSold> itemSet) {
-		super.itemReceivedAction(itemSet);
-	}
-	
 	@Override
 	protected void winAction(Auction auction, long time) {
 //		super.winAction(auction, time);
 		controller.winAction(this, auction);
 	}
 
+	/**
+	 * Tell the controller when this agent loses an auction.
+	 */
 	@Override
 	protected void lossAction(Auction auction, long time) {
 //		super.lossAction(auction, time);

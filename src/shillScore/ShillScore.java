@@ -95,8 +95,8 @@ public class ShillScore {
 	}
 	
 	public static class Thing {
-		final List<Integer> sellerIds;
-		final double maxAlpha;
+		public final List<Integer> sellerIds;
+		public final double maxAlpha;
 		public Thing(List<Integer> sellerIds, double maxAlpha) {
 			this.sellerIds = sellerIds;
 			this.maxAlpha = maxAlpha;

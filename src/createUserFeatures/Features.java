@@ -402,4 +402,17 @@ public enum Features {
 		allFeaturesMinusType.remove(UserType0b);
 		ALL_FEATURES_MINUS_TYPE = ImmutableList.copyOf(allFeaturesMinusType);
 	}
+	public static final List<Features> FEATURES_FOR_DT = Arrays.<Features>asList(
+			Features.UserType0b,
+			Features.AvgBid3Ln,
+			Features.AvgBidIncMinusMinInc4Ln,
+			Features.PropWin5,
+			Features.BidsPerAuc6Ln,
+			Features.BidTimesElapsed9,
+			Features.AvgBidPropMax10,
+			Features.AvgBidProp11,
+			Features.BidTimesMinsBeforeEnd12,
+			Features.AvgFinalBidAmountPropMax14,
+			Features.AvgLastBidAmount19Ln
+		);
 }

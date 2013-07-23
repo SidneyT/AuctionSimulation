@@ -79,23 +79,28 @@ public class SimDBAuctionIterator implements SimAuctionIterator {
 			try {
 				while (rs.next()) {
 					int nextId = rs.getInt("listingId");
-					if (listingId != nextId) {
+					if (listingId != nextId) { // if not equal, then this is the first bid from a different auction
 						if (listingId == -1) { // first auction, so don't return anything.
 							listingId = nextId;
 							auction = new SimAuction(rs.getInt("listingId"), rs.getInt("winnerId"), rs.getInt("sellerId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("endTime")), rs.getInt("itemTypeId"));
 							bids = new ArrayList<>();
 						} else {
+							// process the auction and bids list for the last auction
+							Pair<SimAuction, List<BidObject>> resultPair;
+							int resultPairBidCount = bids.size();
+							if (trim && resultPairBidCount > 20) { // logic for keeping the last 20 bids in the auction, like in TradeMe
+								List<BidObject> trimmedBids = new ArrayList<>(bids.subList(resultPairBidCount - 20, resultPairBidCount));
+								resultPair = new Pair<>(auction, trimmedBids);
+							} else {
+								resultPair = new Pair<>(auction, bids); 
+							}
+							
 							listingId = nextId;
-							Pair<SimAuction, List<BidObject>> resultPair = new Pair<>(auction, bids); 
 							auction = new SimAuction(rs.getInt("listingId"), rs.getInt("winnerId"), rs.getInt("sellerId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("endTime")), rs.getInt("itemTypeId"));
 							bids = new ArrayList<>();
 							BidObject bid = new BidObject(rs.getInt("bidderId"), rs.getInt("listingId"), BuildSimFeatures.convertTimeunitToTimestamp(rs.getLong("bidTime")), rs.getInt("bidAmount"));
 							bids.add(bid);
 							
-							int resultPairBidCount = resultPair.getValue().size();
-							if (trim && resultPairBidCount > 20) { // logic for keeping the last 20 bids in the auction, like in TradeMe
-								resultPair.getValue().subList(resultPairBidCount - 20, resultPairBidCount);
-							}
 							
 							if (auction == null) {
 								throw new RuntimeException("auction should never be null here.");

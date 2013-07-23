@@ -1,5 +1,6 @@
 package shillScore.evaluation;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -23,9 +24,7 @@ import agents.repFraud.MultipleRepFraud;
 import agents.repFraud.SingleRepFraud;
 import agents.shills.Hybrid;
 import agents.shills.LowBidShillPair;
-import agents.shills.ModifiedHybrid;
-import agents.shills.MultiSellerHybrid;
-import agents.shills.NonAltHybrid;
+import agents.shills.HybridLowPrice;
 import agents.shills.RandomHybrid;
 import agents.shills.SimpleShillPair;
 import agents.shills.strategies.LowPriceStrategy;
@@ -69,15 +68,12 @@ public class GenerateShillData {
 		AgentAdder simplePairAdderD = SimpleShillPair.getAgentAdder(20, waitStart);
 		AgentAdder hybridAdderA = Hybrid.getAgentAdder(5, travethan, 4); // use only 5 groups, since each group submits 40 auctions. if too many will affect normal auctions too much. 
 		AgentAdder hybridAdderB = Hybrid.getAgentAdder(1, waitStart, 4);
-		AgentAdder hybridAdderC = ModifiedHybrid.getAgentAdder(5, lateStart, lowPrice, 4);
+		AgentAdder hybridAdderC = HybridLowPrice.getAgentAdder(5, lateStart, lowPrice);
 		AgentAdder randomHybridAdderA = RandomHybrid.getAgentAdder(5, travethan, 4);
-		AgentAdder multisellerHybridAdderA = MultiSellerHybrid.getAgentAdder(5, travethan, 3, 4);
 		
 		AgentAdder repFraudA = SingleRepFraud.getAgentAdder(1, 20);
 		AgentAdder repFraudB = MultipleRepFraud.getAgentAdder(1, 10, 20);
 		
-		AgentAdder nonAltHybridA = NonAltHybrid.getAgentAdder(5, travethan, 4);
-
 		int numberOfRuns = 1;
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
@@ -89,7 +85,8 @@ public class GenerateShillData {
 //		writeSSandPercentiles(simplePairAdderB, numberOfRuns);
 //		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
 		
-		collusiveShillPairMultipleRuns(hybridAdderB, numberOfRuns);
+//		collusiveShillPairMultipleRuns(hybridAdderB, numberOfRuns);
+		buildFeaturesAndSSFromDB("shillingResults/hybridlp", hybridAdderC, 30, new double[]{1,1,1,1,1,1});
 //		collusiveShillPairMultipleRuns(randomHybridAdderA, numberOfRuns);
 //		collusiveShillPairMultipleRuns(multisellerHybridAdderA, numberOfRuns);
 //		collusiveShillPairMultipleRuns(hybridAdderC, numberOfRuns);
@@ -131,12 +128,39 @@ public class GenerateShillData {
 //					featuresSelected, 
 //					Paths.get("single_feature_shillvsnormal", "syn_" + adder + "_" + Features.fileLabels(featuresSelected) + "_" + runNumber + ".csv")
 //					);
-//			writeSSandPercentiles(simAuctionIterator, adder, runNumber, weightSets); // build and write shill scores
+			writeSSandPercentiles(simAuctionIterator, adder, runNumber, weightSets); // build and write shill scores
 			
 //			return;
 		}
 	}
 	
+	/**
+	 * Reads from the database to build csv files with features and shill score ratings.
+	 */
+	public static void buildFeaturesAndSSFromDB(String outputDirectory, AgentAdder adder, int numberOfRuns, double[]... weightSets) {
+		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
+			System.out.println("Reading run " + runNumber);
+			
+			List<Features> featuresSelected = Features.FEATURES_FOR_DT;
+
+			Connection conn = DBConnection.getConnection("auction_simulation_hybrid" + runNumber);
+			SimAuctionIterator simAuctionIterator = new SimDBAuctionIterator(conn, true);
+			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator); // build features
+			
+			// write results to file
+			BuildSimFeatures.writeToFile(userFeatures.values(), // write features
+					featuresSelected, 
+//					Paths.get("single_feature_shillvsnormal", "syn_" + adder + "_" + Features.fileLabels(featuresSelected) + "_" + runNumber + ".csv")
+					Paths.get(outputDirectory, "syn_" + adder + "_" + Features.fileLabels(featuresSelected) + "_" + runNumber + ".csv")
+					);
+			writeSSandPercentiles(outputDirectory, simAuctionIterator, adder, runNumber, weightSets); // build and write shill scores
+		}
+	}
+	
+	private static void writeSSandPercentiles(SimAuctionIterator simAuctionIterator, AgentAdder adder, int runNumber, double[]... weightSets) {
+		writeSSandPercentiles("shillingResults/comparisons", simAuctionIterator, adder, runNumber, weightSets);
+	}
+
 	/**
 	 * Calculate shill scores for synthetic data.
 	 * Write those scores out to files, and also the ssPercentiles. 
@@ -144,14 +168,14 @@ public class GenerateShillData {
 	 * @param runNumber
 	 * @param weightSets
 	 */
-	private static void writeSSandPercentiles(SimAuctionIterator simAuctionIterator, AgentAdder adder, int runNumber, double[]... weightSets) {
+	private static void writeSSandPercentiles(String outputFolder, SimAuctionIterator simAuctionIterator, AgentAdder adder, int runNumber, double[]... weightSets) {
 		String runLabel = adder.toString() + "." + runNumber;
 
 		// build shillScores
 		ShillScoreInfo ssi = BuildShillScore.build(simAuctionIterator);
 		
 		// write out shill scores
-		WriteScores.writeShillScores(ssi.shillScores, ssi.auctionCounts, runLabel, weightSets);
+		WriteScores.writeShillScores(outputFolder, ssi.shillScores, ssi.auctionCounts, runLabel, weightSets);
 		
 		// write out how many wins/losses by shills, and the normalised final price compared to non-shill auctions
 		ShillWinLossPrice.writeToFile(simAuctionIterator, runLabel);
@@ -167,26 +191,31 @@ public class GenerateShillData {
 		}
 		
 		// write out percentiles
-		ShillVsNormalSS.writePercentiles(Paths.get("shillingResults", "comparisons", "ssPercentiles.csv"), ssPercentilesRunLabel, ssPercentiless);
+		ShillVsNormalSS.writePercentiles(Paths.get(outputFolder, "ssPercentiles-" + adder + ".csv"), ssPercentilesRunLabel, ssPercentiless);
 		
 		// write out the number of shill auctions for which the shill had the highest (or not highest) SS
-		ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, simAuctionIterator.users(), Paths.get("shillingResults", "comparisons", "rank.csv"), runLabel, weightSets);
+		ShillVsNormalSS.ssRankForShills(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, simAuctionIterator.users(), Paths.get(outputFolder, "rank.csv"), runLabel, weightSets);
 		
 //		WriteScores.writeShillScoresForAuctions(ssi.shillScores, ssi.auctionBidders, ssi.auctionCounts, runLabel);
 	}
-
+	
 	public static List<Double> splitAndCalculatePercentiles(Collection<ShillScore> sss, Multiset<Integer> auctionCounts, double[] weights) {
 		List<Double> shillSS = new ArrayList<>();
 		List<Double> normalSS = new ArrayList<>();
-		
+//		int fraudCount = 0;
 		for (ShillScore ss : sss) { // sort SS for shills and normals into different lists
-			if (ss.userType.toLowerCase().contains("puppet")) { // TODO:
-//			if (ss.getId() > 5000) { // TODO:
-				shillSS.add(ss.getShillScore(auctionCounts, weights));
+			double shillScore = ss.getShillScore(auctionCounts, weights);
+			if (Double.isNaN(shillScore)) // skip users who have an uncomputable shillscore
+				continue;
+			if (ss.userType.toLowerCase().contains("puppet")) { 
+//				fraudCount++;
+//				System.out.println("ss: " + ss.getId() + "-" + shillScore);
+				shillSS.add(shillScore);
 			} else {
-				normalSS.add(ss.getShillScore(auctionCounts, weights));
+				normalSS.add(shillScore);
 			}
 		}
+//		System.out.println("fCount: " + fraudCount);
 		return ShillVsNormalSS.percentiles(normalSS, shillSS);
 	}
 	
