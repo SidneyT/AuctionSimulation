@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import agents.SimpleUser;
+import agents.SimpleUserI;
 
 import simulator.objects.Auction;
 import simulator.objects.Item;
@@ -26,7 +27,7 @@ public class ItemSender implements Runnable {
 	}
 
 	public void send(long delay, Auction auction, Item item, ItemCondition cond,
-			SimpleUser sender, SimpleUser recipient) {
+			SimpleUserI sender, SimpleUser recipient) {
 		Set<ItemHolder> paymentHolderSet = this.delayedItems.get(this.time + delay);
 		synchronized (this.delayedItems) {
 			if (paymentHolderSet == null) {
@@ -40,7 +41,7 @@ public class ItemSender implements Runnable {
 	/**
 	 * Returns synchronised set of payments made to the user.
 	 */
-	public Set<ItemSold> receive(SimpleUser recipient) {
+	public Set<ItemSold> receive(SimpleUserI recipient) {
 		return this.readyItems.remove(recipient);
 	}
 
@@ -90,9 +91,9 @@ public class ItemSender implements Runnable {
 		private final Auction auction;
 		private final Item item;
 		private final ItemCondition cond;
-		private final SimpleUser sender;
+		private final SimpleUserI sender;
 
-		private ItemSold(Auction auction, Item item, ItemCondition cond, SimpleUser sender) {
+		private ItemSold(Auction auction, Item item, ItemCondition cond, SimpleUserI sender) {
 			this.auction = auction;
 			this.item = item;
 			this.cond = cond;
@@ -107,7 +108,7 @@ public class ItemSender implements Runnable {
 			return this.item;
 		}
 
-		public SimpleUser getSender() {
+		public SimpleUserI getSender() {
 			return this.sender;
 		}
 		

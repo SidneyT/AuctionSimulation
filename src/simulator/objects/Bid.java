@@ -83,11 +83,6 @@ public class Bid implements Comparable<Bid> {
 	// sorts bids from lowest to highest
 	@Override
 	public int compareTo(Bid o) {
-		long diff = this.getPrice() - o.getPrice();
-		if (diff > 1)
-			return 1;
-		else if (diff < 1)
-			return -1;
-		else return 0;
+		return Integer.compare(this.getPrice(), o.getPrice());
 	}
 }

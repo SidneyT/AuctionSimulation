@@ -14,6 +14,7 @@ import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
 import simulator.records.UserRecord;
 import util.Sample;
+import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.strategies.Strategy;
 
 /**
@@ -23,16 +24,16 @@ public class RandomHybrid extends Hybrid {
 	
 	private static Logger logger = Logger.getLogger(RandomHybrid.class);
 	
-	public RandomHybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numBidder) {
-		super(bh, ps, is, ah, ur, types, strategy, 1, numBidder, 2, 40);
+	public RandomHybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, PuppetFactoryI factory, int numBidder) {
+		super(bh, ps, is, ah, ur, types, strategy, factory, 1, numBidder, 2, 40);
 	}
 
 	private final Random r = new Random();
 	@Override
-	protected List<PuppetBidder> selectSet() {
+	protected List<PuppetI> selectSet() {
 		int num = r.nextInt(cbs.size() + 1);
 		// pick users from available
-		List<PuppetBidder> selected = Sample.randomSample(cbs, num, r);
+		List<PuppetI> selected = Sample.randomSample(cbs, num, r);
 		return selected;
 	}
 
@@ -41,7 +42,7 @@ public class RandomHybrid extends Hybrid {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					Hybrid sc = new RandomHybrid(bh, ps, is, ah, ur, types, strategy, numBidder);
+					Hybrid sc = new RandomHybrid(bh, ps, is, ah, ur, types, strategy, PuppetBidder.getFactory(), numBidder);
 					ah.addEventListener(sc);
 				}
 			}

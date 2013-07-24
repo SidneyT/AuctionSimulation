@@ -6,8 +6,6 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import agents.puppets.Puppet;
-
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
@@ -27,7 +25,7 @@ import simulator.records.ReputationRecord;
  * Will respond if it wins an auction, receives a payment or receives an item and
  * gives feedback accordingly.
  */
-public abstract class SimpleUser extends EventListener {
+public abstract class SimpleUser extends EventListener implements SimpleUserI {
 	
 	private static final Logger logger = Logger.getLogger(SimpleUser.class);
 
@@ -41,9 +39,15 @@ public abstract class SimpleUser extends EventListener {
 		this.ah = ah;
 		this.ps = ps;
 		this.is = is;
-//		System.out.println("setting id as " + id);
-
 		this.rr = new ReputationRecord();
+	}
+	
+	public SimpleUser(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, int id) {
+		super(bh, id);
+		this.ah = ah;
+		this.ps = ps;
+		this.is = is;
+		this.rr = new ReputationRecord();		
 	}
 	
 	public void addFeedback(Feedback feedback) {
@@ -51,6 +55,10 @@ public abstract class SimpleUser extends EventListener {
 		this.rr.addFeedback(this.getId(), feedback);
 	}
 	
+	/* (non-Javadoc)
+	 * @see agents.SimpleUserI#getReputationRecord()
+	 */
+	@Override
 	public ReputationRecord getReputationRecord() {
 		return this.rr;
 	}
@@ -75,7 +83,7 @@ public abstract class SimpleUser extends EventListener {
 	
 
 	@Override
-	protected void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, long time) {
 		super.winAction(auction, time);
 		this.ps.send(2, auction, auction.getCurrentPrice(), this, auction.getSeller());
 		this.awaitingItem.add(auction);
@@ -86,7 +94,7 @@ public abstract class SimpleUser extends EventListener {
 	 * @param auction
 	 */
 	@Override
-	protected void soldAction(Auction auction, long time) {
+	public void soldAction(Auction auction, long time) {
 		super.soldAction(auction, time);
 		this.awaitingPayment.add(auction);
 	}
@@ -96,7 +104,7 @@ public abstract class SimpleUser extends EventListener {
 	 * @param auction
 	 */
 	@Override
-	protected void gotPaidAction(Collection<Payment> paymentSet) {
+	public void gotPaidAction(Collection<Payment> paymentSet) {
 		super.gotPaidAction(paymentSet);
 		
 		for (Payment payment : paymentSet) {
@@ -113,7 +121,7 @@ public abstract class SimpleUser extends EventListener {
 	 * @param itemSet synchronised set
 	 */
 	@Override
-	protected void itemReceivedAction(Set<ItemSold> itemSet) {
+	public void itemReceivedAction(Set<ItemSold> itemSet) {
 		super.itemReceivedAction(itemSet);
 
 		for (ItemSold item : itemSet) {

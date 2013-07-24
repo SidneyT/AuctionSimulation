@@ -71,12 +71,12 @@ public abstract class ClusterBidder extends SimpleUser {
 //	protected boolean neverBid = true;
 //	protected final long timeToTest;
 	
-	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, ArrayList<ItemType> itemTypes) {
+	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes2) {
 		super(bh, ps, is, ah);
 
 		assert(num_users > 0);
 		
-		this.itemTypes = itemTypes;
+		this.itemTypes = itemTypes2;
 		
 //		this.oneBidAuctionsUnprocessed = new HashSet<Auction>();
 		this.newAuctionsUnprocessed = new ArrayList<Auction>();
@@ -145,7 +145,7 @@ public abstract class ClusterBidder extends SimpleUser {
 	/**
 	 * Selects auctions to bid in, and the time to begin bidding in them.
 	 */
-	protected void selectAuctionsToBidIn() {
+	public void selectAuctionsToBidIn() {
 		long currentTime = this.bh.getTime();
 
 		// don't do anything if you're not scheduled to bid in an auction yet.
@@ -191,7 +191,7 @@ public abstract class ClusterBidder extends SimpleUser {
 	
 //	public static int debugAverage = 0;
 	
-	ArrayList<Long> interestTimes; // sorted in decreasing order
+	public final ArrayList<Long> interestTimes; // sorted in decreasing order
 	// returns number of auctions this user should bid in at this time
 //	protected int shouldBid(int currentTime) {
 //		int result = 0;
@@ -223,7 +223,7 @@ public abstract class ClusterBidder extends SimpleUser {
 			return false;
 		}
 	}
-	protected void participated() {
+	public void participated() {
 		interestTimes.remove(interestTimes.size() - 1);
 	}
 	
@@ -275,55 +275,56 @@ public abstract class ClusterBidder extends SimpleUser {
 	}
 
 //	@Override
-//	protected void cleanUp() {
+//	public void cleanUp() {
 //		alreadyBidThisTurn.clear();
 //	}
 	
-	@Override
-	protected void priceChangeAction(Auction auction, long time) {
-//		if (auction.getBidCount() == 1)
-//			this.oneBidAuctionsUnprocessed.add(auction);
-		
-//		if (makeRebidAuctions.contains(auction) && auction.getWinner() != this) {
-//			makeRebidAuctions.remove(auction);
-//			long bidAmount = calculateBidAmount(auction);
-////			if (r.nextDouble() < likelihoodToRebid(auction.getBidCount()) * valuationEffect(bidAmount, privateValuationProportion)) {
-//			if (r.nextDouble() < likelihoodOfRebid * valuationEffect(bidAmount, privateValuationProportion)) {
-////				logger.debug(this + " making rebid for " + auction + " at " + this.currentTime);
-//				makeBid(auction);
-//			}
-//		}
-		
-	}
+//	@Override
+//	public void priceChangeAction(Auction auction, long time) {
+//		super.newAction(auction, time);
+////		if (auction.getBidCount() == 1)
+////			this.oneBidAuctionsUnprocessed.add(auction);
+//		
+////		if (makeRebidAuctions.contains(auction) && auction.getWinner() != this) {
+////			makeRebidAuctions.remove(auction);
+////			long bidAmount = calculateBidAmount(auction);
+//////			if (r.nextDouble() < likelihoodToRebid(auction.getBidCount()) * valuationEffect(bidAmount, privateValuationProportion)) {
+////			if (r.nextDouble() < likelihoodOfRebid * valuationEffect(bidAmount, privateValuationProportion)) {
+//////				logger.debug(this + " making rebid for " + auction + " at " + this.currentTime);
+////				makeBid(auction);
+////			}
+////		}
+//		
+//	}
 	
 	@Override
-	protected void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, long time) {
 		super.newAction(auction, time);
 
 		this.newAuctionsUnprocessed.add(auction);
 	}
 	
-	@Override
-	protected void lossAction(Auction auction, long time) {
-		super.lossAction(auction, time);
-		
-//		this.oneBidAuctionsUnprocessed.remove(auction);
-	}
+//	@Override
+//	public void lossAction(Auction auction, long time) {
+//		super.lossAction(auction, time);
+//		
+////		this.oneBidAuctionsUnprocessed.remove(auction);
+//	}
+//	
+//	@Override
+//	public void winAction(Auction auction, long time) {
+//		super.winAction(auction, time);
+//		
+////		this.oneBidAuctionsUnprocessed.remove(auction);
+//	}
+//	
+//	@Override
+//	public void expiredAction(Auction auction, long time) {
+//		super.expiredAction(auction, time);
+////		assert(newAuctionsUnprocessed.contains(auction) == false);
+//	}
 	
-	@Override
-	protected void winAction(Auction auction, long time) {
-		super.winAction(auction, time);
-		
-//		this.oneBidAuctionsUnprocessed.remove(auction);
-	}
-	
-	@Override
-	protected void expiredAction(Auction auction, long time) {
-		super.expiredAction(auction, time);
-//		assert(newAuctionsUnprocessed.contains(auction) == false);
-	}
-	
-	protected void makeBid(Auction auction, int bidAmount) {
+	public void makeBid(Auction auction, int bidAmount) {
 		if (auction.getEndTime() < this.bh.getTimeMessage().getTime()) // don't bid if auction finished
 			return;
 		if (auction.getWinner() == this) // don't bid if already winning
@@ -332,7 +333,7 @@ public abstract class ClusterBidder extends SimpleUser {
 		
 		logger.debug(this + " is making bid now at time " + this.bh.getTimeMessage().getTime() + " for " + auction + ".");
 	}
-	protected void makeBid(Auction auction) {
+	public void makeBid(Auction auction) {
 		if (auction.getEndTime() < this.bh.getTimeMessage().getTime()) // don't bid if auction finished
 			return;
 		if (auction.getWinner() == this) // don't bid if already winning

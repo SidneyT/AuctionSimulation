@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 
 import agents.SimpleUser;
+import agents.SimpleUserI;
 
 import simulator.objects.Auction;
 
@@ -43,7 +44,7 @@ public class PaymentSender implements Runnable {
 	/**
 	 * Returns synchronised set of payments made to the user.
 	 */
-	public Collection<Payment> receive(SimpleUser recipient) {
+	public Collection<Payment> receive(SimpleUserI recipient) {
 		return this.readyPayments.remove(recipient);
 	}
 	

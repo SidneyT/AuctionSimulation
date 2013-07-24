@@ -20,7 +20,7 @@ import simulator.objects.Auction;
  * Receives all events from AuctionHouse and ItemSender/PaymentSender and logs them.
  * Doesn't do anything.
  */
-public abstract class EventListener implements Runnable {
+public abstract class EventListener implements Runnable, EventListenerI {
 	private static final Logger logger = Logger.getLogger(EventListener.class);
 
 	private final static AtomicInteger userIdCount = new AtomicInteger(); // for assigning unique ids
@@ -34,6 +34,20 @@ public abstract class EventListener implements Runnable {
 	
 	public EventListener(BufferHolder bh) {
 		this.id = userIdCount.getAndIncrement();
+		
+		this.bh = bh;
+		this.awaitingPayment = new HashSet<Auction>();
+		this.awaitingItem = new HashSet<Auction>();
+	}
+
+	/**
+	 * Use this to define the id of the agent. Use carefully. 
+	 * Used by {@link PuppetClusterBidderCombined}.
+	 * @param bh
+	 * @param id
+	 */
+	public EventListener(BufferHolder bh, int id) {
+		this.id = id;
 		
 		this.bh = bh;
 		this.awaitingPayment = new HashSet<Auction>();
@@ -86,7 +100,7 @@ public abstract class EventListener implements Runnable {
 	 * For bidders
 	 * @param auction
 	 */
-	protected void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, long time) {
 		logger.debug(this + " received " + auction + " " + MessageType.NEW + " at " + time);
 	}
 
@@ -94,7 +108,7 @@ public abstract class EventListener implements Runnable {
 	 * For bidders
 	 * @param auction
 	 */
-	protected void priceChangeAction(Auction auction, long time) {
+	public void priceChangeAction(Auction auction, long time) {
 		logger.debug(this + " received " + auction + " " + MessageType.PRICE_CHANGE + " at " + time);
 	}
 
@@ -102,7 +116,7 @@ public abstract class EventListener implements Runnable {
 	 * For bidders
 	 * @param auction
 	 */
-	protected void lossAction(Auction auction, long time) {
+	public void lossAction(Auction auction, long time) {
 		logger.debug(this + " received " + auction + " " + MessageType.LOSS + " at " + time);
 	}
 
@@ -110,7 +124,7 @@ public abstract class EventListener implements Runnable {
 	 * For bidders
 	 * @param auction
 	 */
-	protected void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, long time) {
 		logger.debug(this + " received " + auction + " " + MessageType.WIN + " at " + time);
 	}
 
@@ -118,7 +132,7 @@ public abstract class EventListener implements Runnable {
 	 * For sellers
 	 * @param auction
 	 */
-	protected void expiredAction(Auction auction, long time) {
+	public void expiredAction(Auction auction, long time) {
 		logger.debug(this + " received " + auction + " " + MessageType.EXPIRED + " at " + time);
 	}
 
@@ -126,7 +140,7 @@ public abstract class EventListener implements Runnable {
 	 * For sellers
 	 * @param auction
 	 */
-	protected void soldAction(Auction auction, long time) {
+	public void soldAction(Auction auction, long time) {
 		logger.debug(this + " received " + auction + " " + MessageType.SOLD + " at " + time);
 	}
 	
@@ -134,7 +148,7 @@ public abstract class EventListener implements Runnable {
 	 * For bidders
 	 * @param auction
 	 */
-	protected void endSoonAction(Auction auction, long time) {
+	public void endSoonAction(Auction auction, long time) {
 		logger.debug(this + " received " + auction + " " + MessageType.END_SOON + " at " + time);
 	}
 	
@@ -142,7 +156,7 @@ public abstract class EventListener implements Runnable {
 	 * For sellers
 	 * @param auction
 	 */
-	protected void gotPaidAction(Collection<Payment> paymentSet) {
+	public void gotPaidAction(Collection<Payment> paymentSet) {
 		logger.debug(this + " received payments " + paymentSet);
 	}
 
@@ -150,7 +164,7 @@ public abstract class EventListener implements Runnable {
 	 * For bidders
 	 * @param auction
 	 */
-	protected void itemReceivedAction(Set<ItemSold> itemSet) {
+	public void itemReceivedAction(Set<ItemSold> itemSet) {
 		logger.debug(this + " received items " + itemSet);
 	}
 	

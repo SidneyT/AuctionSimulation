@@ -33,47 +33,47 @@ public class Puppet extends SimpleUser {
 	}
 
 	@Override
-	protected void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, long time) {
 		master.puppetNewAction(this, auction);
 	}
 
 	@Override
-	protected void priceChangeAction(Auction auction, long time) {
+	public void priceChangeAction(Auction auction, long time) {
 		master.puppetPriceChangeAction(this, auction);
 	}
 
 	@Override
-	protected void lossAction(Auction auction, long time) {
+	public void lossAction(Auction auction, long time) {
 		master.puppetLossAction(this, auction);
 	}
 
 	@Override
-	protected void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, long time) {
 		master.puppetWinAction(this, auction);
 	}
 
 	@Override
-	protected void expiredAction(Auction auction, long time) {
+	public void expiredAction(Auction auction, long time) {
 		master.puppetExpiredAction(this, auction);
 	}
 
 	@Override
-	protected void soldAction(Auction auction, long time) {
+	public void soldAction(Auction auction, long time) {
 		master.puppetSoldAction(this, auction);
 	}
 	
 	@Override
-	protected void gotPaidAction(Collection<Payment> paymentSet) {
+	public void gotPaidAction(Collection<Payment> paymentSet) {
 		master.puppetGotPaidAction(this, paymentSet);
 	}
 
 	@Override
-	protected void itemReceivedAction(Set<ItemSold> itemSet) {
+	public void itemReceivedAction(Set<ItemSold> itemSet) {
 		master.puppetItemReceivedAction(this, itemSet);
 	}
 	
 	@Override
-	protected void endSoonAction(Auction auction, long time) {
+	public void endSoonAction(Auction auction, long time) {
 		master.puppetEndSoonAction(this, auction);
 	}
 }

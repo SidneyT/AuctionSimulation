@@ -27,9 +27,10 @@ import simulator.objects.Feedback;
 import simulator.objects.ItemCondition;
 import simulator.objects.Feedback.Val;
 import simulator.records.UserRecord;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Util;
 import agents.EventListener;
-import agents.SimpleUser;
+import agents.SimpleUserI;
 import agents.shills.strategies.Strategy;
 
 /**
@@ -146,7 +147,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, long time) {
 		super.newAction(auction, time);
 		if (shillAuctions.containsKey(auction)) {
 //			ah.registerForAuction(sb, auction);
@@ -156,20 +157,19 @@ public class SimpleShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void priceChangeAction(Auction auction, long time) {
+	public void priceChangeAction(Auction auction, long time) {
 		super.priceChangeAction(auction, time);
 	}
 
 	@Override
-	public void winAction(SimpleUser agent, Auction auction) {
-	}
-
+	public void winAction(SimpleUserI agent, Auction auction) {throw new NotImplementedException();}
 	@Override
-	public void lossAction(SimpleUser agent, Auction auction) {
-	}
+	public void lossAction(SimpleUserI agent, Auction auction) {throw new NotImplementedException();}
+	@Override
+	public boolean isFraud(Auction auction) {throw new NotImplementedException();}
 	
 	@Override
-	protected void lossAction(Auction auction, long time) {
+	public void lossAction(Auction auction, long time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;
@@ -178,24 +178,24 @@ public class SimpleShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, long time) {
 		assert(false) : "This method should never be called, since this class can never bid/win.";
 	}
 
 	@Override
-	protected void expiredAction(Auction auction, long time) {
+	public void expiredAction(Auction auction, long time) {
 		super.expiredAction(auction, time);
 	}
 
 	@Override
-	protected void soldAction(Auction auction, long time) {
+	public void soldAction(Auction auction, long time) {
 		super.soldAction(auction, time);
 		this.awaitingPayment.add(auction);
 	}
 
 	@Override
 	// acts for the shill bidder. copied from simpleUser, replacing "this" with ss
-	protected void gotPaidAction(Collection<Payment> paymentSet) {
+	public void gotPaidAction(Collection<Payment> paymentSet) {
 		super.gotPaidAction(paymentSet);
 		
 		for (Payment payment : paymentSet) {
@@ -210,7 +210,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 	
 	@Override
 	// acts for the shill seller. copied from simpleUser, replacing "this" with ss
-	protected void itemReceivedAction(Set<ItemSold> itemSet) {
+	public void itemReceivedAction(Set<ItemSold> itemSet) {
 		super.itemReceivedAction(itemSet);
 
 		for (ItemSold item : itemSet) {
@@ -242,5 +242,5 @@ public class SimpleShillPair extends EventListener implements Controller {
 			}
 		};
 	}
-	
+
 }

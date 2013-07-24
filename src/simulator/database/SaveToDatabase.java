@@ -15,6 +15,7 @@ import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.objects.Feedback;
 import agents.SimpleUser;
+import agents.SimpleUserI;
 
 public class SaveToDatabase implements SaveObjects {
 
@@ -80,8 +81,8 @@ public class SaveToDatabase implements SaveObjects {
 				"values (?, ?, ?, ?, ?, ?)");
 	}
 
-	private List<SimpleUser> userStore = new ArrayList<SimpleUser>();
-	public void saveUser(SimpleUser user) {
+	private List<SimpleUserI> userStore = new ArrayList<SimpleUserI>();
+	public void saveUser(SimpleUserI user) {
 		userStore.add(user);
 		if (userStore.size() >= 500) {
 			flushSaveUser();
@@ -92,7 +93,7 @@ public class SaveToDatabase implements SaveObjects {
 			conn.setAutoCommit(false);
 			
 			PreparedStatement saveUserPstmt = saveUserPstmt(conn);
-			for (SimpleUser user : userStore) {
+			for (SimpleUserI user : userStore) {
 				saveUserPstmt.setInt(1, user.getId());
 				saveUserPstmt.setString(2, user.getClass().getSimpleName());
 				saveUserPstmt.setInt(3, user.getReputationRecord().getPos());

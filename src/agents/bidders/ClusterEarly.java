@@ -3,6 +3,7 @@ package agents.bidders;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,13 +17,12 @@ import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
-import util.Util;
 
 public class ClusterEarly extends ClusterBidder {
 
 	private static final Logger logger = Logger.getLogger(ClusterEarly.class);
 
-	public ClusterEarly(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, ArrayList<ItemType> itemTypes) {
+	public ClusterEarly(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes) {
 		super(bh, ps, is, ah, itemTypes);
 	}
 

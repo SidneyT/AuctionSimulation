@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
 
@@ -23,8 +24,8 @@ import simulator.records.UserRecord;
 public class AlternatingBid extends CollusiveShillController {
 
 	public AlternatingBid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur,
-			List<ItemType> types, Strategy strategy, int numBidder) {
-		super(bh, ps, is, ah, ur, types, strategy, 1, numBidder, 40);
+			List<ItemType> types, Strategy strategy, PuppetFactoryI factory, int numBidder) {
+		super(bh, ps, is, ah, ur, types, strategy, factory, 1, numBidder, 40);
 	}
 
 	Map<Auction, Integer> alternatingBidderAssigned = new HashMap<>(); // Map<auction, index of next bidder who should bid in that auction>
@@ -36,9 +37,9 @@ public class AlternatingBid extends CollusiveShillController {
 	 * Bidder index keeps track of who should make the first bid in this auction.
 	 */
 	@Override
-	protected PuppetBidder pickBidder(Auction auction) { 
+	protected PuppetI pickBidder(Auction auction) { 
 		if (!alternatingBidderAssigned.containsKey(auction)) {
-			PuppetBidder chosen = cbs.get(bidderIndex % cbs.size());
+			PuppetI chosen = cbs.get(bidderIndex % cbs.size());
 			bidderIndex = (bidderIndex + 1) % cbs.size();
 			alternatingBidderAssigned.put(auction, bidderIndex);
 //			System.out.println("chosen " + chosen);
@@ -55,9 +56,9 @@ public class AlternatingBid extends CollusiveShillController {
 	 * @param bidders
 	 * @return
 	 */
-	public PuppetBidder simplePickBidder(Auction auction, List<PuppetBidder> bidders) {
+	public PuppetI simplePickBidder(Auction auction, List<PuppetBidder> bidders) {
 		if (!alternatingBidderAssigned.containsKey(auction)) {
-			PuppetBidder chosen = bidders.get(0);
+			PuppetI chosen = bidders.get(0);
 			alternatingBidderAssigned.put(auction, 1);
 //			System.out.println("chosen " + chosen);
 			return chosen;
@@ -72,7 +73,7 @@ public class AlternatingBid extends CollusiveShillController {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfGroups; i++) {
-					AlternatingBid sc = new AlternatingBid(bh, ps, is, ah, ur, types, strategy, numBidder);
+					AlternatingBid sc = new AlternatingBid(bh, ps, is, ah, ur, types, strategy, PuppetBidder.getFactory(), numBidder);
 					ah.addEventListener(sc);
 				}
 			}
@@ -93,5 +94,5 @@ public class AlternatingBid extends CollusiveShillController {
 	protected PuppetSeller pickSeller() {
 		return css.get(0);
 	}
-	
+
 }

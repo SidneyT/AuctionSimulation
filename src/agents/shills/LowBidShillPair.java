@@ -27,9 +27,10 @@ import simulator.objects.Feedback;
 import simulator.objects.ItemCondition;
 import simulator.objects.Feedback.Val;
 import simulator.records.UserRecord;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Util;
 import agents.EventListener;
-import agents.SimpleUser;
+import agents.SimpleUserI;
 import agents.shills.strategies.Strategy;
 
 public class LowBidShillPair extends EventListener implements Controller {
@@ -162,7 +163,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	protected void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, long time) {
 		super.newAction(auction, time);
 		if (shillAuctions.containsKey(auction)) {
 			ah.registerForAuction(this, auction);
@@ -172,14 +173,14 @@ public class LowBidShillPair extends EventListener implements Controller {
 
 	boolean someoneJustBid; 
 	@Override
-	protected void priceChangeAction(Auction auction, long time) {
+	public void priceChangeAction(Auction auction, long time) {
 		super.priceChangeAction(auction, time);
 		if (auction.getWinner() != sb)
 			someoneJustBid = true;
 	}
 
 	@Override
-	protected void lossAction(Auction auction, long time) {
+	public void lossAction(Auction auction, long time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;
@@ -193,13 +194,13 @@ public class LowBidShillPair extends EventListener implements Controller {
 	 * This method will never be called.
 	 */
 	@Override
-	protected void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, long time) {
 		super.winAction(auction, time);
 		assert(false) : "This method should never be called, since this class can never bid/win.";
 	}
 
 	@Override
-	protected void endSoonAction(Auction auction, long time) {
+	public void endSoonAction(Auction auction, long time) {
 		super.endSoonAction(auction, time);
 		
 		if (!shouldSnipe(auction))
@@ -227,13 +228,13 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 	
 	@Override
-	protected void expiredAction(Auction auction, long time) {
+	public void expiredAction(Auction auction, long time) {
 		super.expiredAction(auction, time);
 	}
 
 	// can remove...
 	@Override
-	protected void soldAction(Auction auction, long time) {
+	public void soldAction(Auction auction, long time) {
 		super.soldAction(auction, time);
 		this.awaitingPayment.add(auction);
 	}
@@ -241,7 +242,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 	// can remove...
 	@Override
 	// acts for the shill bidder. copied from simpleUser, replacing "this" with ss
-	protected void gotPaidAction(Collection<Payment> paymentSet) {
+	public void gotPaidAction(Collection<Payment> paymentSet) {
 		super.gotPaidAction(paymentSet);
 		
 		for (Payment payment : paymentSet) {
@@ -257,7 +258,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 	// can remove...
 	@Override
 	// acts for the shill seller. copied from simpleUser, replacing "this" with ss
-	protected void itemReceivedAction(Set<ItemSold> itemSet) {
+	public void itemReceivedAction(Set<ItemSold> itemSet) {
 		super.itemReceivedAction(itemSet);
 
 		for (ItemSold item : itemSet) {
@@ -291,7 +292,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	public void winAction(SimpleUser agent, Auction auction) {
+	public void winAction(SimpleUserI agent, Auction auction) {
 //		System.out.println(agent + " won the auction : " + auction);
 		assert agent == sb;
 		if (shillAuctions.containsKey(auction))
@@ -301,13 +302,18 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	public void lossAction(SimpleUser agent, Auction auction) {
+	public void lossAction(SimpleUserI agent, Auction auction) {
 //		System.out.println(agent + " lost the auction : " + auction);
 		assert agent == sb;
 		if (auction.getSeller() == ss)
 			shillLossCount++;
 		else
 			lossCount++;
+	}
+
+	@Override
+	public boolean isFraud(Auction auction) {
+		throw new NotImplementedException();
 	}
 	
 }

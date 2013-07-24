@@ -14,6 +14,7 @@ import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.objects.Feedback;
 import agents.SimpleUser;
+import agents.SimpleUserI;
 
 public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
 	private KeepObjectsInMemory() {}
@@ -101,5 +102,11 @@ public class KeepObjectsInMemory implements SaveObjects, SavedObjects {
 	@Override
 	public List<Feedback> getFeedbackStore() {
 		return feedbackStore;
+	}
+
+	@Override
+	public void saveUser(SimpleUserI user) {
+		// TODO Auto-generated method stub
+		
 	}
 }

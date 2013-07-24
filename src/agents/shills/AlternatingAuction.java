@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
 
@@ -23,19 +24,19 @@ import simulator.records.UserRecord;
 public class AlternatingAuction extends CollusiveShillController {
 
 	public AlternatingAuction(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur,
-			List<ItemType> types, Strategy strategy, int numBidder) {
-		super(bh, ps, is, ah, ur, types, strategy, 1, numBidder, 40);
+			List<ItemType> types, Strategy strategy, PuppetFactoryI factory, int numBidder) {
+		super(bh, ps, is, ah, ur, types, strategy, factory, 1, numBidder, 40);
 	}
 
-	Map<Auction, PuppetBidder> AuctionsAssigned = new HashMap<>(); // Map<auction, bidder assigned to that auction> 
+	Map<Auction, PuppetI> AuctionsAssigned = new HashMap<>(); // Map<auction, bidder assigned to that auction> 
 	private int bidderIndex = 0;
 	/**
 	 * Assign auctions to shills according to the alternating auction strategy
 	 */
 	@Override
-	protected PuppetBidder pickBidder(Auction auction) {
+	protected PuppetI pickBidder(Auction auction) {
 		if (!AuctionsAssigned.containsKey(auction)) {
-			PuppetBidder chosen = cbs.get(bidderIndex % cbs.size());
+			PuppetI chosen = cbs.get(bidderIndex % cbs.size());
 			AuctionsAssigned.put(auction, chosen);
 //			System.out.println("new: picked " + chosen);
 			bidderIndex++;
@@ -51,7 +52,7 @@ public class AlternatingAuction extends CollusiveShillController {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfGroups; i++) {
-					AlternatingAuction sc = new AlternatingAuction(bh, ps, is, ah, ur, types, strategy, numBidder);
+					AlternatingAuction sc = new AlternatingAuction(bh, ps, is, ah, ur, types, strategy, PuppetBidder.getFactory(), numBidder);
 					ah.addEventListener(sc);
 				}
 			}

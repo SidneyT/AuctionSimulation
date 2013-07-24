@@ -8,7 +8,7 @@ import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.objects.Feedback;
 
-import agents.SimpleUser;
+import agents.SimpleUserI;
 
 public interface SaveObjects {
 	void saveBid(Auction auction, Bid bid);
@@ -17,6 +17,6 @@ public interface SaveObjects {
 	void saveExpiredAuction(Auction auction, boolean sold);
 	void saveFeedback(Feedback feedback);
 	void saveItemTypes(Collection<ItemType> itemTypes);
-	void saveUser(SimpleUser user);
+	void saveUser(SimpleUserI user);
 	void cleanup();
 }

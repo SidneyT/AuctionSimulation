@@ -26,6 +26,13 @@ public class BidRecord {
 //		bidCount = new AtomicInteger();
 		r = new Random();
 	}
+	public static void main(String[] args) {
+		for (int i = 0; i < 100; i++) {
+			if (i == 5)
+				break;
+			System.out.println(i);
+		}
+	}
 	
 	public Bid processAuctionBids(Auction auction, List<Bid> auctionBids, long time) {
 		List<Bid> highestBids = sortBidsAndReturnHighest(auctionBids);
@@ -64,7 +71,7 @@ public class BidRecord {
 		
 		{ // asserts no user submitted two bids for the same auction
 			boolean assertOn = false;
-			assert assertOn = true;
+			assert assertOn = true; // assertOn only becomes true if assertions are actually on.
 			if (assertOn) {
 				Set<SimpleUser> users = new HashSet<SimpleUser>();
 				for (Bid bid : bids) {
@@ -77,31 +84,33 @@ public class BidRecord {
 		}
 		
 		Collections.sort(bids);
-		for (int i = 0; i + 1 < bids.size(); i++) {
+
+		for (int i = 0; i < bids.size() - 1; i++) {
 			assert(bids.get(i).getPrice() <= bids.get(i+1).getPrice());
 		}
 		
 		int i = numberOfSameMaxBids(bids);
-		assert(i > 0) : "There must be 1 or more highest bid";
-		
-//		int elementFromEnd = (int) (Math.random() * i);
+		assert i > 0 : "There must be 1 or more highest bid";
+		assert bids.get(bids.size() - 1).getPrice() == bids.get(bids.size() - i).getPrice() : "The two bid values should be the same. Might be bug in \"numberOfSameMaxBids\"";
 		
 		return bids.subList(bids.size() - i, bids.size());
-		
-//		System.out.println("Same number of max bids: " + i);
-//		System.out.println("winner is: " + (bids.size() - 1 - elementFromEnd));
-//		return bids.get(bids.size() - 1 - elementFromEnd);
 	}
 
+	/**
+	 * Bids must be sorted in ascending value.
+	 * @param bids
+	 * @return
+	 */
 	private static int numberOfSameMaxBids(List<Bid> bids) {
-		Bid previousBid = null;
-		int i = 0;
+		if (bids.size() < 1)
+			return 1;
+		
+		int highestBidValue = bids.get(bids.size() - 1).getPrice();
+		int i = 1;
 		for (; i < bids.size(); i++) {
 			Bid currentBid = bids.get(bids.size() - i - 1);
-			if (previousBid != null && currentBid.getPrice() != previousBid.getPrice()) { // test if next biggest bid is the same
-				break;
-			} else { 
-				previousBid = currentBid;
+			if (currentBid.getPrice() != highestBidValue) { // test if next biggest bid is the same
+				return i;
 			}
 		}
 		return i;

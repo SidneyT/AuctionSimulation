@@ -32,15 +32,19 @@ import simulator.objects.Feedback;
 import simulator.records.UserRecord;
 import util.CrashOnAssertionErrorRunnable;
 import agents.EventListener;
+import agents.EventListenerI;
 import agents.SimpleUser;
+import agents.SimpleUserI;
 import agents.bidders.ClusterBidder;
 import agents.bidders.ClusterEarly;
 import agents.bidders.ClusterSnipe;
 import agents.sellers.TMSeller;
 import agents.sellers.TimedSeller;
+import agents.shills.Hybrid;
 import agents.shills.HybridLowPrice;
 import agents.shills.HybridT;
 import agents.shills.HybridTVaryCollusion;
+import agents.shills.PuppetClusterBidderCombined;
 import agents.shills.SimpleShillPair;
 import agents.shills.strategies.LateStartTrevathanStrategy;
 import agents.shills.strategies.LowPriceStrategy;
@@ -56,10 +60,12 @@ public class Main {
 	public static void main(String[] args) throws InterruptedException {
 		System.out.println("Start.");
 		long t1 = System.nanoTime();
-		normalsOnly();
+
+//		normalsOnly();
+		withFraudsIntoDiffDatabases();
+		
 		long delta = System.nanoTime() - t1;
 		System.out.println(delta / 1000000);
-//		withFraudsIntoDiffDatabases();
 		System.out.println("Finished.");
 	}
 
@@ -90,17 +96,19 @@ public class Main {
 //			// run the simulation and store everything into the database
 //			Main.run(SaveToDatabase.instance(databaseName), delayedStart);
 //		}
-		AgentAdder hybrid = HybridLowPrice.getAgentAdder(20, waitStart, lowPrice); // can use 20, since each submits 10 auctions.
-		for (int i = 0; i < 30; i++) {
-			String databaseName = "syn_hybridLP_" + i;
-			// construct database and tables to store simulation data
-//			DBConnection.createDatabase(databaseName);
-//			SimulationCreateTableStmts.createSimulationTables(databaseName);
-			
-			// run the simulation and store everything into the database
-			Main.run(SaveToDatabase.instance(databaseName), hybrid);
-		}
-		
+//		AgentAdder hybrid = HybridLowPrice.getAgentAdder(20, waitStart, lowPrice); // can use 20, since each submits 10 auctions.
+//		for (int i = 0; i < 30; i++) {
+//			String databaseName = "syn_hybridLP_" + i;
+//			// construct database and tables to store simulation data
+////			DBConnection.createDatabase(databaseName);
+////			SimulationCreateTableStmts.createSimulationTables(databaseName);
+//			
+//			// run the simulation and store everything into the database
+//			Main.run(SaveToDatabase.instance(databaseName), hybrid);
+//		}
+
+		AgentAdder hybrid = HybridT.getAgentAdder(1, waitStart, PuppetClusterBidderCombined.getFactory());
+		Main.run(SaveToDatabase.instance(), hybrid);
 	}
 	
 	/**
@@ -183,8 +191,9 @@ public class Main {
 		// TODO: Add fraud agents here
 		// initialise shillers; shillers are different from normal agents - their constructors add additional
 		// agents to the UserRecord
-		for (int i = 0; i < agentAdder.length; i++)
+		for (int i = 0; i < agentAdder.length; i++) {
 			agentAdder[i].add(bh, ps, is, ah, userRecord, itemTypes);
+		}
 		
 		// print out the list of users
 		logger.debug(userRecord);
@@ -198,7 +207,7 @@ public class Main {
 				Executors.callable(is)
 				);
 		final ImmutableSet.Builder<Callable<Object>> userCallablesBuilder = ImmutableSet.builder();
-		for (SimpleUser user : userRecord.getUsers()) {
+		for (SimpleUserI user : userRecord.getUsers()) {
 			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(user)));
 //			userCallablesBuilder.add(Executors.callable(user));
 		}

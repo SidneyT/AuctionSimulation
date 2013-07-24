@@ -5,7 +5,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import agents.EventListenerI;
 import agents.SimpleUser;
+import agents.SimpleUserI;
 
 /**
  * Keeps track of bidders/sellers in the Auction House.
@@ -17,23 +19,23 @@ import agents.SimpleUser;
 public class UserRecord {
 	
 	// Set<User> - keeps track of users
-	private final List<SimpleUser> users;
+	private final List<SimpleUserI> users;
 
 	public UserRecord() {
-		this.users  = Collections.synchronizedList(new ArrayList<SimpleUser>());
+		this.users  = Collections.synchronizedList(new ArrayList<SimpleUserI>());
 	}
 	
-	public void addUser(SimpleUser user) {
+	public void addUser(SimpleUserI user) {
 		boolean isNew = this.users.add(user);
 		assert isNew ;
 	}
 	
-	public List<SimpleUser> getUsers() {
+	public List<SimpleUserI> getUsers() {
 		return this.users;
 	}
 	
-	public void addUsers(Collection<? extends SimpleUser> users) {
-		for (SimpleUser user : users) {
+	public void addUsers(Collection<? extends SimpleUserI> users) {
+		for (SimpleUserI user : users) {
 			addUser(user);
 		}
 	}
@@ -42,7 +44,7 @@ public class UserRecord {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("(");
-		for (SimpleUser user : users) {
+		for (SimpleUserI user : users) {
 			sb.append(user);
 			sb.append(",");
 		}

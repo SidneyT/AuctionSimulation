@@ -9,7 +9,8 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
-import agents.SimpleUser;
+import agents.SimpleUserI;
+import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.strategies.LowPriceStrategy;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
@@ -35,10 +36,10 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 	private static Logger logger = Logger.getLogger(HybridLowPrice.class);
 
 	private final Strategy strategy2;
-	private final Map<PuppetBidder, int[]> winLossMap; // Map<agent, [win, shillAuctionWin, loss, shillAuctionLoss]>
+	private final Map<PuppetI, int[]> winLossMap; // Map<agent, [win, shillAuctionWin, loss, shillAuctionLoss]>
 	
-	public HybridLowPrice(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy1, Strategy strategy2) {
-		super(bh, ps, is, ah, ur, types, strategy1);
+	public HybridLowPrice(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy1, Strategy strategy2, PuppetFactoryI factory) {
+		super(bh, ps, is, ah, ur, types, strategy1, factory);
 		
 		// define strategy and register for sniping events
 		this.strategy2 = strategy2;
@@ -46,7 +47,7 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 		
 		// make winLoss count objects for each bidder
 		winLossMap = new HashMap<>();
-		for (PuppetBidder puppet : cbs) {
+		for (PuppetI puppet : cbs) {
 			winLossMap.put(puppet, new int[4]);
 		}
 	}
@@ -59,9 +60,9 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 	
 	
 	@Override
-	public void winAction(SimpleUser agent, Auction auction) {
+	public void winAction(SimpleUserI agent, Auction auction) {
 		super.winAction(agent, auction);
-		if (shillAuctions.containsKey(auction)) // count shill/non-shill auctions seperately
+		if (shillAuctions.contains(auction)) // count shill/non-shill auctions seperately
 			winLossMap.get(agent)[1]++;
 		else if (expiredShillAuctions.contains(auction))
 			winLossMap.get(agent)[1]++;
@@ -70,9 +71,9 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 	}
 	
 	@Override
-	public void lossAction(SimpleUser agent, Auction auction) {
+	public void lossAction(SimpleUserI agent, Auction auction) {
 		super.lossAction(agent, auction);
-		if (shillAuctions.containsKey(auction)) // count shill/non-shill auctions seperately
+		if (shillAuctions.contains(auction)) // count shill/non-shill auctions seperately
 			winLossMap.get(agent)[3]++;
 		else if (expiredShillAuctions.contains(auction))
 			winLossMap.get(agent)[1]++;
@@ -81,7 +82,7 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 	}
 	
 	@Override
-	protected void endSoonAction(Auction auction, long time) {
+	public void endSoonAction(Auction auction, long time) {
 		super.endSoonAction(auction, time);
 		
 		if (!shouldSnipe(auction))
@@ -91,7 +92,7 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 			// try to find a bidder to bid with
 			int size = cbs.size();
 			int index = r.nextInt(size); // starting index
-			PuppetBidder chosen = null;
+			PuppetI chosen = null;
 			for (int i = index; i < index + size; i++ ) {
 				int[] counts = winLossMap.get(cbs.get(i % size));
 //				if (wl.winCount + wl.shillWinCount < wl.lossCount + wl.shillLossCount) {
@@ -108,9 +109,8 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 	}
 	
 	private boolean shouldSnipe(Auction auction) {
-		if (shillAuctions.containsKey(auction))
-			return false;
-		return true;
+		// snipe if the auction is not a known shill auction
+		return !shillAuctions.contains(auction);
 	}
 		
 	public static AgentAdder getAgentAdder(final int numberOfAgents, final Strategy strategy1, final Strategy strategy2) {
@@ -118,7 +118,7 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					HybridLowPrice sc = new HybridLowPrice(bh, ps, is, ah, ur, types, strategy1, strategy2);
+					HybridLowPrice sc = new HybridLowPrice(bh, ps, is, ah, ur, types, strategy1, strategy2, PuppetBidder.getFactory());
 					ah.addEventListener(sc);
 				}
 			}

@@ -9,6 +9,7 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
+import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
 
@@ -33,15 +34,15 @@ public class Hybrid extends CollusiveShillController {
 	
 	private static Logger logger = Logger.getLogger(Hybrid.class);
 
-	public Hybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, int numSeller, int biddersPerSeller, int shillsPerAuction, int auctionCount) {
-		super(bh, ps, is, ah, ur, types, strategy, numSeller, biddersPerSeller, auctionCount);
+	public Hybrid(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, PuppetFactoryI factory, int numSeller, int biddersPerSeller, int shillsPerAuction, int auctionCount) {
+		super(bh, ps, is, ah, ur, types, strategy, factory, numSeller, biddersPerSeller, auctionCount);
 		
 		this.shillsPerAuction = shillsPerAuction;
 //		cb = new CombinationGenerator(cbs.size(), shillsPerAuction);
 		r = new Random();
 	}
 
-	protected Map<Auction, List<PuppetBidder>> shillsAssigned = new HashMap<>(); // Map<Auction, Shills assigned to that auction>
+	protected Map<Auction, List<PuppetI>> shillsAssigned = new HashMap<>(); // Map<Auction, Shills assigned to that auction>
 	private final int shillsPerAuction; // number of bidders to use in an auction
 //	private final CombinationGenerator cb;
 	protected final Random r;
@@ -49,8 +50,8 @@ public class Hybrid extends CollusiveShillController {
 	 * Return the puppet bidder to bid in the auction
 	 */
 	@Override
-	protected PuppetBidder pickBidder(Auction auction) {
-		List<PuppetBidder> selected;
+	protected PuppetI pickBidder(Auction auction) {
+		List<PuppetI> selected;
 		if (!shillsAssigned.containsKey(auction)) {
 		// pick the set of users to use for this auction
 			selected = selectSet();
@@ -69,7 +70,7 @@ public class Hybrid extends CollusiveShillController {
 	/**
 	 * Select the set of shills to use in the shill auction
 	 */
-	protected List<PuppetBidder> selectSet() {
+	protected List<PuppetI> selectSet() {
 //		List<PuppetBidder> selected = new ArrayList<>(shillsPerAuction);
 //		// goes through each combination of users deterministically.
 //		int[] combination = cb.getNext();
@@ -77,7 +78,7 @@ public class Hybrid extends CollusiveShillController {
 //			selected.add(cbs.get(combination[i]));
 //		}
 		
-		List<PuppetBidder> selected = Sample.randomSample(cbs, shillsPerAuction, r);
+		List<PuppetI> selected = Sample.randomSample(cbs, shillsPerAuction, r);
 		Collections.shuffle(selected);
 		return selected;
 	}
@@ -86,9 +87,9 @@ public class Hybrid extends CollusiveShillController {
 	 * Copied from Alternating Bid class
 	 */
 	Map<Auction, Integer> alternatingBidderAssigned = new HashMap<>(); // Map<auction, index of next bidder who should bid in that auction>
-	protected PuppetBidder simplePickBidder(Auction auction, List<PuppetBidder> bidders) {
+	protected PuppetI simplePickBidder(Auction auction, List<PuppetI> bidders) {
 		if (!alternatingBidderAssigned.containsKey(auction)) {
-			PuppetBidder chosen = bidders.get(0);
+			PuppetI chosen = bidders.get(0);
 			alternatingBidderAssigned.put(auction, 1 % bidders.size());
 //			System.out.println("chosen " + chosen);
 			return chosen;
@@ -103,7 +104,7 @@ public class Hybrid extends CollusiveShillController {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					Hybrid sc = new Hybrid(bh, ps, is, ah, ur, types, strategy, 1, bidderPerAgent, 2, 40);
+					Hybrid sc = new Hybrid(bh, ps, is, ah, ur, types, strategy, PuppetBidder.getFactory(), 1, bidderPerAgent, 2, 40);
 					ah.addEventListener(sc);
 				}
 			}

@@ -12,7 +12,9 @@ import org.apache.log4j.Logger;
 import com.google.common.collect.ListMultimap;
 
 import agents.EventListener;
+import agents.EventListenerI;
 import agents.SimpleUser;
+import agents.SimpleUserI;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.Message;
 import simulator.buffers.MessageType;
@@ -130,7 +132,7 @@ public class AuctionHouse implements Runnable {
 		List<Auction> newAuctions = this.buffers.getAuctionMessagesToAh().get();
 		// debugAuctionCounter += newAuctions.size();
 		MessagesToUsers buffer = this.buffers.getMessagesToUsers();
-		Collection<SimpleUser> userMap = this.userRecord.getUsers();
+		Collection<SimpleUserI> userMap = this.userRecord.getUsers();
 
 		for (Auction newAuction : newAuctions) {
 			this.auctionRecord.addAuction(newAuction, this.time);
@@ -140,9 +142,9 @@ public class AuctionHouse implements Runnable {
 		}
 	}
 
-	private void sendNewAuctionMessages(Collection<? extends EventListener> users, Auction newAuction,
+	private void sendNewAuctionMessages(Collection<? extends EventListenerI> users, Auction newAuction,
 			MessagesToUsers buffer) {
-		for (EventListener user : users) {
+		for (EventListenerI user : users) {
 			buffer.putMessages(user.getId(), new Message(MessageType.NEW, newAuction));
 		}
 	}
@@ -270,7 +272,7 @@ public class AuctionHouse implements Runnable {
 	}
 
 	public void saveUsers() {
-		for (SimpleUser user : userRecord.getUsers()) {
+		for (SimpleUserI user : userRecord.getUsers()) {
 			saveObjects.saveUser(user);
 		}
 	}

@@ -1,6 +1,6 @@
 package simulator.objects;
 
-import agents.SimpleUser;
+import agents.SimpleUserI;
 
 public class Feedback {
 	private boolean forSeller;
@@ -24,7 +24,7 @@ public class Feedback {
 	 * @param submitter person submitting the feedback
 	 * @param auction
 	 */
-	public Feedback(Val val, SimpleUser submitter, Auction auction) {
+	public Feedback(Val val, SimpleUserI submitter, Auction auction) {
 		this.time = -1;
 		this.val = val;
 		if (auction.getSeller() == submitter)

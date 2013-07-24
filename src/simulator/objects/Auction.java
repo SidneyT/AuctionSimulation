@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import util.Util;
 
 import agents.SimpleUser;
+import agents.SimpleUserI;
 
 /**
  * Not thread safe. Should be single thread access only.
@@ -70,7 +71,7 @@ public class Auction {
 		this.popularity = popluarity;
 	}
 
-	private boolean argumentsValid(SimpleUser seller, Item item, long duration,
+	private boolean argumentsValid(SimpleUserI seller, Item item, long duration,
 			long startPrice, long reservePrice) {
 		return seller != null && duration > 0 && startPrice >= 0 && reservePrice >= 0;
 	}

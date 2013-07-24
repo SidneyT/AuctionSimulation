@@ -24,7 +24,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Multimap;
 
 import agents.EventListener;
-import agents.SimpleUser;
+import agents.SimpleUserI;
 import agents.puppets.Puppet;
 import agents.puppets.PuppetMaster;
 
@@ -118,7 +118,7 @@ public class MultipleRepFraud extends EventListener {
 	}
 	
 	@Override
-	protected void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, long time) {
 		super.newAction(auction, time);
 		
 		// Check if the auction is by known repFraud. 
@@ -188,7 +188,7 @@ public class MultipleRepFraud extends EventListener {
 		return false;
 	}
 	
-	private Puppet pickUninteractedPuppet(SimpleUser puppet) {
+	private Puppet pickUninteractedPuppet(SimpleUserI puppet) {
 		Sample<Integer> sampler = new Sample<>(1);
 		
 		int puppetIndex = puppets.get(puppet);
