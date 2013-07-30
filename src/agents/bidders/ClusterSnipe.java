@@ -3,6 +3,7 @@ package agents.bidders;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ public class ClusterSnipe extends ClusterBidder {
 
 	private static final Logger logger = Logger.getLogger(ClusterSnipe.class);
 
-	public ClusterSnipe(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, ArrayList<ItemType> itemTypes) {
+	public ClusterSnipe(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes) {
 		super(bh, ps, is, ah, itemTypes);
 		
 		probInterest *= 1.5;

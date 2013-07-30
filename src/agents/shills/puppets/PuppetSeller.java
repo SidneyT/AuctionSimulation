@@ -1,4 +1,4 @@
-package agents.shills;
+package agents.shills.puppets;
 
 import java.util.List;
 import java.util.Random;
@@ -16,6 +16,7 @@ import simulator.objects.Auction;
 import simulator.objects.Item;
 import simulator.objects.Auction.AuctionLength;
 import agents.SimpleUser;
+import agents.shills.Controller;
 
 /**
  * Does nothing; does not react to any events.
@@ -37,12 +38,12 @@ public class PuppetSeller extends SimpleUser {
 		this.items = types;
 	}
 
-	protected Auction submitAuction() {
+	public Auction submitAuction() {
 		Item item = new Item(CreateItemTypes.pickType(items, r.nextDouble()), "item" + (int) (r.nextDouble() * 100000));
 		Auction auction = new Auction(this, item, AuctionLength.SEVEN_DAYS.timeUnits(), (int) getPrice(), 0, 1);
 		this.bh.getAuctionMessagesToAh().put(auction);
 		
-		logger.info(this + " submitting shill auction " + auction + " at " + bh.getTimeMessage().getTime());
+		logger.debug(this + " submitting shill auction " + auction + " at " + bh.getTimeMessage().getTime());
 
 		return auction;
 	}

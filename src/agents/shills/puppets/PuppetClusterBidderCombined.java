@@ -1,6 +1,5 @@
-package agents.shills;
+package agents.shills.puppets;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -16,10 +15,10 @@ import simulator.buffers.PaymentSender.Payment;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.records.ReputationRecord;
-import agents.SimpleUserI;
 import agents.bidders.ClusterBidder;
 import agents.bidders.ClusterEarly;
-import agents.shills.puppets.PuppetFactoryI;
+import agents.bidders.ClusterSnipe;
+import agents.shills.Controller;
 
 /**
  * Does nothing; does not react to any events. Actions are made by a controller through this class.
@@ -29,16 +28,28 @@ public class PuppetClusterBidderCombined implements PuppetI {
 
 	private static final Logger logger = Logger.getLogger(PuppetClusterBidderCombined.class); 
 	
-	private final ClusterEarly normal;
+	private final ClusterBidder normal;
 	private final PuppetBidder puppet;
 
-//	private final Controller controller;
+	private final Controller controller;
 	
 	public PuppetClusterBidderCombined(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, Controller controller, List<ItemType> itemTypes) {
-//		this.controller = controller;
+		this.controller = controller;
 
-		this.normal = new ClusterEarly(bh, ps, is, ah, itemTypes);
-		System.out.println(normal.getId() + ", " + normal.interestTimes);
+		if (Math.random() < 0.5) {
+			this.normal = new ClusterEarly(bh, ps, is, ah, itemTypes) {
+				protected int numberOfAuctionsPer100Days(double random) { // modify behaviour to participate make it participate in more auctions...
+					return super.numberOfAuctionsPer100Days(r.nextDouble()) + 4;
+				}
+			};
+		} else {
+			this.normal = new ClusterSnipe(bh, ps, is, ah, itemTypes) {
+				protected int numberOfAuctionsPer100Days(double random) { // modify behaviour to participate make it participate in more auctions...
+					return super.numberOfAuctionsPer100Days(r.nextDouble()) + 4;
+				}
+			};
+		}
+//		System.out.println(normal.getId() + ", " + normal.interestTimes);
 		
 		// reuse the id, so that actions by both "normal" and "puppet" are viewed as by the same agent in the simulation.
 		int normalId = this.normal.getId();
@@ -65,7 +76,8 @@ public class PuppetClusterBidderCombined implements PuppetI {
 
 	@Override
 	public void newAction(Auction auction, long time) {
-		normal.newAction(auction, time);
+		if (!controller.isFraud(auction))
+			normal.newAction(auction, time);
 	}
 
 	/**

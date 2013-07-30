@@ -10,7 +10,9 @@ import java.util.Random;
 import org.apache.log4j.Logger;
 
 import agents.SimpleUserI;
+import agents.shills.puppets.PuppetBidder;
 import agents.shills.puppets.PuppetFactoryI;
+import agents.shills.puppets.PuppetI;
 import agents.shills.strategies.LowPriceStrategy;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
@@ -62,9 +64,7 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 	@Override
 	public void winAction(SimpleUserI agent, Auction auction) {
 		super.winAction(agent, auction);
-		if (shillAuctions.contains(auction)) // count shill/non-shill auctions seperately
-			winLossMap.get(agent)[1]++;
-		else if (expiredShillAuctions.contains(auction))
+		if (allShillAuctions.contains(auction)) // count shill/non-shill auctions seperately
 			winLossMap.get(agent)[1]++;
 		else
 			winLossMap.get(agent)[0]++;
@@ -73,10 +73,8 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 	@Override
 	public void lossAction(SimpleUserI agent, Auction auction) {
 		super.lossAction(agent, auction);
-		if (shillAuctions.contains(auction)) // count shill/non-shill auctions seperately
+		if (allShillAuctions.contains(auction)) // count shill/non-shill auctions seperately
 			winLossMap.get(agent)[3]++;
-		else if (expiredShillAuctions.contains(auction))
-			winLossMap.get(agent)[1]++;
 		else
 			winLossMap.get(agent)[2]++;
 	}
@@ -110,7 +108,7 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 	
 	private boolean shouldSnipe(Auction auction) {
 		// snipe if the auction is not a known shill auction
-		return !shillAuctions.contains(auction);
+		return !currentShillAuctions.contains(auction);
 	}
 		
 	public static AgentAdder getAgentAdder(final int numberOfAgents, final Strategy strategy1, final Strategy strategy2) {

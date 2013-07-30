@@ -1,6 +1,7 @@
 package simulator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,8 +45,8 @@ import agents.shills.Hybrid;
 import agents.shills.HybridLowPrice;
 import agents.shills.HybridT;
 import agents.shills.HybridTVaryCollusion;
-import agents.shills.PuppetClusterBidderCombined;
 import agents.shills.SimpleShillPair;
+import agents.shills.puppets.PuppetClusterBidderCombined;
 import agents.shills.strategies.LateStartTrevathanStrategy;
 import agents.shills.strategies.LowPriceStrategy;
 import agents.shills.strategies.Strategy;
@@ -96,9 +97,19 @@ public class Main {
 //			// run the simulation and store everything into the database
 //			Main.run(SaveToDatabase.instance(databaseName), delayedStart);
 //		}
-//		AgentAdder hybrid = HybridLowPrice.getAgentAdder(20, waitStart, lowPrice); // can use 20, since each submits 10 auctions.
+		AgentAdder hybrid = HybridLowPrice.getAgentAdder(20, waitStart, lowPrice); // can use 20, since each submits 10 auctions.
+		for (int i = 0; i < 30; i++) {
+			String databaseName = "syn_hybridLP_" + i;
+			// construct database and tables to store simulation data
+//			DBConnection.createDatabase(databaseName);
+//			SimulationCreateTableStmts.createSimulationTables(databaseName);
+			
+			// run the simulation and store everything into the database
+			Main.run(SaveToDatabase.instance(databaseName), hybrid);
+		}
+//		AgentAdder hybrid = HybridTVaryCollusion.getAgentAdder(10, waitStart); // can use 20, since each submits 10 auctions.
 //		for (int i = 0; i < 30; i++) {
-//			String databaseName = "syn_hybridLP_" + i;
+//			String databaseName = "syn_hybridTVC_" + i;
 //			// construct database and tables to store simulation data
 ////			DBConnection.createDatabase(databaseName);
 ////			SimulationCreateTableStmts.createSimulationTables(databaseName);
@@ -106,10 +117,18 @@ public class Main {
 //			// run the simulation and store everything into the database
 //			Main.run(SaveToDatabase.instance(databaseName), hybrid);
 //		}
-
-		AgentAdder hybrid = HybridT.getAgentAdder(1, waitStart, PuppetClusterBidderCombined.getFactory());
-		Main.run(SaveToDatabase.instance(), hybrid);
-	}
+//		AgentAdder hybrid = HybridT.getAgentAdder(10, waitStart, PuppetClusterBidderCombined.getFactory());
+////		Main.run(SaveToDatabase.instance(), hybrid);
+//		for (int i = 0; i < 30; i++) {
+//			String databaseName = "syn_hybridNormal_" + i;
+//			// construct database and tables to store simulation data
+////			DBConnection.createDatabase(databaseName);
+////			SimulationCreateTableStmts.createSimulationTables(databaseName);
+//			
+//			// run the simulation and store everything into the database
+//			Main.run(SaveToDatabase.instance(databaseName), hybrid);
+//		}
+}
 	
 	/**
 	 * Generates synthetic data with only normal users.
@@ -253,7 +272,7 @@ public class Main {
 		// }
 		// System.out.println();
 		
-		logger.info("Simulation done.");
+		logger.debug("Simulation done.");
 	}
 
 }

@@ -31,6 +31,8 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Util;
 import agents.EventListener;
 import agents.SimpleUserI;
+import agents.shills.puppets.PuppetBidder;
+import agents.shills.puppets.PuppetSeller;
 import agents.shills.strategies.Strategy;
 
 public class LowBidShillPair extends EventListener implements Controller {

@@ -5,7 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import agents.shills.puppets.PuppetBidder;
 import agents.shills.puppets.PuppetFactoryI;
+import agents.shills.puppets.PuppetI;
+import agents.shills.puppets.PuppetSeller;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
 

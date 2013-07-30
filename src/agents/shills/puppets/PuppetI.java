@@ -1,4 +1,4 @@
-package agents.shills;
+package agents.shills.puppets;
 
 import agents.SimpleUserI;
 import simulator.objects.Auction;

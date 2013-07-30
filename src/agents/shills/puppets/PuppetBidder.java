@@ -1,6 +1,5 @@
-package agents.shills;
+package agents.shills.puppets;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -13,7 +12,7 @@ import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import agents.SimpleUser;
-import agents.shills.puppets.PuppetFactoryI;
+import agents.shills.Controller;
 
 /**
  * Does nothing; does not react to any events. Actions are made by a controller through this class.

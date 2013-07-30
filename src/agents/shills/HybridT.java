@@ -13,6 +13,7 @@ import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
 import simulator.records.UserRecord;
 import agents.shills.puppets.PuppetFactoryI;
+import agents.shills.puppets.PuppetSeller;
 import agents.shills.strategies.Strategy;
 
 /**

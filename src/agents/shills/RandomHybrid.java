@@ -14,7 +14,9 @@ import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
 import simulator.records.UserRecord;
 import util.Sample;
+import agents.shills.puppets.PuppetBidder;
 import agents.shills.puppets.PuppetFactoryI;
+import agents.shills.puppets.PuppetI;
 import agents.shills.strategies.Strategy;
 
 /**

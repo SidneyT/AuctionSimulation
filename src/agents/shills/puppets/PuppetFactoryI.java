@@ -8,7 +8,6 @@ import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
 import agents.shills.Controller;
-import agents.shills.PuppetI;
 
 public interface PuppetFactoryI {
 	

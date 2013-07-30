@@ -9,7 +9,10 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
+import agents.shills.puppets.PuppetBidder;
 import agents.shills.puppets.PuppetFactoryI;
+import agents.shills.puppets.PuppetI;
+import agents.shills.puppets.PuppetSeller;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
 

@@ -2,10 +2,8 @@ package agents.shills;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -22,10 +20,11 @@ import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.records.UserRecord;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-import util.Util;
 import agents.EventListener;
 import agents.SimpleUserI;
 import agents.shills.puppets.PuppetFactoryI;
+import agents.shills.puppets.PuppetI;
+import agents.shills.puppets.PuppetSeller;
 import agents.shills.strategies.Strategy;
 
 public abstract class CollusiveShillController extends EventListener implements Controller {
@@ -39,41 +38,41 @@ public abstract class CollusiveShillController extends EventListener implements 
 	
 	protected final List<PuppetSeller> css;
 	protected final List<PuppetI> cbs;
-	// Map<Auction, Registered>. Registered == true if the auction is ready to be bid on by controlled shills, false otherwise.
-	protected final Set<Auction> shillAuctions;
-	protected final Set<Auction> expiredShillAuctions;
-	protected List<ItemType> types;
+	
+	protected final Set<Auction> currentShillAuctions; // auctions ready to be bid on by collaborating agents
+	protected final Set<Auction> allShillAuctions; // all shill auctions
+	protected List<ItemType> itemTypes;
 	
 	protected final int numberOfAuctions; // number of auctions submitted by the shill seller
 	
 	protected final Strategy strategy;
-	public CollusiveShillController(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> itemTypes, Strategy strategy, PuppetFactoryI factory, int numSeller, int biddersPerSeller, int numberOfAuctions) {
+	public CollusiveShillController(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, PuppetFactoryI factory, int numSeller, int biddersPerSeller, int numberOfAuctions) {
 		super(bh);
 		this.bh = bh;
 		this.ps = ps;
 		this.is = is;
 		this.ah = ah;
-		this.types = itemTypes;
+		this.itemTypes = types;
 		this.strategy = strategy;
 		
 		// set up the shill seller, only need 1.
 		css = new ArrayList<>(numSeller);
 		for (int i = 0; i < numSeller; i++) {
-			PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, this, itemTypes);
+			PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, this, types);
 			ur.addUser(ss);
 			css.add(ss);
 		}
 		
 		cbs = new ArrayList<>(biddersPerSeller);
 		for (int i = 0; i < biddersPerSeller; i++) {
-//			PuppetBidder cb = new PuppetBidder(bh, ps, is, ah, this);
+//			PuppetClusterBidderCombined cb = new PuppetClusterBidderCombined(bh, ps, is, ah, this, types);
 			PuppetI cb = factory.instance(bh, ps, is, ah, this, itemTypes);
 			ur.addUser(cb);
 			this.cbs.add(cb);
 		}
 	
-		shillAuctions = new HashSet<>();
-		expiredShillAuctions = new HashSet<>();
+		currentShillAuctions = new HashSet<>();
+		allShillAuctions = new HashSet<>();
 		
 		this.numberOfAuctions = numberOfAuctions;
 		setNumberOfAuctions(numberOfAuctions);
@@ -91,7 +90,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 		// after that auction receives a message about a new bid.
 		
 		// look through the shill auctions to see if any require action
-		for (Auction shillAuction : shillAuctions) {
+		for (Auction shillAuction : currentShillAuctions) {
 			// check if a shill is already winning in the auction
 			if (cbs.contains(shillAuction.getWinner()))
 				continue;
@@ -133,7 +132,8 @@ public abstract class CollusiveShillController extends EventListener implements 
 		
 		if (!auctionTimes.isEmpty() && auctionTimes.get(auctionTimes.size() - 1) == currentTime) { // decide whether to submit a new auction
 			// pick a seller and submit an auction
-			pickSeller().submitAuction();
+			Auction submitted = pickSeller().submitAuction();
+			allShillAuctions.add(submitted);
 			auctionTimes.remove(auctionTimes.size() - 1);
 		}
 	}
@@ -152,9 +152,9 @@ public abstract class CollusiveShillController extends EventListener implements 
 	@Override
 	public void newAction(Auction auction, long time) {
 		super.newAction(auction, time);
-		if (auction.getSeller().equals(this)) {
+		if (allShillAuctions.contains(auction)) {
 			ah.registerForAuction(this, auction);
-			shillAuctions.add(auction);
+			currentShillAuctions.add(auction);
 		}
 	}
 
@@ -166,10 +166,8 @@ public abstract class CollusiveShillController extends EventListener implements 
 	@Override
 	public void lossAction(Auction auction, long time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
-		assert shillAuctions.contains(auction);
-		assert !expiredShillAuctions.contains(auction);
-		shillAuctions.remove(auction);
-		expiredShillAuctions.add(auction);
+		assert currentShillAuctions.contains(auction);
+		currentShillAuctions.remove(auction);
 	}
 
 	@Override

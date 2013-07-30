@@ -1,6 +1,5 @@
 package shillScore.evaluation;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -23,10 +22,14 @@ import createUserFeatures.UserFeatures;
 import agents.repFraud.MultipleRepFraud;
 import agents.repFraud.SingleRepFraud;
 import agents.shills.Hybrid;
+import agents.shills.HybridT;
+import agents.shills.HybridTVaryCollusion;
 import agents.shills.LowBidShillPair;
 import agents.shills.HybridLowPrice;
 import agents.shills.RandomHybrid;
 import agents.shills.SimpleShillPair;
+import agents.shills.puppets.PuppetClusterBidderCombined;
+import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.strategies.LowPriceStrategy;
 import agents.shills.strategies.LateStartTrevathanStrategy;
 import agents.shills.strategies.Strategy;
@@ -68,7 +71,9 @@ public class GenerateShillData {
 		AgentAdder simplePairAdderD = SimpleShillPair.getAgentAdder(20, waitStart);
 		AgentAdder hybridAdderA = Hybrid.getAgentAdder(5, travethan, 4); // use only 5 groups, since each group submits 40 auctions. if too many will affect normal auctions too much. 
 		AgentAdder hybridAdderB = Hybrid.getAgentAdder(1, waitStart, 4);
+		AgentAdder hybridAdderTVC = HybridTVaryCollusion.getAgentAdder(5, lateStart);
 		AgentAdder hybridAdderC = HybridLowPrice.getAgentAdder(5, lateStart, lowPrice);
+		AgentAdder hybridAdderD = HybridT.getAgentAdder(10, lateStart, PuppetClusterBidderCombined.getFactory());
 		AgentAdder randomHybridAdderA = RandomHybrid.getAgentAdder(5, travethan, 4);
 		
 		AgentAdder repFraudA = SingleRepFraud.getAgentAdder(1, 20);
@@ -86,14 +91,16 @@ public class GenerateShillData {
 //		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
 		
 //		collusiveShillPairMultipleRuns(hybridAdderB, numberOfRuns);
-		buildFeaturesAndSSFromDB("shillingResults/hybridlp", hybridAdderC, 30, new double[]{1,1,1,1,1,1});
+		buildFeaturesAndSSFromDB("shillingResults/hybridlp", "syn_hybridlp_", hybridAdderC, 30);
+//		buildFeaturesAndSSFromDB("shillingResults/hybridtvc", "syn_hybridtvc_", hybridAdderTVC, 30);
+//		buildFeaturesAndSSFromDB("shillingResults/hybridnormal", "syn_hybridLP_", hybridAdderD, 30);
 //		collusiveShillPairMultipleRuns(randomHybridAdderA, numberOfRuns);
 //		collusiveShillPairMultipleRuns(multisellerHybridAdderA, numberOfRuns);
 //		collusiveShillPairMultipleRuns(hybridAdderC, numberOfRuns);
-//		collusiveShillPairMultipleRuns(nonAltHybridA, numberOfRuns);
+//		collusiveShillPairMultipleRuns(nonAltHybridA, numberOfRuns);11
 	}
 	
-	private static AgentAdder doNothingAdder() {
+	public static final AgentAdder doNothingAdder() {
 		return new AgentAdder() {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur,
@@ -137,13 +144,13 @@ public class GenerateShillData {
 	/**
 	 * Reads from the database to build csv files with features and shill score ratings.
 	 */
-	public static void buildFeaturesAndSSFromDB(String outputDirectory, AgentAdder adder, int numberOfRuns, double[]... weightSets) {
+	public static void buildFeaturesAndSSFromDB(String outputDirectory, String databasePrefix, AgentAdder adder, int numberOfRuns, double[]... weightSets) {
 		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("Reading run " + runNumber);
 			
 			List<Features> featuresSelected = Features.FEATURES_FOR_DT;
 
-			Connection conn = DBConnection.getConnection("auction_simulation_hybrid" + runNumber);
+			Connection conn = DBConnection.getConnection(databasePrefix + runNumber);
 			SimAuctionIterator simAuctionIterator = new SimDBAuctionIterator(conn, true);
 			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator); // build features
 			
