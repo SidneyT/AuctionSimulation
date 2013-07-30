@@ -3,6 +3,10 @@ package agents.shills.strategies;
 import java.util.List;
 import java.util.Random;
 
+import com.sun.istack.internal.logging.Logger;
+
+import createUserFeatures.BuildSimFeatures;
+
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 
@@ -12,6 +16,8 @@ import simulator.objects.Bid;
  */
 public class WaitStartStrategy implements Strategy {
 
+	private static final Logger logger = Logger.getLogger(WaitStartStrategy.class);
+	
 	private final double theta;
 	private final double alpha;
 	private final double mu;
@@ -47,8 +53,10 @@ public class WaitStartStrategy implements Strategy {
 	 */
 	public int bidAmount(Auction auction) {
 		int amount = auction.minimumBid();
-		if (r.nextDouble() > 0.8)
-			amount += (int) ((1 - auction.proportionOfTrueValuation()) * 0.1 * auction.trueValue());
+		if (r.nextDouble() > 0.98) {
+			int change = Math.max(0, (int) ((1 - auction.proportionOfTrueValuation()) * 0.1 * auction.trueValue()));
+			amount += change;
+		}
 		return amount;
 	}
 	
