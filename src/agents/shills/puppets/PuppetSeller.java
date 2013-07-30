@@ -43,7 +43,7 @@ public class PuppetSeller extends SimpleUser {
 		Auction auction = new Auction(this, item, AuctionLength.SEVEN_DAYS.timeUnits(), (int) getPrice(), 0, 1);
 		this.bh.getAuctionMessagesToAh().put(auction);
 		
-		logger.debug(this + " submitting shill auction " + auction + " at " + bh.getTimeMessage().getTime());
+		logger.debug(this + " submitting shill auction " + auction + " at " + bh.getTime());
 
 		return auction;
 	}

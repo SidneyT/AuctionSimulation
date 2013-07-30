@@ -84,7 +84,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 	public void run() {
 		super.run();
 		
-		long currentTime = bh.getTimeMessage().getTime();
+		long currentTime = bh.getTime();
 		
 		// TODO: can make another set "shillAuctionsToCheck" which only needs to be checked
 		// after that auction receives a message about a new bid.

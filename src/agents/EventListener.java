@@ -69,7 +69,7 @@ public abstract class EventListener implements Runnable, EventListenerI {
 		List<Message> messages = this.bh.getMessagesToUsers().getMessages(id);
 		for (Message message : messages) {
 			Auction auction = message.getAuction();
-			long time = bh.getTimeMessage().getTime();
+			long time = bh.getTime();
 			switch (message.getType()) {
 				case NEW:
 					newAction(auction, time);

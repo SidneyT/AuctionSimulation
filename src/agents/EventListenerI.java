@@ -8,7 +8,6 @@ import simulator.buffers.PaymentSender.Payment;
 import simulator.objects.Auction;
 
 public interface EventListenerI extends Runnable {
-	
 	int getId();
 	void newAction(Auction auction, long time);
 	void priceChangeAction(Auction auction, long time);

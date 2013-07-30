@@ -318,22 +318,22 @@ public abstract class ClusterBidder extends SimpleUser {
 //	}
 	
 	public void makeBid(Auction auction, int bidAmount) {
-		if (auction.getEndTime() < this.bh.getTimeMessage().getTime()) // don't bid if auction finished
+		if (auction.getEndTime() < this.bh.getTime()) // don't bid if auction finished
 			return;
 		if (auction.getWinner() == this) // don't bid if already winning
 			return;
 		bh.getBidMessageToAh().put(auction, createBid(auction, bidAmount));
 		
-		logger.debug(this + " is making bid now at time " + this.bh.getTimeMessage().getTime() + " for " + auction + ".");
+		logger.debug(this + " is making bid now at time " + this.bh.getTime() + " for " + auction + ".");
 	}
 	public void makeBid(Auction auction) {
-		if (auction.getEndTime() < this.bh.getTimeMessage().getTime()) // don't bid if auction finished
+		if (auction.getEndTime() < this.bh.getTime()) // don't bid if auction finished
 			return;
 		if (auction.getWinner() == this) // don't bid if already winning
 			return;
 		bh.getBidMessageToAh().put(auction, createBid(auction, calculateBidAmount(auction)));
 		
-		logger.debug(this + " is making bid now at time " + this.bh.getTimeMessage().getTime() + " for " + auction + ".");
+		logger.debug(this + " is making bid now at time " + this.bh.getTime() + " for " + auction + ".");
 	}
 
 	protected int calculateBidAmount(Auction auction) {

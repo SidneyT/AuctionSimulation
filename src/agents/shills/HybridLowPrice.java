@@ -86,7 +86,7 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 		if (!shouldSnipe(auction))
 			return;
 		
-		if (strategy2.shouldBid(auction, bh.getTimeMessage().getTime())) {
+		if (strategy2.shouldBid(auction, bh.getTime())) {
 			// try to find a bidder to bid with
 			int size = cbs.size();
 			int index = r.nextInt(size); // starting index

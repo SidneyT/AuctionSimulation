@@ -74,7 +74,7 @@ public class TimedSeller extends SimpleUser {
 	@Override
 	public void run() {
 		super.run();
-		long currentTime = this.bh.getTimeMessage().getTime();
+		long currentTime = this.bh.getTime();
 		assert (currentTime <= nextSubmission) : "Time for next auction submission must be in the future: " + currentTime + "," + nextSubmission + ".";
 		if (currentTime == nextSubmission) {
 			do {
@@ -98,7 +98,7 @@ public class TimedSeller extends SimpleUser {
 		else
 			popularity = 1;
 		Auction auction = new Auction(this, newItem, 2016, (int) getPrice(), 0, popularity);
-		logger.debug(this + " submitting auction " + auction + " at " + this.bh.getTimeMessage().getTime() + ".");
+		logger.debug(this + " submitting auction " + auction + " at " + this.bh.getTime() + ".");
 		this.bh.getAuctionMessagesToAh().put(auction);
 	}
 

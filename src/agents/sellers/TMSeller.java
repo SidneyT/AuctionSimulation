@@ -44,7 +44,7 @@ public class TMSeller extends TimedSeller {
 	}
 
 	public void action() {
-		long currentTime = this.bh.getTimeMessage().getTime();
+		long currentTime = this.bh.getTime();
 		if (currentTime == nextSubmission) {
 			do {
 				submitAuction();

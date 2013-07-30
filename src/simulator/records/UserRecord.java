@@ -34,7 +34,7 @@ public class UserRecord {
 		return this.users;
 	}
 	
-	public void addUsers(Collection<? extends SimpleUserI> users) {
+	public void addUsers(Collection<SimpleUserI> users) {
 		for (SimpleUserI user : users) {
 			addUser(user);
 		}

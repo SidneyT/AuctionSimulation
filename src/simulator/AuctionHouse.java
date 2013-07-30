@@ -69,7 +69,7 @@ public class AuctionHouse implements Runnable {
 		this.bidRecord = new BidRecord(); //TODO
 		this.interestRecord = new AuctionInterestRecord();
 
-		snipingRecord = Collections.newSetFromMap(new ConcurrentHashMap<EventListener, Boolean>());
+		snipingRecord = Collections.newSetFromMap(new ConcurrentHashMap<EventListenerI, Boolean>());
 
 		eventListeners = new HashSet<>();
 		
@@ -224,7 +224,7 @@ public class AuctionHouse implements Runnable {
 
 		MessagesToUsers msgToUsers = this.buffers.getMessagesToUsers();
 		for (Auction auction : endSoon) {
-			for (EventListener agent : snipingRecord) {
+			for (EventListenerI agent : snipingRecord) {
 				msgToUsers.putMessages(agent.getId(), new Message(MessageType.END_SOON, auction));
 			}
 		}
@@ -283,9 +283,9 @@ public class AuctionHouse implements Runnable {
 		interestRecord.register(auction, user);
 	}
 
-	private final Set<EventListener> snipingRecord;
+	private final Set<EventListenerI> snipingRecord;
 
-	public void registerForSniping(EventListener user) {
+	public void registerForSniping(EventListenerI user) {
 		snipingRecord.add(user);
 	}
 

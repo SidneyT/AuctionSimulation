@@ -102,7 +102,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 	public void run() {
 		super.run();
 		
-		long currentTime = bh.getTimeMessage().getTime();
+		long currentTime = bh.getTime();
 		
 		// TODO: can make another set "toCheckShillAuctions" which only needs to be checked
 		// after that auction receives a message about a new bid.
@@ -208,8 +208,8 @@ public class LowBidShillPair extends EventListener implements Controller {
 		if (!shouldSnipe(auction))
 			return;
 		
-		if (this.strategy2.shouldBid(auction, bh.getTimeMessage().getTime())) {
-//			System.out.println(sb + " is making bid on " + auction + " at " + bh.getTimeMessage().getTime() + ".");
+		if (this.strategy2.shouldBid(auction, bh.getTime())) {
+//			System.out.println(sb + " is making bid on " + auction + " at " + bh.getTime() + ".");
 			this.sb.makeBid(auction, strategy2.bidAmount(auction));
 		}
 	}

@@ -146,7 +146,7 @@ public class ClusterEarly extends ClusterBidder {
 	
 	HashMultimap<Long, Auction> revisitForRebids = HashMultimap.create();
 	private void revisitLater(Auction auction) {
-		long currentTime = this.bh.getTimeMessage().getTime();
+		long currentTime = this.bh.getTime();
 //		int delayForRevisit = 288; // since this runs before action(), if delay is zero, auction will be revisited immediately
 		int delayForRevisit = 188 + r.nextInt(200);
 		

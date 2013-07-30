@@ -2,7 +2,7 @@ package agents;
 
 import simulator.records.ReputationRecord;
 
-public interface SimpleUserI extends EventListenerI{
+public interface SimpleUserI extends EventListenerI {
 
 	ReputationRecord getReputationRecord();
 

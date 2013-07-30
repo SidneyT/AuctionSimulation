@@ -47,7 +47,7 @@ public class PuppetBidder extends SimpleUser implements PuppetI {
 	 */
 	@Override
 	public void winAction(Auction auction, long time) {
-//		super.winAction(auction, time);
+		super.winAction(auction, time);
 		controller.winAction(this, auction);
 	}
 

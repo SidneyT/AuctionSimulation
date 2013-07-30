@@ -76,7 +76,7 @@ public class ClusterSnipe extends ClusterBidder {
 	
 	HashMultimap<Long, Auction> revisitForRebids = HashMultimap.create();
 	private void revisitLater(Auction auction) {
-		long currentTime = this.bh.getTimeMessage().getTime();
+		long currentTime = this.bh.getTime();
 		int delayForRevisit = 1; // since this runs before action(), if delay is zero, auction will be revisited immediately 
 		
 		revisitForRebids.put(currentTime + delayForRevisit, auction);
@@ -100,8 +100,8 @@ public class ClusterSnipe extends ClusterBidder {
 //			if (r.nextDouble() < likelihoodOfRebid * valuationEffect(bidAmount, privateValuationProportion)) {
 			double maximumBid = privateValuationProportion * auction.getItem().getType().getTrueValuation();
 			if (r.nextDouble() < valuationEffect(bidAmount, maximumBid)) {
-//				if (auction.percentageElapsed(bh.getTimeMessage().getTime()) < 0.6) {
-//					logger.debug(this + " making rebid for " + auction + " at " + bh.getTimeMessage().getTime());
+//				if (auction.percentageElapsed(bh.getTime()) < 0.6) {
+//					logger.debug(this + " making rebid for " + auction + " at " + bh.getTime());
 					makeBid(auction, bidAmount);
 					revisitLater(auction);
 					return true;
@@ -128,7 +128,7 @@ public class ClusterSnipe extends ClusterBidder {
 //		timeUnitsFromEnd /= factor;
 //		
 //		long timeUnitToBid = auction.getEndTime() - (long) (timeUnitsFromEnd + 0.5);
-////		timeUnitToBid = (long) (factor * (timeUnitToBid - bh.getTimeMessage().getTime()) + 0.5) + bh.getTimeMessage().getTime();
+////		timeUnitToBid = (long) (factor * (timeUnitToBid - bh.getTime()) + 0.5) + bh.getTime();
 //		assert timeUnitToBid > auction.getStartTime() && timeUnitToBid <= auction.getEndTime();
 //		Util.mapListAdd(this.auctionsToBidIn, timeUnitToBid, auction);
 //		
@@ -137,7 +137,7 @@ public class ClusterSnipe extends ClusterBidder {
 ////		}
 //		
 ////		System.out.println("SnipeBid: " + ((double) (timeUnitToBid - auction.getStartTime()) / (auction.getEndTime() - auction.getStartTime())));
-//		logger.debug(this + " is making a snipe bid in the future at " + timeUnitToBid + " at time " + bh.getTimeMessage().getTime() + ".");
+//		logger.debug(this + " is making a snipe bid in the future at " + timeUnitToBid + " at time " + bh.getTime() + ".");
 //	}
 	
 	// [0-960] minutes before the end

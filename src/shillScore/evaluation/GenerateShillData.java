@@ -19,6 +19,7 @@ import createUserFeatures.SimAuctionIterator;
 import createUserFeatures.SimMemoryAuctionIterator;
 import createUserFeatures.UserFeatures;
 
+import agents.repFraud.SingleRepFraud;
 import agents.repFraud.MultipleRepFraud;
 import agents.repFraud.SingleRepFraud;
 import agents.shills.Hybrid;
@@ -83,7 +84,7 @@ public class GenerateShillData {
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
 //		run(simplePairAdderA, numberOfRuns);
-//		run(repFraudB, 1);
+		run(repFraudA, 1);
 //		run(doNothingAdder(), numberOfRuns);
 //		run(simplePairAdderD, numberOfRuns);
 //		run(simplePairAdderA, numberOfRuns, new double[]{0.0820,0.0049,-0.0319,0.5041,0.2407,0.2003});
@@ -91,7 +92,7 @@ public class GenerateShillData {
 //		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
 		
 //		collusiveShillPairMultipleRuns(hybridAdderB, numberOfRuns);
-		buildFeaturesAndSSFromDB("shillingResults/hybridlp", "syn_hybridlp_", hybridAdderC, 30);
+//		buildFeaturesAndSSFromDB("shillingResults/hybridlp", "syn_hybridlp_", hybridAdderC, 30);
 //		buildFeaturesAndSSFromDB("shillingResults/hybridtvc", "syn_hybridtvc_", hybridAdderTVC, 30);
 //		buildFeaturesAndSSFromDB("shillingResults/hybridnormal", "syn_hybridLP_", hybridAdderD, 30);
 //		collusiveShillPairMultipleRuns(randomHybridAdderA, numberOfRuns);
@@ -121,14 +122,14 @@ public class GenerateShillData {
 //			List<Features> featuresSelected = Features.defaultFeatures;
 			List<Features> featuresSelected = Features.ALL_FEATURES;
 
-			KeepObjectsInMemory objInMem = KeepObjectsInMemory.instance();
-			SimAuctionIterator simAuctionIterator = new SimMemoryAuctionIterator(objInMem, true);
-			Main.run(objInMem, adder); // run simulator
-			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator); // build features
+//			KeepObjectsInMemory objInMem = KeepObjectsInMemory.instance();
+//			SimAuctionIterator simAuctionIterator = new SimMemoryAuctionIterator(objInMem, true);
+//			Main.run(objInMem, adder); // run simulator
+//			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator); // build features
 			
-//			SimAuctionIterator simAuctionIterator = new SimAuctionDBIterator(DBConnection.getSimulationConnection(), true);
-//			Main.run(SaveToDatabase.instance(), adder);
-//			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator);
+			SimAuctionIterator simAuctionIterator = new SimDBAuctionIterator(DBConnection.getSimulationConnection(), true);
+			Main.run(SaveToDatabase.instance(), adder);
+			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator);
 			
 			// write results to file
 //			BuildSimFeatures.writeToFile(userFeatures.values(), // write features
