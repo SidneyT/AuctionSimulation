@@ -66,12 +66,12 @@ public abstract class ClusterBidder extends SimpleUser {
 	
 	protected final List<ItemType> itemTypes;
 	
-	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes2) {
+	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes) {
 		super(bh, ps, is, ah);
 
 		assert(num_users > 0);
 		
-		this.itemTypes = itemTypes2;
+		this.itemTypes = itemTypes;
 		
 //		this.oneBidAuctionsUnprocessed = new HashSet<Auction>();
 		this.newAuctionsUnprocessed = new ArrayList<Auction>();
@@ -347,7 +347,7 @@ public abstract class ClusterBidder extends SimpleUser {
 		return bidAmount;
 	}
 	
-	protected final static double pIncreaseIncrement = 0.39505 / 20; // proportion of users that make more than the minimum increment
+	protected final static double pIncreaseIncrement = 0.39505 / 15; // proportion of users that make more than the minimum increment
 //	private Bid createBid(Auction auction) {
 //		long bidAmount = auction.minimumBid();
 //		
@@ -385,32 +385,42 @@ public abstract class ClusterBidder extends SimpleUser {
 	//		}
 	//	}
 	protected int numberOfAuctionsPer100Days(double random) {
-		if (random < 0.6) return 1;
-		else if (random < 0.78) return 2;
-		else if (random < 0.86) return 3;
-		else if (random < 0.91) return 4;
-		else if (random < 0.94) return 5;
-		else if (random < 0.956273) return 6;
-		else if (random < 0.964617) return 7;
-		else if (random < 0.970626) return 8;
-		else if (random < 0.975345) return 9;
-		else if (random < 0.979018) return 10;
-		else if (random < 0.981647) return 11;
-		else if (random < 0.984031) return 12;
-		else if (random < 0.986350) return 13;
-		else if (random < 0.987999) return 14;
-		else if (random < 0.989501) return 15;
-		else if (random < 0.990497) return 16;
-		else if (random < 0.991460) return 17;
-		else if (random < 0.992293) return 18;
-		else if (random < 0.993126) return 19;
-		else if (random < 0.993779) return 20;
-		else if (random < 0.994416) return 21;
-		else if (random < 0.994987) return 22;
-		else if (random < 0.995542) return 23;
-		else if (random < 0.995869) return 24;
-		else if (random < 0.996277) return 25;
-		else return 26;
+		if (random < 0.576816606) return 1;
+		else if (random < 0.758013403) return 2; 
+		else if (random < 0.839887786) return 3; 
+		else if (random < 0.884832607) return 4; 
+		else if (random < 0.912960228) return 5; 
+		else if (random < 0.93186288) return 6; 
+		else if (random < 0.945281016) return 7; 
+		else if (random < 0.954995807) return 8; 
+		else if (random < 0.961964629) return 9; 
+		else if (random < 0.967590153) return 10; 
+		else if (random < 0.972035653) return 11; 
+		else if (random < 0.975590569) return 12; 
+		else if (random < 0.978744721) return 13; 
+		else if (random < 0.981193828) return 14; 
+		else if (random < 0.983116006) return 15; 
+		else if (random < 0.984949125) return 16; 
+		else if (random < 0.986351796) return 17; 
+		
+		// model the rest with power law
+		for (int i = 0; i < probabilities.size(); i++) {
+			if (random < probabilities.get(i))
+				return 18 + i;
+		}
+		return probabilities.size();
 	}
-
+	static final ArrayList<Double> probabilities;
+	static {
+		probabilities = new ArrayList<>();
+		double sum = 0.987665407479424;
+		for (int x = 18;; x++) {
+			double y = Math.round(800000 * Math.pow(x, -2.99)) / 107421.465102286;
+			sum += y;
+			probabilities.add(sum);
+	//		System.out.println(sum);
+			if (sum > 0.9999999999)
+				break;
+		}
+	}
 }
