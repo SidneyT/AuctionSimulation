@@ -1,13 +1,15 @@
 package agents.sellers;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Random;
 
-import org.apache.commons.math3.distribution.ExponentialDistribution;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.log4j.Logger;
+
+import agents.SimpleUser;
 
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
@@ -17,39 +19,40 @@ import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Item;
-import util.IncrementalMean;
+import util.Sample;
 
 /**
- * Models behaviour of sellers found in TradeMe.
+ * Models the distribution of auction submission frequency of sellers found in TradeMe.
  */
-public class TMSeller extends TimedSeller {
+public class TMSeller extends SimpleUser {
 	
 	private static final Logger logger = Logger.getLogger(TMSeller.class);
 
-	private final ExponentialDistribution exponentialDistribution; // gives next time to submit an auction
-	private long nextSubmission; // remembers the time to submit an auction next
-	
 	private final List<ItemType> itemTypesUsed;
-	
-	public TMSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> types) {
-		super(bh, ps, is, ah, types);
-		
-		int numberOfAuctions = SellerAuctionListingFrequency.numberOfAuctions(); // number of auctions per 60 days
-		
-		// number of auctions over 60 days worth of time units. so * (60 * 24 * 60 * 5)
-		exponentialDistribution = new ExponentialDistribution((double) (60 * 24 * 60 / 5) / numberOfAuctions);
-		nextSubmission = Math.round(exponentialDistribution.sample());
+	protected final Random r;
+	private List<ItemType> itemTypes;
 
+	public TMSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes) {
+		super(bh, ps, is, ah);
+		r = new Random();
+		
+		int numberOfAuctions = numberOfAuction(r.nextDouble());
+		int numberOfTimeUnits = 60 * 24 * 60 / 5 - 2016; 
+
+		List<Integer> listOfTimes = Sample.randomSample(numberOfTimeUnits, numberOfAuctions, r);
+		Collections.sort(listOfTimes, Collections.reverseOrder());
+		auctionSubmissionTimes = new ArrayDeque<>(listOfTimes);
+				
 		itemTypesUsed = new ArrayList<>();
+		this.itemTypes = itemTypes;
 	}
 
+	ArrayDeque<Integer> auctionSubmissionTimes; // the times at which this agent will submit an auction
+	
 	public void action() {
 		long currentTime = this.bh.getTime();
-		if (currentTime == nextSubmission) {
-			do {
-				submitAuction();
-				nextSubmission = Math.round(exponentialDistribution.sample()) + currentTime;
-			} while (nextSubmission == currentTime);
+		if (!auctionSubmissionTimes.isEmpty() && currentTime >= auctionSubmissionTimes.removeLast()) {
+			submitAuction();
 		}
 	}
 	
@@ -107,7 +110,34 @@ public class TMSeller extends TimedSeller {
 	}
 
 	public static int sellersRequired(double targetPerDay) {
-		// 5.539 is the number of auctions on average that each TMSeller submits every 60 days.
-		return (int) (targetPerDay/5.539 * 60 + 0.5);
+		// 7.17892371446915 is the number of auctions on average that each TMSeller submits every 60 days.
+		return (int) (targetPerDay/7.17892371446915 * 60 + 0.5);
 	}
+	
+	public static int numberOfAuction(double random) {
+		// auction submission frequency modelled using a power law
+		for (int i = 0; i < probabilities.size(); i++) {
+			if (random < probabilities.get(i))
+				return i;
+		}
+		return probabilities.size();
+	}
+	
+	static final ArrayList<Double> probabilities;
+	static {
+		probabilities = new ArrayList<>(373);
+		double sum = 0;
+		for (int x = 1;; x++) {
+			double y = Math.round(17875 * Math.pow(x, -1.77)) / 34266d;
+			sum += y;
+			probabilities.add(sum);
+//			System.out.println(sum);
+			if (sum > 0.99999999999)
+				break;
+		}
+	}
+//	public static void main(String[] args) {
+//		System.out.println(probabilities);
+//		System.out.println();
+//	}
 }
