@@ -13,7 +13,7 @@ import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
 import simulator.records.UserRecord;
 import agents.shills.puppets.PuppetFactoryI;
-import agents.shills.puppets.PuppetSeller;
+import agents.shills.puppets.PuppetI;
 import agents.shills.strategies.Strategy;
 
 /**
@@ -31,7 +31,7 @@ public class HybridT extends Hybrid {
 	}
 
 	@Override
-	protected PuppetSeller pickSeller() {
+	protected PuppetI pickSeller() {
 		return css.get(0);
 	}
 

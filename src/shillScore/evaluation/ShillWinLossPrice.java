@@ -6,13 +6,10 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import java.sql.CallableStatement;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -20,18 +17,13 @@ import java.util.Map;
 
 import org.apache.commons.math3.util.Pair;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
-
-import createUserFeatures.BuildUserFeatures.BidObject;
-import createUserFeatures.BuildUserFeatures.SimAuction;
-import createUserFeatures.BuildUserFeatures.UserObject;
-import createUserFeatures.SimDBAuctionIterator;
-import createUserFeatures.SimAuctionIterator;
-
 import simulator.categories.ItemType;
 import simulator.database.DBConnection;
 import util.IncrementalMean;
+import createUserFeatures.BuildUserFeatures.BidObject;
+import createUserFeatures.BuildUserFeatures.SimAuction;
+import createUserFeatures.BuildUserFeatures.UserObject;
+import createUserFeatures.SimAuctionIterator;
 
 
 public class ShillWinLossPrice {

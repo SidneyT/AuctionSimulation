@@ -48,6 +48,9 @@ public class ReputationRecord {
 		return negUnique;
 	}
 	
+	/**
+	 * return getPosUnique() - getNegUnique()
+	 */
 	public int getNetRep() {
 		return getPosUnique() - getNegUnique();
 	}

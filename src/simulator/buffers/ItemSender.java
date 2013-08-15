@@ -17,17 +17,17 @@ public class ItemSender implements Runnable {
 
 	// Map<Delay finish time, PaymentHolder>
 	private final Map<Long, Set<ItemHolder>> delayedItems;
-	private final Map<SimpleUser, Set<ItemSold>> readyItems;
+	private final Map<SimpleUserI, Set<ItemSold>> readyItems;
 
 	public ItemSender() {
 		this.time = 0;
 
 		this.delayedItems = Collections.synchronizedMap(new HashMap<Long, Set<ItemHolder>>());
-		this.readyItems = Collections.synchronizedMap(new HashMap<SimpleUser, Set<ItemSold>>());
+		this.readyItems = Collections.synchronizedMap(new HashMap<SimpleUserI, Set<ItemSold>>());
 	}
 
 	public void send(long delay, Auction auction, Item item, ItemCondition cond,
-			SimpleUserI sender, SimpleUser recipient) {
+			SimpleUserI sender, SimpleUserI recipient) {
 		Set<ItemHolder> paymentHolderSet = this.delayedItems.get(this.time + delay);
 		synchronized (this.delayedItems) {
 			if (paymentHolderSet == null) {
@@ -70,15 +70,15 @@ public class ItemSender implements Runnable {
 	}
 
 	private static class ItemHolder {
-		private final SimpleUser recipient;
+		private final SimpleUserI recipient;
 		private final ItemSold itemSold;
 
-		public ItemHolder(SimpleUser recipient, ItemSold itemSold) {
+		public ItemHolder(SimpleUserI recipient, ItemSold itemSold) {
 			this.recipient = recipient;
 			this.itemSold = itemSold;
 		}
 
-		public SimpleUser getRecipient() {
+		public SimpleUserI getRecipient() {
 			return recipient;
 		}
 

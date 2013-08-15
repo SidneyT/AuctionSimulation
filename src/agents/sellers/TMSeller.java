@@ -19,6 +19,7 @@ import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Item;
+import simulator.objects.Auction.AuctionLength;
 import util.Sample;
 
 /**
@@ -29,29 +30,29 @@ public class TMSeller extends SimpleUser {
 	private static final Logger logger = Logger.getLogger(TMSeller.class);
 
 	private final List<ItemType> itemTypesUsed;
-	protected final Random r;
+	private final static Random r = new Random();
 	private List<ItemType> itemTypes;
 
 	public TMSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes) {
 		super(bh, ps, is, ah);
-		r = new Random();
 		
-		int numberOfAuctions = numberOfAuction(r.nextDouble());
-		int numberOfTimeUnits = 60 * 24 * 60 / 5 - 2016; 
+		int numberOfAuctions = numberOfAuctions(r.nextDouble());
+		int numberOfTimeUnits = AuctionLength.ONE_DAY.timeUnits() * (100 - 7);
 
 		List<Integer> listOfTimes = Sample.randomSample(numberOfTimeUnits, numberOfAuctions, r);
 		Collections.sort(listOfTimes, Collections.reverseOrder());
 		auctionSubmissionTimes = new ArrayDeque<>(listOfTimes);
-				
+//		System.out.println(auctionSubmissionTimes.size());
 		itemTypesUsed = new ArrayList<>();
 		this.itemTypes = itemTypes;
 	}
 
 	ArrayDeque<Integer> auctionSubmissionTimes; // the times at which this agent will submit an auction
 	
-	public void action() {
+	public void run() {
 		long currentTime = this.bh.getTime();
-		if (!auctionSubmissionTimes.isEmpty() && currentTime >= auctionSubmissionTimes.removeLast()) {
+		if (!auctionSubmissionTimes.isEmpty() && currentTime >= auctionSubmissionTimes.peekLast()) {
+			auctionSubmissionTimes.removeLast();
 			submitAuction();
 		}
 	}
@@ -114,13 +115,20 @@ public class TMSeller extends SimpleUser {
 		return (int) (targetPerDay/7.17892371446915 * 60 + 0.5);
 	}
 	
-	public static int numberOfAuction(double random) {
+	public static int numberOfAuctions(double random) {
 		// auction submission frequency modelled using a power law
 		for (int i = 0; i < probabilities.size(); i++) {
 			if (random < probabilities.get(i))
-				return i;
+				return i + 1;
 		}
-		return probabilities.size();
+		return probabilities.size() + 1;
+	}
+	
+	@Override
+	public void expiredAction(Auction auction, int time) {
+		// since the auction failed, just re-submit the exact same auction again immediately
+		Auction nAuction = new Auction(this, auction.getItem(), auction.getDuration(), auction.getStartPrice(), auction.getReservePrice(), auction.getPopularity());
+		submitAuction(nAuction);
 	}
 	
 	static final ArrayList<Double> probabilities;
@@ -132,12 +140,12 @@ public class TMSeller extends SimpleUser {
 			sum += y;
 			probabilities.add(sum);
 //			System.out.println(sum);
-			if (sum > 0.99999999999)
+			if (sum > 0.999999999999)
 				break;
 		}
 	}
-//	public static void main(String[] args) {
-//		System.out.println(probabilities);
-//		System.out.println();
-//	}
+	public static void main(String[] args) {
+		System.out.println(probabilities);
+		System.out.println();
+	}
 }

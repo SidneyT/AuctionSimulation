@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,21 +20,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.math3.stat.Frequency;
+import shillScore.ShillScore;
+import shillScore.evaluation.BayseanAverageSS.BayseanSS;
+import au.com.bytecode.opencsv.CSVReader;
 
 import com.google.common.collect.Multiset;
 import com.google.common.primitives.Doubles;
 
-import createUserFeatures.BuildUserFeatures;
 import createUserFeatures.BuildUserFeatures.AuctionObject;
-import createUserFeatures.BuildUserFeatures.SimAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
-
-import shillScore.ShillScore;
-import shillScore.evaluation.BayseanAverageSS.BayseanSS;
-
-
-import au.com.bytecode.opencsv.CSVReader;
 
 /**
  * Calculate statistics about the shill scores of shillers vs. normal users.

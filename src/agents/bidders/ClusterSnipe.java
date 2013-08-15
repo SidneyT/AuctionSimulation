@@ -27,8 +27,6 @@ public class ClusterSnipe extends ClusterBidder {
 
 	public ClusterSnipe(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes) {
 		super(bh, ps, is, ah, itemTypes);
-		
-		probInterest *= 1.5;
 	}
 
 	private int firstBidPrice(Auction auction) {
@@ -45,7 +43,9 @@ public class ClusterSnipe extends ClusterBidder {
 		
 		if (this.auctionsToBidIn.containsKey(currentTime)) {
 			for (Auction auction : this.auctionsToBidIn.removeAll(currentTime)) {
-				if (!alreadyBidOn.contains(auction)) {
+//				if (!alreadyBidOn.contains(auction)) {
+				assert !alreadyBidOn.contains(auction);
+				
 					// if item is under 50% value, made a bid greater than the minimum
 //					if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.6) {
 					if (r.nextDouble() < 0.2) {
@@ -58,7 +58,7 @@ public class ClusterSnipe extends ClusterBidder {
 					}
 					revisitLater(auction);
 					alreadyBidOn.add(auction);
-				}
+//				}
 			}
 		}
 		
@@ -74,9 +74,9 @@ public class ClusterSnipe extends ClusterBidder {
 	
 	}
 	
-	HashMultimap<Long, Auction> revisitForRebids = HashMultimap.create();
+	HashMultimap<Integer, Auction> revisitForRebids = HashMultimap.create();
 	private void revisitLater(Auction auction) {
-		long currentTime = this.bh.getTime();
+		int currentTime = this.bh.getTime();
 		int delayForRevisit = 1; // since this runs before action(), if delay is zero, auction will be revisited immediately 
 		
 		revisitForRebids.put(currentTime + delayForRevisit, auction);
@@ -150,7 +150,7 @@ public class ClusterSnipe extends ClusterBidder {
 //		return SEVEN_DAYS - unitsBeforeEnd;
 //	}
 	@Override
-	protected long firstBidTime() {
+	protected int firstBidTime() {
 		double bidTimeBeforeEnd;
 		do {
 			double random = r.nextDouble();
@@ -161,7 +161,7 @@ public class ClusterSnipe extends ClusterBidder {
 			else
 				bidTimeBeforeEnd = 169.6812 * Math.pow(66.27293, random) / 5;
 		} while (bidTimeBeforeEnd > 260 || bidTimeBeforeEnd < 1);
-		return SEVEN_DAYS - (long) bidTimeBeforeEnd;
+		return SEVEN_DAYS - (int) bidTimeBeforeEnd;
 	}
 
 	@Override

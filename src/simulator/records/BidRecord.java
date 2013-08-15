@@ -5,15 +5,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import agents.SimpleUser;
+import agents.SimpleUserI;
 
 import simulator.objects.Auction;
 import simulator.objects.Bid;
-import util.Util;
 
 public class BidRecord {
 	
@@ -69,11 +67,13 @@ public class BidRecord {
 			return Collections.singletonList(bids.get(0));
 		}
 		
+		Collections.sort(bids);
+
 		{ // asserts no user submitted two bids for the same auction
 			boolean assertOn = false;
 			assert assertOn = true; // assertOn only becomes true if assertions are actually on.
 			if (assertOn) {
-				Set<SimpleUser> users = new HashSet<SimpleUser>();
+				Set<SimpleUserI> users = new HashSet<>();
 				for (Bid bid : bids) {
 					boolean exists = !users.add(bid.getBidder());
 					if (exists)
@@ -81,12 +81,13 @@ public class BidRecord {
 					assert !exists : "More than 1 bid by " + bid.getBidder() + " for the same auction.";
 				}
 			}
-		}
-		
-		Collections.sort(bids);
-
-		for (int i = 0; i < bids.size() - 1; i++) {
-			assert(bids.get(i).getPrice() <= bids.get(i+1).getPrice());
+			
+			// assert each bid is sorted so that each is strictly greater than the previous
+			if (assertOn) {
+				for (int i = 0; i < bids.size() - 1; i++) {
+					assert(bids.get(i).getPrice() <= bids.get(i+1).getPrice());
+				}
+			}
 		}
 		
 		int i = numberOfSameMaxBids(bids);

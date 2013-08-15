@@ -61,11 +61,11 @@ public class CreateItemTypes {
 	 * @return
 	 */
 	public static ArrayList<ItemType> TMItems(List<CategoryNode> categories) {
-		ArrayList<ItemType> items = new ArrayList<>();
 		List<Double> averagePrice = Arrays.asList(1667.977954,3806.576259,5564.987737,1141.784542,5544.632408,
 				2535.696347,1579.006121,2827.319666,8378.555295,1229.761731,5817.559521,3235.879813,1034.310468,
 				3948.616336,14056.42692,6989.800117,6240.8449,2182.868802,3575.955412,8160.105714,3509.499257,12845.89461);
 
+		ArrayList<ItemType> items = new ArrayList<>(categories.size());
 		for (int i = 0; i < categories.size(); i++) {
 			CategoryNode category = categories.get(i); 
 			double weight = category.getWeight();

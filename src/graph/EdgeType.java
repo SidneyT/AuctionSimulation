@@ -9,7 +9,7 @@ import java.util.Set;
 import createUserFeatures.BuildUserFeatures.AuctionObject;
 import createUserFeatures.BuildUserFeatures.BidObject;
 
-enum EdgeType implements EdgeTypeI {
+public enum EdgeType implements EdgeTypeI {
 	/**
 	 * Edge from winner to seller.
 	 */
@@ -64,7 +64,7 @@ enum EdgeType implements EdgeTypeI {
 	},
 	/**
 	 * An edge goes from each bidder to the seller for one auction. 
-	 * Maximum of 1 edge per auction between seller/bidder.
+	 * Maximum of 1 edge per auction between seller/bidder per auction.
 	 */
 	PARTICIPATE {
 		public List<int[]> getTuples(AuctionObject auction, List<BidObject> bids) {

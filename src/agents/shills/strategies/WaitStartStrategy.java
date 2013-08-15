@@ -5,8 +5,6 @@ import java.util.Random;
 
 import com.sun.istack.internal.logging.Logger;
 
-import createUserFeatures.BuildSimFeatures;
-
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 

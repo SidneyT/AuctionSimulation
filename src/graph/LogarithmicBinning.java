@@ -95,7 +95,7 @@ public class LogarithmicBinning {
 	 * @return
 	 */
 	public int findBinIndex(double value) {
-		assert value < startingBinValue : "Value " + value + " must be greater than startingBinValue " + startingBinValue + ".";
+		assert value >= startingBinValue : "Value " + value + " must be greater than startingBinValue " + startingBinValue + ".";
 		return (int) (FastMath.log((value - startingBinValue) / firstBinWidth + 1) / FastMath.log(binWidthGrowth));
 	}
 	

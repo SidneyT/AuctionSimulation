@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.log4j.Logger;
 
 import agents.SimpleUser;
+import agents.SimpleUserI;
 
 /**
  * Bid object. Comparator sorts list from lowest to highest.
@@ -17,10 +18,10 @@ public class Bid implements Comparable<Bid> {
 	
 	private final int id;
 	private long time;
-	private final SimpleUser bidder;
+	private final SimpleUserI bidder;
 	private final int price;
 	
-	public Bid(SimpleUser bidder, int price) {
+	public Bid(SimpleUserI bidder, int price) {
 //		this.id = -1;
 		this.id = bidId.getAndIncrement();
 		this.bidder = bidder;
@@ -44,7 +45,7 @@ public class Bid implements Comparable<Bid> {
 //		}
 //	}
 	
-	public SimpleUser getBidder() {
+	public SimpleUserI getBidder() {
 		return bidder;
 	}
 

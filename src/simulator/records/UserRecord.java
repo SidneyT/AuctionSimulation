@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import agents.EventListenerI;
-import agents.SimpleUser;
 import agents.SimpleUserI;
 
 /**

@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import agents.shills.puppets.PuppetBidder;
+import agents.SimpleUserI;
+import agents.shills.puppets.Puppet;
 import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.puppets.PuppetI;
-import agents.shills.puppets.PuppetSeller;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
 
@@ -55,7 +55,7 @@ public class AlternatingAuction extends CollusiveShillController {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfGroups; i++) {
-					AlternatingAuction sc = new AlternatingAuction(bh, ps, is, ah, ur, types, strategy, PuppetBidder.getFactory(), numBidder);
+					AlternatingAuction sc = new AlternatingAuction(bh, ps, is, ah, ur, types, strategy, Puppet.getFactory(), numBidder);
 					ah.addEventListener(sc);
 				}
 			}
@@ -73,8 +73,8 @@ public class AlternatingAuction extends CollusiveShillController {
 	}
 
 	@Override
-	protected PuppetSeller pickSeller() {
+	protected PuppetI pickSeller() {
 		return css.get(0);
 	}
-	
+
 }

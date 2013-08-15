@@ -26,8 +26,8 @@ import simulator.database.DBConnection;
 public class BuildTMFeatures extends BuildUserFeatures {
 	
 	public static void main(String[] args) {
-//		run();
-		moreThanTwo();
+		run();
+//		moreThanTwo();
 		System.out.println("Finished.");
 	}
 
@@ -46,7 +46,8 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	}
 	
 	private static void run() {
-		List<Features> featureList = Features.ALL_FEATURES_MINUS_TYPE;
+		List<Features> featureList = Features.DEFAULT_FEATURES;
+//		List<Features> featureList = Features.ALL_FEATURES_MINUS_TYPE;
 		BuildTMFeatures bf = new BuildTMFeatures();
 		
 //		int minimumFinalPrice = 10000;

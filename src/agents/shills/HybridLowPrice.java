@@ -1,32 +1,25 @@
 package agents.shills;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.apache.log4j.Logger;
 
-import agents.SimpleUserI;
-import agents.shills.puppets.PuppetBidder;
-import agents.shills.puppets.PuppetFactoryI;
-import agents.shills.puppets.PuppetI;
-import agents.shills.strategies.LowPriceStrategy;
-import agents.shills.strategies.Strategy;
-import agents.shills.strategies.TrevathanStrategy;
-
 import simulator.AgentAdder;
 import simulator.AuctionHouse;
-import simulator.Main;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
-import simulator.database.SaveToDatabase;
 import simulator.objects.Auction;
 import simulator.records.UserRecord;
+import agents.SimpleUserI;
+import agents.shills.puppets.Puppet;
+import agents.shills.puppets.PuppetFactoryI;
+import agents.shills.puppets.PuppetI;
+import agents.shills.strategies.Strategy;
 
 /**
  * Does what Hybrid does, except bidding agents also bid in non-shill
@@ -80,7 +73,7 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 	}
 	
 	@Override
-	public void endSoonAction(Auction auction, long time) {
+	public void endSoonAction(Auction auction, int time) {
 		super.endSoonAction(auction, time);
 		
 		if (!shouldSnipe(auction))
@@ -116,7 +109,7 @@ public class HybridLowPrice extends HybridTVaryCollusion {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					HybridLowPrice sc = new HybridLowPrice(bh, ps, is, ah, ur, types, strategy1, strategy2, PuppetBidder.getFactory());
+					HybridLowPrice sc = new HybridLowPrice(bh, ps, is, ah, ur, types, strategy1, strategy2, Puppet.getFactory());
 					ah.addEventListener(sc);
 				}
 			}

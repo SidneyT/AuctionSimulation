@@ -27,12 +27,10 @@ import simulator.objects.Feedback;
 import simulator.objects.ItemCondition;
 import simulator.objects.Feedback.Val;
 import simulator.records.UserRecord;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-import util.Util;
 import agents.EventListener;
 import agents.SimpleUserI;
-import agents.shills.puppets.PuppetBidder;
-import agents.shills.puppets.PuppetSeller;
+import agents.shills.puppets.Puppet;
+import agents.shills.puppets.PuppetI;
 import agents.shills.strategies.Strategy;
 
 public class LowBidShillPair extends EventListener implements Controller {
@@ -44,8 +42,8 @@ public class LowBidShillPair extends EventListener implements Controller {
 	protected ItemSender is;
 	protected AuctionHouse ah;
 	
-	private final PuppetSeller ss;
-	private final PuppetBidder sb;
+	private final Puppet ss;
+	private final Puppet sb;
 	// Map<Auction, Registered>
 	private final Map<Auction, Boolean> shillAuctions;
 	private final Set<Auction> expiredShillAuctions;
@@ -71,14 +69,14 @@ public class LowBidShillPair extends EventListener implements Controller {
 		this.types = types;
 		
 		// set up the shill seller
-		PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, this, types);
+		Puppet ss = new Puppet(bh, ps, is, ah, this, types);
 //		SimpleUser ss = new SimpleUser(bh, ps, is, ah);
 		ur.addUser(ss);
 		this.ss = ss;
 		
 		// set up the shill bidder
 //		SimpleUser sb = new SimpleUser(bh, ps, is, ah);
-		PuppetBidder sb = new PuppetBidder(bh, ps, is, ah, this);
+		Puppet sb = new Puppet(bh, ps, is, ah, this, types);
 		ur.addUser(sb);
 		this.sb = sb;
 	
@@ -165,7 +163,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	public void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, int time) {
 		super.newAction(auction, time);
 		if (shillAuctions.containsKey(auction)) {
 			ah.registerForAuction(this, auction);
@@ -175,14 +173,14 @@ public class LowBidShillPair extends EventListener implements Controller {
 
 	boolean someoneJustBid; 
 	@Override
-	public void priceChangeAction(Auction auction, long time) {
+	public void priceChangeAction(Auction auction, int time) {
 		super.priceChangeAction(auction, time);
 		if (auction.getWinner() != sb)
 			someoneJustBid = true;
 	}
 
 	@Override
-	public void lossAction(Auction auction, long time) {
+	public void lossAction(Auction auction, int time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;
@@ -196,13 +194,13 @@ public class LowBidShillPair extends EventListener implements Controller {
 	 * This method will never be called.
 	 */
 	@Override
-	public void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, int time) {
 		super.winAction(auction, time);
 		assert(false) : "This method should never be called, since this class can never bid/win.";
 	}
 
 	@Override
-	public void endSoonAction(Auction auction, long time) {
+	public void endSoonAction(Auction auction, int time) {
 		super.endSoonAction(auction, time);
 		
 		if (!shouldSnipe(auction))
@@ -230,48 +228,6 @@ public class LowBidShillPair extends EventListener implements Controller {
 	}
 	
 	@Override
-	public void expiredAction(Auction auction, long time) {
-		super.expiredAction(auction, time);
-	}
-
-	// can remove...
-	@Override
-	public void soldAction(Auction auction, long time) {
-		super.soldAction(auction, time);
-		this.awaitingPayment.add(auction);
-	}
-	
-	// can remove...
-	@Override
-	// acts for the shill bidder. copied from simpleUser, replacing "this" with ss
-	public void gotPaidAction(Collection<Payment> paymentSet) {
-		super.gotPaidAction(paymentSet);
-		
-		for (Payment payment : paymentSet) {
-			boolean exists = this.awaitingPayment.remove(payment.getAuction());
-			assert(exists); 
-			
-			this.is.send(2, payment.getAuction(), payment.getAuction().getItem(), ItemCondition.GOOD, ss, payment.getSender());
-			
-			bh.getFeedbackToAh().put(new Feedback(Val.POS, ss, payment.getAuction()));
-		}
-	}
-	
-	// can remove...
-	@Override
-	// acts for the shill seller. copied from simpleUser, replacing "this" with ss
-	public void itemReceivedAction(Set<ItemSold> itemSet) {
-		super.itemReceivedAction(itemSet);
-
-		for (ItemSold item : itemSet) {
-			boolean awaiting = awaitingItem.remove(item.getAuction());
-			assert awaiting;
-			
-			bh.getFeedbackToAh().put(new Feedback(Val.POS, sb, item.getAuction()));
-		}
-	}
-
-	@Override
 	public String toString() {
 		return super.toString() + ":" + strategy1.toString(); 
 	}
@@ -297,10 +253,11 @@ public class LowBidShillPair extends EventListener implements Controller {
 	public void winAction(SimpleUserI agent, Auction auction) {
 //		System.out.println(agent + " won the auction : " + auction);
 		assert agent == sb;
-		if (shillAuctions.containsKey(auction))
+		if (shillAuctions.containsKey(auction)) {
 			shillWinCount++;
-		else
+		} else {
 			winCount++;
+		}
 	}
 
 	@Override
@@ -315,7 +272,33 @@ public class LowBidShillPair extends EventListener implements Controller {
 
 	@Override
 	public boolean isFraud(Auction auction) {
-		throw new NotImplementedException();
+		return shillAuctions.containsKey(auction);
+	}
+
+	@Override
+	public void soldAction(SimpleUserI agent, Auction auction) {
+		if (isFraud(auction))
+			bh.getFeedbackToAh().put(new Feedback(Val.POS, agent, auction));
+		else {
+			this.awaitingPayment.add(auction);
+		}
+
+	}
+
+	@Override
+	public void expiredAction(SimpleUserI agent, Auction auction) {
+	}
+
+	@Override
+	public void gotPaidAction(SimpleUserI agent, Collection<Payment> paymentSet) {
+	}
+
+	@Override
+	public void itemReceivedAction(PuppetI agent, Set<ItemSold> itemSet) {
+	}
+
+	@Override
+	public void endSoonAction(PuppetI agent, Auction auction) {
 	}
 	
 }

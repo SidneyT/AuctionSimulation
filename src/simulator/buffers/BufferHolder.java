@@ -29,7 +29,7 @@ public class BufferHolder {
 		return this.timeMessage;
 	}
 	
-	public long getTime() {
+	public int getTime() {
 		return this.timeMessage.getTime();
 	}
 	

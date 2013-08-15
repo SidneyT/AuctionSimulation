@@ -23,7 +23,7 @@ public class AuctionRecord {
 //	private final Map<Integer, Set<Auction>> submissions;
 //	private final AtomicInteger auctionCount; // number of auctions submitted.  used to give auctions an ID.
 	// Map<Auction endTime, Auction object>
-	private final HashMultimap<Long, Auction> currentAuctions;
+	private final HashMultimap<Integer, Auction> currentAuctions;
 //	private final Map<Long, Set<Auction>> expiredAuctions;
 	
 	// the set of auctions that are running
@@ -38,7 +38,7 @@ public class AuctionRecord {
 		this.currentSet = new HashSet<Auction>();
 	}
 	
-	public void addAuction(Auction auction, long time) {
+	public void addAuction(Auction auction, int time) {
 		// set the id and startTime of the auction
 //		auction.setId(auctionCount.getAndIncrement());
 		auction.setStartTime(time);
@@ -51,7 +51,7 @@ public class AuctionRecord {
 		this.currentSet.add(auction);
 		
 		// recording auction according to expiry date
-		long expiryTime = auction.getDuration() + time;
+		int expiryTime = auction.getDuration() + time;
 		currentAuctions.put(expiryTime, auction);
 
 //		SaveToDatabase.saveAuction(auction);
@@ -59,7 +59,7 @@ public class AuctionRecord {
 		assert(auction.idAndStartTimeSet()); // auction id & startTime must be set
 	}
 	
-	public void addAuctions(Collection<Auction> auctions, long time) {
+	public void addAuctions(Collection<Auction> auctions, int time) {
 		for (Auction auction : auctions) {
 			addAuction(auction, time);
 		}
@@ -78,13 +78,13 @@ public class AuctionRecord {
 			currentAuctions.removeAll(auction.getEndTime());
 		}
 		// change the endTime of the auction
-		long newEndTime = auction.extendAuction(time);
+		int newEndTime = auction.extendAuction(time);
 		// add the auction into the currentAuctions map using the new endTime
 		boolean added = currentAuctions.put(newEndTime, auction);
 		assert(added);
 	}
 	
-	public HashMultimap<Long, Auction> getCurrentAuctions() {
+	public HashMultimap<Integer, Auction> getCurrentAuctions() {
 		return this.currentAuctions;
 	}
 	
@@ -94,7 +94,7 @@ public class AuctionRecord {
 	 * 
 	 * @return the list of expired auctions or an emptyList if there are no expired auctions
 	 */
-	public Set<Auction> removeExpiredAuctions(long time) {
+	public Set<Auction> removeExpiredAuctions(int time) {
 		Set<Auction> expireds = this.currentAuctions.get(time);
 		if (expireds == null) {
 			return Collections.emptySet();

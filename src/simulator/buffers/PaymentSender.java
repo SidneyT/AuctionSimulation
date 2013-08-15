@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
-import agents.SimpleUser;
 import agents.SimpleUserI;
 
 import simulator.objects.Auction;
@@ -21,16 +20,16 @@ public class PaymentSender implements Runnable {
 	
 	// Map<Delay finish time, PaymentHolder>
 	private final ConcurrentHashMap<Long, Set<PaymentHolder>> delayedPayments;
-	private final ConcurrentHashMap<SimpleUser, List<Payment>> readyPayments;
+	private final ConcurrentHashMap<SimpleUserI, List<Payment>> readyPayments;
 	
 	public PaymentSender() {
 		this.time = 0;
 		
 		this.delayedPayments = new ConcurrentHashMap<Long, Set<PaymentHolder>>();
-		this.readyPayments = new ConcurrentHashMap<SimpleUser, List<Payment>>();
+		this.readyPayments = new ConcurrentHashMap<SimpleUserI, List<Payment>>();
 	}
 	
-	public void send(long delay, Auction auction, long amount, SimpleUser sender, SimpleUser recipient) {
+	public void send(long delay, Auction auction, long amount, SimpleUserI sender, SimpleUserI recipient) {
 		logger.debug("Payment of " + amount + " received from " + sender + " to " + recipient + " for " + auction + ".");
 		
 		final long target = this.time + delay;
@@ -74,15 +73,15 @@ public class PaymentSender implements Runnable {
 	}
 	
 	private static class PaymentHolder {
-		private final SimpleUser recipient; 
+		private final SimpleUserI recipient; 
 		private final Payment payment;
 		
-		public PaymentHolder(SimpleUser recipient, Payment payment) {
+		public PaymentHolder(SimpleUserI recipient, Payment payment) {
 			this.recipient = recipient;
 			this.payment = payment;
 		}
 
-		public SimpleUser getRecipient() {
+		public SimpleUserI getRecipient() {
 			return recipient;
 		}
 
@@ -94,9 +93,9 @@ public class PaymentSender implements Runnable {
 	public static class Payment {
 		private final Auction auction;
 		private final long amount;
-		private final SimpleUser sender;
+		private final SimpleUserI sender;
 		
-		private Payment(Auction auction, long amount, SimpleUser sender) {
+		private Payment(Auction auction, long amount, SimpleUserI sender) {
 			this.auction = auction;
 			this.amount = amount;
 			this.sender = sender;
@@ -110,7 +109,7 @@ public class PaymentSender implements Runnable {
 			return this.amount;
 		}
 		
-		public SimpleUser getSender() {
+		public SimpleUserI getSender() {
 			return this.sender;
 		}
 		

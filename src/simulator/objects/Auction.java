@@ -22,19 +22,19 @@ public class Auction {
 	private static final AtomicInteger auctionId = new AtomicInteger(); // for allocating unique auction ids
 
 	private final int id;
-	private long startTime;
-	private final SimpleUser seller;
-	private final long startPrice;
-	private final long reservePrice;
+	private int startTime;
+	private final SimpleUserI seller;
+	private final int startPrice;
+	private final int reservePrice;
 	private int currentPrice;
-	private final long duration;
+	private final int duration;
 	private final Item item;
 	private final List<Bid> bidHistory;
 	private int bidCount;
 //	private Bid firstBid;
 //	private Bid lastBid;
-	private SimpleUser winner; // whoever's winning, or won the auction
-	private long endTime;
+	private SimpleUserI winner; // whoever's winning, or won the auction
+	private int endTime;
 	
 	private final double popularity;
 
@@ -47,8 +47,8 @@ public class Auction {
 //		this(seller, category, item, duration, startPrice, reservePrice, 1);
 //	}
 
-	public Auction(SimpleUser seller, Item item, long duration, int startPrice,
-			long reservePrice, double popluarity) {
+	public Auction(SimpleUserI seller, Item item, int duration, int startPrice,
+			int reservePrice, double popluarity) {
 
 		if (!argumentsValid(seller, item, duration, startPrice, reservePrice)) {
 			throw new IllegalArgumentException();
@@ -91,15 +91,15 @@ public class Auction {
 //		}
 //	}
 
-	public SimpleUser getSeller() {
+	public SimpleUserI getSeller() {
 		return seller;
 	}
 
-	public long getStartPrice() {
+	public int getStartPrice() {
 		return startPrice;
 	}
 
-	public long getReservePrice() {
+	public int getReservePrice() {
 		return this.reservePrice;
 	}
 
@@ -111,33 +111,33 @@ public class Auction {
 //		return this.category;
 //	}
 
-	public long getCurrentPrice() {
+	public int getCurrentPrice() {
 		logger.debug("Reporting current price as: " + this.currentPrice);
 		return currentPrice;
 	}
 
-	public long getDuration() {
+	public int getDuration() {
 		return duration;
 	}
 
-	public long getStartTime() {
+	public int getStartTime() {
 		return startTime;
 	}
 
 	// public void setEndtime(long endtime) {
 	// this.endTime = endtime;
 	// }
-	public long extendAuction(long time) {
+	public int extendAuction(long time) {
 		this.endTime += time;
 		return this.endTime;
 	}
 
-	public long getEndTime() {
+	public int getEndTime() {
 		assert (endTime != -1);
 		return endTime;
 	}
 
-	public void setStartTime(long startTime) {
+	public void setStartTime(int startTime) {
 		if (this.startTime == -1) {
 			this.startTime = startTime;
 			this.endTime = startTime + duration;
@@ -212,7 +212,7 @@ public class Auction {
 	 * @return User with the highest bid currently, or the winner, if the
 	 *         auction has ended, or <code>null</code> if no one has bid.
 	 */
-	public SimpleUser getWinner() {
+	public SimpleUserI getWinner() {
 		return this.winner;
 	}
 
@@ -231,11 +231,11 @@ public class Auction {
 		ONE_DAY(288),
 		SEVEN_DAYS(2016), 
 		TEN_DAYS(2880);
-		private final long timeUnits;
-		AuctionLength(long timeUnits) {
+		private final int timeUnits;
+		AuctionLength(int timeUnits) {
 			this.timeUnits = timeUnits;
 		}
-		public long timeUnits() {
+		public int timeUnits() {
 			return timeUnits;
 		}
 	}

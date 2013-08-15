@@ -76,6 +76,12 @@ public class Main {
 		Strategy waitStart = new WaitStartStrategy(0.95, 0.85, 0.85);
 		Strategy lowPrice = new LowPriceStrategy();
 
+//		String databaseName = "syn_normal_100k_test5";
+//		DBConnection.createDatabase(databaseName);
+//		SimulationCreateTableStmts.createSimulationTables(databaseName);
+//		// run the simulation and store everything into the database
+//		Main.run(SaveToDatabase.instance(databaseName));
+
 //		AgentAdder trevathan = SimpleShillPair.getAgentAdder(30, travethan); // can use 20, since each submits 10 auctions.
 //		for (int i = 0; i < 30; i++) {
 //			String databaseName = "auction_simulation_simple" + i;
@@ -97,16 +103,16 @@ public class Main {
 //			// run the simulation and store everything into the database
 //			Main.run(SaveToDatabase.instance(databaseName), delayedStart);
 //		}
-		AgentAdder hybrid = HybridLowPrice.getAgentAdder(20, waitStart, lowPrice); // can use 20, since each submits 10 auctions.
-		for (int i = 0; i < 30; i++) {
-			String databaseName = "syn_hybridLP_" + i;
-			// construct database and tables to store simulation data
-//			DBConnection.createDatabase(databaseName);
-//			SimulationCreateTableStmts.createSimulationTables(databaseName);
-			
-			// run the simulation and store everything into the database
-			Main.run(SaveToDatabase.instance(databaseName), hybrid);
-		}
+//		AgentAdder hybrid = HybridLowPrice.getAgentAdder(20, waitStart, lowPrice); // can use 20, since each submits 10 auctions.
+//		for (int i = 0; i < 30; i++) {
+//			String databaseName = "syn_hybridLP_" + i;
+//			// construct database and tables to store simulation data
+////			DBConnection.createDatabase(databaseName);
+////			SimulationCreateTableStmts.createSimulationTables(databaseName);
+//			
+//			// run the simulation and store everything into the database
+//			Main.run(SaveToDatabase.instance(databaseName), hybrid);
+//		}
 //		AgentAdder hybrid = HybridTVaryCollusion.getAgentAdder(10, waitStart); // can use 20, since each submits 10 auctions.
 //		for (int i = 0; i < 30; i++) {
 //			String databaseName = "syn_hybridTVC_" + i;
@@ -117,17 +123,17 @@ public class Main {
 //			// run the simulation and store everything into the database
 //			Main.run(SaveToDatabase.instance(databaseName), hybrid);
 //		}
-//		AgentAdder hybrid = HybridT.getAgentAdder(10, waitStart, PuppetClusterBidderCombined.getFactory());
-////		Main.run(SaveToDatabase.instance(), hybrid);
-//		for (int i = 0; i < 30; i++) {
-//			String databaseName = "syn_hybridNormal_" + i;
-//			// construct database and tables to store simulation data
-////			DBConnection.createDatabase(databaseName);
-////			SimulationCreateTableStmts.createSimulationTables(databaseName);
-//			
-//			// run the simulation and store everything into the database
-//			Main.run(SaveToDatabase.instance(databaseName), hybrid);
-//		}
+		AgentAdder hybrid = HybridT.getAgentAdder(10 * 25, waitStart, PuppetClusterBidderCombined.getFactory());
+//		Main.run(SaveToDatabase.instance(), hybrid);
+		for (int i = 0; i < 5; i++) {
+			String databaseName = "syn_hybridNormal_100k_" + i;
+			// construct database and tables to store simulation data
+			DBConnection.createDatabase(databaseName);
+			SimulationCreateTableStmts.createSimulationTables(databaseName);
+			
+			// run the simulation and store everything into the database
+			Main.run(SaveToDatabase.instance(databaseName), hybrid);
+		}
 }
 	
 	/**
@@ -176,16 +182,16 @@ public class Main {
 		final AuctionHouse ah = new AuctionHouse(userRecord, bh, saveObjects);
 
 		// parameters of simulator
-		final int numClusterBidder = 4000;
+		final int numClusterBidder = 100000;
 		final double numberOfDays = 100;
 //		final double auctionsPerBidder = 1.04; // value from TM data
 //		final double auctionsPerBidder = 1.25; // assuming 35.9% of auctions have no bids, 1.04 becomes 1.62
 		final double auctionsPerBidder = 1.4;
-		final double auctionsPerDay = auctionsPerBidder * numClusterBidder / numberOfDays;
+//		final double failedAuctionsAdjustment = 1.033; // every 1.033 auctions, only 1 will be bid upon by at least 1 person
+		final double auctionsPerDay = auctionsPerBidder * numClusterBidder / numberOfDays; // * failedAuctionsAdjustment;
 
 //		double probIsSniper = 0.33; // from tradeMeData
 		final double probIsSniper = 0.5;
-		ClusterBidder.setNumUsers(numClusterBidder);
 		int numberOfSnipers = (int) (probIsSniper * numClusterBidder + 0.5);
 		for (int i = 0; i < numberOfSnipers; i++) {
 			userRecord.addUser(new ClusterSnipe(bh, ps, is, ah, itemTypes));

@@ -34,11 +34,13 @@ public class BuildSimFeatures extends BuildUserFeatures{
 //		String features = "-0-1ln-2ln-3ln-10-4ln-5-6-11-7-9-8";
 //		String features = "-3ln-10-5-6ln-11";
 		
-		List<Features> features = Features.ALL_FEATURES;
+		List<Features> features = Features.DEFAULT_FEATURES;
 		
 		boolean trim = true;
 		BuildSimFeatures bf = new BuildSimFeatures(trim);
-		writeToFile(bf.build().values(), features, Paths.get("BuildTrimmedSimFeatures_" + Features.fileLabels(features) + ".csv"));
+//		writeToFile(bf.build().values(), features, Paths.get("BuildTrimmedSimFeatures20000_" + Features.fileLabels(features) + ".csv"));
+		writeToFile(bf.build(new SimDBAuctionIterator(DBConnection.getConnection("syn_normal_20000"), true)).values(), features, Paths.get("BuildTrimmedSimFeatures20000_" + Features.fileLabels(features) + ".csv"));
+		writeToFile(bf.build(new SimDBAuctionIterator(DBConnection.getConnection("syn_normal_4000"), true)).values(), features, Paths.get("BuildTrimmedSimFeatures4000_" + Features.fileLabels(features) + ".csv"));
 //		String features = "-0-1ln-2ln-3ln-10-5-6-11-7-9-8";
 		System.out.println("Finished.");
 	}

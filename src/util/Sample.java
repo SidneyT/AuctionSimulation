@@ -73,9 +73,30 @@ public class Sample <T> {
 	    return new ArrayList<>(res);
 	}
 
+	/**
+	 * Floyd's algorithm, selects numbers between 0 inclusive and maxValue exclusive.
+	 * @param maxValue
+	 * @param sampleSize
+	 * @param r
+	 * @return
+	 */
+	public static List<Integer> randomSample(int maxValue, int sampleSize, Random r){
+	    HashSet<Integer> res = new HashSet<Integer>(sampleSize);
+	    int n = maxValue;
+	    for(int i = n - sampleSize; i < n; i++){
+	        int pos = r.nextInt(i+1);
+	        Integer item = pos;
+	        if (res.contains(item))
+	            res.add(i);
+	        else
+	            res.add(pos);
+	    }
+	    return new ArrayList<>(res);
+	}
+
 	public static void main(String[] args) {
-		int[] counts = new int[20];
 		Random r = new Random();
+		int[] counts = new int[20];
 		for (int i = 0; i < 200000; i++) {
 			List<Integer> results = randomSample(Arrays.asList(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19).iterator(), 10, r);
 			for (int j : results) {
@@ -83,6 +104,9 @@ public class Sample <T> {
 			}
 		}
 		System.out.println(Arrays.toString(counts));
+		
 		System.out.println("Done");
 	}
+	
+	
 }

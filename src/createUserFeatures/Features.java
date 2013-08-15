@@ -404,6 +404,7 @@ public enum Features {
 	}
 	public static final List<Features> FEATURES_FOR_DT = Arrays.<Features>asList(
 			Features.UserType0b,
+//			Features.AuctionCount1Ln,
 			Features.AvgBid3Ln,
 			Features.AvgBidIncMinusMinInc4Ln,
 			Features.PropWin5,

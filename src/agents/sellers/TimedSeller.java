@@ -19,12 +19,13 @@ import agents.SimpleUser;
 
 /**
  * Simple seller class. Simulates the average frequency of auctions seen from sellers in TM.
+ * Every instance submits the same number of auctions on average.
  */
 public class TimedSeller extends SimpleUser {
 
 	private static final Logger logger = Logger.getLogger(TimedSeller.class);
 	protected final Random r;
-	private long nextSubmission;
+	private int nextSubmission;
 	private final ExponentialDistribution exp;
 	protected final List<ItemType> itemTypes;
 	
@@ -35,7 +36,7 @@ public class TimedSeller extends SimpleUser {
 		
 		this.itemTypes = itemTypes;
 
-		exp = createExpDist();
+		exp = createExpDist(); // make it pre-generate all auction times at beginning...
 		nextSubmission = nextAuctionSubmission();
 		logger.debug(" submitting auction at " + this.nextSubmission + " at time " + 0 + ".");
 	}
@@ -74,7 +75,7 @@ public class TimedSeller extends SimpleUser {
 	@Override
 	public void run() {
 		super.run();
-		long currentTime = this.bh.getTime();
+		int currentTime = this.bh.getTime();
 		assert (currentTime <= nextSubmission) : "Time for next auction submission must be in the future: " + currentTime + "," + nextSubmission + ".";
 		if (currentTime == nextSubmission) {
 			do {
@@ -85,8 +86,8 @@ public class TimedSeller extends SimpleUser {
 		}
 	}
 
-	private long nextAuctionSubmission() {
-		return Math.round(exp.sample());
+	private int nextAuctionSubmission() {
+		return (int) Math.round(exp.sample());
 	}
 	
 	private void submitAuction() {

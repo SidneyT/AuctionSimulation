@@ -143,37 +143,39 @@ public class Chart  {
 	    renderer.setSeriesPaint(0, Color.blue);
 	    double size = 1.0;
 	    double delta = size / 2.0;
-	    Shape shape1 = new Rectangle2D.Double(-delta/2, -delta*2, size/2, size * 2);
-	    renderer.setSeriesShape(0, shape1);
-	    Shape shape2 = new Ellipse2D.Double(-delta * 3, -delta * 3, size * 3, size * 3);
-	    renderer.setSeriesShape(1, shape2);
 	    Shape shape3 = ShapeUtilities.createDiagonalCross(2f, 0.02f);
-	    renderer.setSeriesShape(2, shape3);
+	    renderer.setSeriesShape(0, shape3);
 	    Shape shape4 = ShapeUtilities.createRegularCross(3f, 0.02f);
-	    renderer.setSeriesShape(3, shape4);
-	    Shape shape5 = ShapeUtilities.createDiamond(2);
+	    renderer.setSeriesShape(1, shape4);
+	    Shape shape1 = new Rectangle2D.Double(-delta, -delta, size, size);
+	    renderer.setSeriesShape(2, shape1);
+	    Shape shape2 = ShapeUtilities.createDiagonalCross(2f, 0.02f);
+	    renderer.setSeriesShape(3, shape2);
+	    Shape shape5 = ShapeUtilities.createRegularCross(3f, 0.02f);
 	    renderer.setSeriesShape(4, shape5);
-	    Shape shape6 = ShapeUtilities.createUpTriangle(2);
+	    Shape shape6 = ShapeUtilities.createUpTriangle(1);
 	    renderer.setSeriesShape(5, shape6);
-	    Shape shape7 = ShapeUtilities.createDownTriangle(2);
-	    renderer.setSeriesShape(6, shape7);
-	    Shape shape8 = new Rectangle2D.Double(-delta*2, -delta/2, size*2, size/2);
+//	    Shape shape9 = new Rectangle2D.Double(-delta, -delta, size, size);
+	    Shape shape9 = ShapeUtilities.createDiagonalCross(2f, 0.02f);
+	    renderer.setSeriesShape(6, shape9);
+//	    Shape shape8 = new Rectangle2D.Double(-delta*2, -delta/2, size*2, size/2);
+	    Shape shape8 = ShapeUtilities.createRegularCross(3f, 0.1f);
 	    renderer.setSeriesShape(7, shape8);
-	    Shape shape9 = new Rectangle2D.Double(-delta, -delta, size, size);
-	    renderer.setSeriesShape(8, shape9);
+	    Shape shape7 = new Ellipse2D.Double(-delta, -delta, size, size);
+	    renderer.setSeriesShape(8, shape7);
 
 
 		//save chart using chart title as filename.
 		saveChart(chart);
 	    
-        ChartPanel chartPanel = new ChartPanel(chart);
-        // default size
-        chartPanel.setPreferredSize(new java.awt.Dimension(1000, 600));
-        // add it to our application
-        JFrame frame = new JFrame();
-        frame.setContentPane(chartPanel);
-        frame.pack();
-        frame.setVisible(true);
+//        ChartPanel chartPanel = new ChartPanel(chart);
+//        // default size
+//        chartPanel.setPreferredSize(new java.awt.Dimension(1000, 600));
+//        // add it to our application
+//        JFrame frame = new JFrame();
+//        frame.setContentPane(chartPanel);
+//        frame.pack();
+//        frame.setVisible(true);
 	}
 
 	public void saveChart(JFreeChart chart) {
@@ -183,7 +185,7 @@ public class Chart  {
 			 * This utility saves the JFreeChart as a JPEG First Parameter: FileName Second Parameter: Chart To Save
 			 * Third Parameter: Height Of Picture Fourth Parameter: Width Of Picture
 			 */
-			ChartUtilities.saveChartAsPNG(new File(fileName), chart, 1200, 675);
+			ChartUtilities.saveChartAsPNG(new File(fileName), chart, 1280, 720);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Problem occurred creating chart.");

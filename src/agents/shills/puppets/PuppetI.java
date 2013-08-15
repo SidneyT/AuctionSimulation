@@ -11,5 +11,6 @@ public interface PuppetI extends SimpleUserI {
 	 * @param bidPrice
 	 */
 	void makeBid(Auction auction, int bidPrice);
-
+	void submitAuction(Auction auction);
+	Auction submitAuction();
 }

@@ -40,7 +40,7 @@ enum NodeFeature implements NodeFeatureI {
 	 * Finds the total edge weight for the given user's egonet. Assumes directed graph.
 	 * @param adjacencyList
 	 */
-	EgonetWeight {
+	EgonetWeightCount {
 		@Override
 		public double value(HashMap<Integer, HashMultiset<Integer>> adjacencyList, int user) {
 			HashMap<Integer, Multiset<Integer>> egonet = egonetAdjacencyMatrix(adjacencyList, user);
@@ -51,7 +51,7 @@ enum NodeFeature implements NodeFeatureI {
 			return totalWeight;
 		}
 	},
-	NodeNeighbourCount {
+	NodeEdgeCount {
 		@Override
 		public double value(HashMap<Integer, HashMultiset<Integer>> adjacencyList, int user) {
 		if (!adjacencyList.containsKey(user))
@@ -193,7 +193,20 @@ enum NodeFeature implements NodeFeatureI {
 //		return sum;
 //	}
 	
-	static HashMap<Integer, HashMap<Integer, Multiset<Integer>>> cachedEgonetAdjacencyMatricies = new HashMap<>();
+//	static HashMap<Integer, HashMap<Integer, Multiset<Integer>>> cachedEgonetAdjacencyMatricies = new HashMap<>(); // Map<userId, Map<neighbourId, neighbour's neighbours>>
+	public static HashMap<EdgeTypeI, HashMap<Integer, HashMap<Integer, Multiset<Integer>>>> cachedEgonetAdjacencyMatricies = new HashMap<>();
+	public static HashMap<Integer, HashMap<Integer, Multiset<Integer>>> findAllEgonets(EdgeTypeI edgeType, HashMap<Integer, HashMultiset<Integer>> adjacencyList) {
+		HashMap<Integer, HashMap<Integer, Multiset<Integer>>> egonets = new HashMap<>();
+		for (int user : adjacencyList.keySet()) {
+			HashMap<Integer, Multiset<Integer>> egonet = egonetAdjacencyMatrix(adjacencyList, user);
+			egonets.put(user, egonet);
+		}
+		cachedEgonetAdjacencyMatricies.put(edgeType, egonets);
+		return egonets;
+	}
+	
+//	static HashMap<Integer, Multiset<Integer>> egonetAdjacencyMatrix(EdgeType edgeType, HashMap<Integer, HashMultiset<Integer>> adjacencyList, int user) {
+//	}
 	
 	/**
 	 * Wrapper for caching egonets.
@@ -202,13 +215,8 @@ enum NodeFeature implements NodeFeatureI {
 	 * @return
 	 */
 	static HashMap<Integer, Multiset<Integer>> egonetAdjacencyMatrix(HashMap<Integer, HashMultiset<Integer>> adjacencyList, int user) {
-		if (cachedEgonetAdjacencyMatricies.containsKey(user)) {
-			return cachedEgonetAdjacencyMatricies.get(user);
-		} else {
-			HashMap<Integer, Multiset<Integer>> egonet = egonetAdjacencyMatrixInner(adjacencyList, user);
-			cachedEgonetAdjacencyMatricies.put(user, egonet);
-			return egonet;
-		}
+		HashMap<Integer, Multiset<Integer>> egonet = egonetAdjacencyMatrixInner(adjacencyList, user);
+		return egonet;
 	}
 	
 	/**

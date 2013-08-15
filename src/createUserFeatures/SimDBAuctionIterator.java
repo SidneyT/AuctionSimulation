@@ -105,6 +105,7 @@ public class SimDBAuctionIterator implements SimAuctionIterator {
 							if (auction == null) {
 								throw new RuntimeException("auction should never be null here.");
 							}
+							assert(resultPair.getValue().size() <= 20);
 							return resultPair;
 						}
 					} 

@@ -1,10 +1,21 @@
 package dataAnalysis;
 
+import graph.EdgeType;
+import graph.GraphOperations;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+
+import com.google.common.collect.BoundType;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.TreeMultiset;
+import createUserFeatures.BuildTMFeatures;
+import createUserFeatures.BuildTMFeatures.TMAuctionIterator;
 
 import nl.peterbloem.powerlaws.Discrete;
 
@@ -18,15 +29,15 @@ public class TestAuctionData {
 	}
 	
 	private void test() {
-		List<Integer> data = getData();
+		List<Integer> data = run2();
 		
 		Discrete model = Discrete.fit(data).fit();
 		double exponent = model.exponent();
 		double xMin = model.xMin();
 		System.out.println("exponent: " + exponent + ", xMin: " + xMin);
 		
-		double significance = model.significance(data, 10);
-		System.out.println("significance: " + significance);
+//		double significance = model.significance(data, 0.01);
+//		System.out.println("significance: " + significance);
 	}
 	
 	private List<Integer> getData() {
@@ -48,4 +59,16 @@ public class TestAuctionData {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	private static List<Integer> run2() {
+		TMAuctionIterator tmIt = new TMAuctionIterator(DBConnection.getTrademeConnection(), BuildTMFeatures.DEFAULT_QUERY);
+		HashMap<Integer, HashMultiset<Integer>> adjacencyList = GraphOperations.duplicateAdjacencyList(tmIt.getIterator(), EdgeType.reverse(EdgeType.PARTICIPATE));
+		TreeMultiset<Integer> frequencies = TreeMultiset.create();
+		for (Integer key : adjacencyList.keySet()) {
+			frequencies.add(adjacencyList.get(key).size());
+		}
+		
+		return Arrays.asList((frequencies.tailMultiset(7, BoundType.CLOSED)).toArray(new Integer[0]));
+	}
+
 }

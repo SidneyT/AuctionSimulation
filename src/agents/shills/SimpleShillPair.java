@@ -27,12 +27,12 @@ import simulator.objects.Feedback;
 import simulator.objects.ItemCondition;
 import simulator.objects.Feedback.Val;
 import simulator.records.UserRecord;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Util;
 import agents.EventListener;
 import agents.SimpleUserI;
-import agents.shills.puppets.PuppetBidder;
-import agents.shills.puppets.PuppetSeller;
+import agents.shills.puppets.Puppet;
+import agents.shills.puppets.Puppet;
+import agents.shills.puppets.PuppetI;
 import agents.shills.strategies.Strategy;
 
 /**
@@ -49,8 +49,8 @@ public class SimpleShillPair extends EventListener implements Controller {
 	protected final AuctionHouse ah;
 	private final List<ItemType> types;
 	
-	private final PuppetSeller ss;
-	private final PuppetBidder sb;
+	private final Puppet ss;
+	private final Puppet sb;
 	// Map<Auction, Registered>
 	private final Map<Auction, Boolean> shillAuctions;
 	private final Set<Auction> expiredShillAuctions;
@@ -68,12 +68,12 @@ public class SimpleShillPair extends EventListener implements Controller {
 		this.types = types;
 		
 		// set up the shill seller
-		PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, this, types);
+		Puppet ss = new Puppet(bh, ps, is, ah, this, types);
 		ur.addUser(ss);
 		this.ss = ss;
 		
 		// set up the shill bidder
-		PuppetBidder sb = new PuppetBidder(bh, ps, is, ah, this);
+		Puppet sb = new Puppet(bh, ps, is, ah, this, types);
 		ur.addUser(sb);
 		this.sb = sb;
 	
@@ -149,7 +149,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	public void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, int time) {
 		super.newAction(auction, time);
 		if (shillAuctions.containsKey(auction)) {
 //			ah.registerForAuction(sb, auction);
@@ -159,19 +159,30 @@ public class SimpleShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	public void priceChangeAction(Auction auction, long time) {
+	public void priceChangeAction(Auction auction, int time) {
 		super.priceChangeAction(auction, time);
 	}
 
 	@Override
-	public void winAction(SimpleUserI agent, Auction auction) {throw new NotImplementedException();}
+	public void winAction(SimpleUserI agent, Auction auction) {
+		bh.getFeedbackToAh().put(new Feedback(Val.POS, agent, auction));
+	}
 	@Override
-	public void lossAction(SimpleUserI agent, Auction auction) {throw new NotImplementedException();}
+	public void lossAction(SimpleUserI agent, Auction auction) {}
 	@Override
-	public boolean isFraud(Auction auction) {throw new NotImplementedException();}
-	
+	public boolean isFraud(Auction auction) {
+		return shillAuctions.containsKey(auction);
+	}
 	@Override
-	public void lossAction(Auction auction, long time) {
+	public void soldAction(SimpleUserI agent, Auction auction) {
+		bh.getFeedbackToAh().put(new Feedback(Val.POS, agent, auction));
+	}
+	@Override
+	public void expiredAction(SimpleUserI agent, Auction auction) {
+	}
+
+	@Override
+	public void lossAction(Auction auction, int time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		boolean removed = shillAuctions.remove(auction);
 		assert removed;
@@ -180,17 +191,17 @@ public class SimpleShillPair extends EventListener implements Controller {
 	}
 
 	@Override
-	public void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, int time) {
 		assert(false) : "This method should never be called, since this class can never bid/win.";
 	}
 
 	@Override
-	public void expiredAction(Auction auction, long time) {
+	public void expiredAction(Auction auction, int time) {
 		super.expiredAction(auction, time);
 	}
 
 	@Override
-	public void soldAction(Auction auction, long time) {
+	public void soldAction(Auction auction, int time) {
 		super.soldAction(auction, time);
 		this.awaitingPayment.add(auction);
 	}
@@ -243,6 +254,18 @@ public class SimpleShillPair extends EventListener implements Controller {
 				return "SimpleShillPair." + numberOfGroups + "." + strategy.toString();
 			}
 		};
+	}
+
+	@Override
+	public void gotPaidAction(SimpleUserI agent, Collection<Payment> paymentSet) {
+	}
+
+	@Override
+	public void itemReceivedAction(PuppetI agent, Set<ItemSold> itemSet) {
+	}
+
+	@Override
+	public void endSoonAction(PuppetI agent, Auction auction) {
 	}
 
 }

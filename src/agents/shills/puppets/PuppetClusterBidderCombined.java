@@ -14,6 +14,7 @@ import simulator.buffers.ItemSender.ItemSold;
 import simulator.buffers.PaymentSender.Payment;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
+import simulator.objects.Feedback;
 import simulator.records.ReputationRecord;
 import agents.bidders.ClusterBidder;
 import agents.bidders.ClusterEarly;
@@ -29,13 +30,16 @@ public class PuppetClusterBidderCombined implements PuppetI {
 	private static final Logger logger = Logger.getLogger(PuppetClusterBidderCombined.class); 
 	
 	private final ClusterBidder normal;
-	private final PuppetBidder puppet;
+	private final Puppet puppet;
 
 	private final Controller controller;
+	private final BufferHolder bh;
 	
-	public PuppetClusterBidderCombined(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, Controller controller, List<ItemType> itemTypes) {
+	
+	public PuppetClusterBidderCombined(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes, final Controller controller) {
 		this.controller = controller;
-
+		this.bh = bh;
+		
 		if (Math.random() < 0.5) {
 			this.normal = new ClusterEarly(bh, ps, is, ah, itemTypes) {
 				protected int numberOfAuctionsPer100Days(double random) { // modify behaviour to participate make it participate in more auctions...
@@ -53,7 +57,7 @@ public class PuppetClusterBidderCombined implements PuppetI {
 		
 		// reuse the id, so that actions by both "normal" and "puppet" are viewed as by the same agent in the simulation.
 		int normalId = this.normal.getId();
-		this.puppet = new PuppetBidder(bh, ps, is, ah, controller, normalId);
+		this.puppet = new PuppetV(bh, ps, is, ah, itemTypes, controller, normalId);
 	}
 
 	@Override
@@ -63,19 +67,19 @@ public class PuppetClusterBidderCombined implements PuppetI {
 	}
 	
 	@Override
-	public void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, int time) {
 		normal.winAction(auction, time);
 		puppet.winAction(auction, time);
 	}
 
 	@Override
-	public void lossAction(Auction auction, long time) {
-		normal.lossAction(auction, time);
+	public void lossAction(Auction auction, int time) {
+//		normal.lossAction(auction, time);
 		puppet.lossAction(auction, time);
 	}
 
 	@Override
-	public void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, int time) {
 		if (!controller.isFraud(auction))
 			normal.newAction(auction, time);
 	}
@@ -85,8 +89,9 @@ public class PuppetClusterBidderCombined implements PuppetI {
 	 * @param auction
 	 */
 	@Override
-	public void soldAction(Auction auction, long time) {
-		normal.soldAction(auction, time); // only need to call with 1 field. Both normal & puppet calls the same method in SimpleUser 
+	public void soldAction(Auction auction, int time) {
+		normal.soldAction(auction, time); // only need to call with 1 field. Both normal & puppet calls the same method in SimpleUser
+		puppet.soldAction(auction, time);
 	}
 	
 	/**
@@ -96,6 +101,7 @@ public class PuppetClusterBidderCombined implements PuppetI {
 	@Override
 	public void gotPaidAction(Collection<Payment> paymentSet) {
 		normal.gotPaidAction(paymentSet); // only need to call with 1 field. Both normal & puppet calls the same method in SimpleUser
+		puppet.gotPaidAction(paymentSet);
 	}
 
 	/**
@@ -104,27 +110,33 @@ public class PuppetClusterBidderCombined implements PuppetI {
 	 */
 	@Override
 	public void itemReceivedAction(Set<ItemSold> itemSet) {
-		normal.itemReceivedAction(itemSet);
+		normal.itemReceivedAction(itemSet); // only need to call with 1 field. Both normal & puppet calls the same method in SimpleUser
+		puppet.itemReceivedAction(itemSet);
 	}
 
 	@Override
-	public void priceChangeAction(Auction auction, long time) {
+	public void priceChangeAction(Auction auction, int time) {
 		normal.priceChangeAction(auction, time); // only need to call with 1 field. Both normal & puppet calls the same method in EventListener
 	}
 
 	@Override
-	public void expiredAction(Auction auction, long time) {
+	public void expiredAction(Auction auction, int time) {
 		normal.expiredAction(auction, time); // only need to call with 1 field. Both normal & puppet calls the same method in EventListener
 	}
 
 	@Override
-	public void endSoonAction(Auction auction, long time) {
+	public void endSoonAction(Auction auction, int time) {
 		normal.endSoonAction(auction, time);
 	}
 
 	@Override
 	public ReputationRecord getReputationRecord() {
 		return normal.getReputationRecord();
+	}
+
+	@Override
+	public void addFeedback(Feedback feedback) {
+		this.getReputationRecord().addFeedback(this.getId(), feedback);
 	}
 
 	@Override
@@ -137,11 +149,21 @@ public class PuppetClusterBidderCombined implements PuppetI {
 		puppet.makeBid(auction, bidPrice);
 	}
 
+	@Override
+	public void submitAuction(Auction auction) {
+		bh.getAuctionMessagesToAh().put(auction);
+	}
+
+	@Override
+	public Auction submitAuction() {
+		throw new UnsupportedOperationException();
+	}
+
 	public static PuppetFactoryI getFactory() {
 		return new PuppetFactoryI() {
 			@Override
 			public PuppetI instance(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, Controller controller, List<ItemType> itemTypes) {
-				return new PuppetClusterBidderCombined(bh, ps, is, ah, controller, itemTypes);
+				return new PuppetClusterBidderCombined(bh, ps, is, ah, itemTypes, controller);
 			}
 		};
 	}

@@ -1,7 +1,9 @@
 package agents.repFraud;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.math3.distribution.ExponentialDistribution;
 
@@ -9,15 +11,16 @@ import simulator.AgentAdder;
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
+import simulator.buffers.ItemSender.ItemSold;
 import simulator.buffers.PaymentSender;
+import simulator.buffers.PaymentSender.Payment;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.records.UserRecord;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import agents.EventListener;
 import agents.SimpleUserI;
 import agents.shills.Controller;
-import agents.shills.puppets.PuppetBidder;
+import agents.shills.puppets.Puppet;
 import agents.shills.puppets.PuppetI;
 
 public class SingleRepFraud extends EventListener implements Controller {
@@ -29,7 +32,7 @@ public class SingleRepFraud extends EventListener implements Controller {
 //	private final List<ItemType> types;
 	private final int repTarget;
 	
-	private final PuppetI puppet; // trying to inflate the reputation of the puppet
+	private final PuppetI puppet; // trying to inflate the reputation of the puppet by bidding in auctions
 	private final ExponentialDistribution exp;
 	private long nextBidTime;
 	
@@ -43,7 +46,7 @@ public class SingleRepFraud extends EventListener implements Controller {
 		
 		this.repTarget = repTarget;
 		
-		puppet = new PuppetBidder(bh, ps, is, ah, this);
+		puppet = new Puppet(bh, ps, is, ah, this, types);
 		ur.addUser(puppet);
 		ah.registerForSniping(this); // to get notifications when the auctions are about to end, for bidding on low priced items
 		
@@ -52,6 +55,11 @@ public class SingleRepFraud extends EventListener implements Controller {
 		nextBidTime = Math.round(exp.sample());
 	}
 
+	@Override
+	public void run() {
+		super.run();
+	}
+	
 	/**
 	 * Tests whether bidding criteria are met. If yes, bid. If not, do nothing.
 	 * The criteria are: if target netRep has not been met, if nextBidTime has passed. 
@@ -85,7 +93,7 @@ public class SingleRepFraud extends EventListener implements Controller {
 	}
 
 	@Override
-	public void endSoonAction(Auction auction, long time) {
+	public void endSoonAction(Auction auction, int time) {
 		if (auction.minimumBid() <= 150) {
 			testAndBid(auction);
 		}
@@ -102,7 +110,29 @@ public class SingleRepFraud extends EventListener implements Controller {
 
 	@Override
 	public boolean isFraud(Auction auction) {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public void soldAction(SimpleUserI agent, Auction auction) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void expiredAction(SimpleUserI agent, Auction auction) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void gotPaidAction(SimpleUserI agent, Collection<Payment> paymentSet) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void itemReceivedAction(PuppetI agent, Set<ItemSold> itemSet) {
+	}
+
+	@Override
+	public void endSoonAction(PuppetI agent, Auction auction) {
+	}
 }

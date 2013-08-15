@@ -20,7 +20,7 @@ import createUserFeatures.SimMemoryAuctionIterator;
 import createUserFeatures.UserFeatures;
 
 import agents.repFraud.SingleRepFraud;
-import agents.repFraud.MultipleRepFraud;
+import agents.repFraud.MultipleRepFraud_old;
 import agents.repFraud.SingleRepFraud;
 import agents.shills.Hybrid;
 import agents.shills.HybridT;
@@ -74,25 +74,25 @@ public class GenerateShillData {
 		AgentAdder hybridAdderB = Hybrid.getAgentAdder(1, waitStart, 4);
 		AgentAdder hybridAdderTVC = HybridTVaryCollusion.getAgentAdder(5, lateStart);
 		AgentAdder hybridAdderC = HybridLowPrice.getAgentAdder(5, lateStart, lowPrice);
-		AgentAdder hybridAdderD = HybridT.getAgentAdder(10, lateStart, PuppetClusterBidderCombined.getFactory());
 		AgentAdder randomHybridAdderA = RandomHybrid.getAgentAdder(5, travethan, 4);
+		AgentAdder hybridAdderD = HybridT.getAgentAdder(10, lateStart, PuppetClusterBidderCombined.getFactory());
 		
 		AgentAdder repFraudA = SingleRepFraud.getAgentAdder(1, 20);
-		AgentAdder repFraudB = MultipleRepFraud.getAgentAdder(1, 10, 20);
+		AgentAdder repFraudB = MultipleRepFraud_old.getAgentAdder(1, 10, 20);
 		
 		int numberOfRuns = 1;
 		
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
 //		run(simplePairAdderA, numberOfRuns);
-		run(repFraudA, 1);
-//		run(doNothingAdder(), numberOfRuns);
-//		run(simplePairAdderD, numberOfRuns);
+//		run(repFraudA, 1);
+//		run(doNothingAdder, numberOfRuns);
+//		run(hybridAdderD, numberOfRuns);
 //		run(simplePairAdderA, numberOfRuns, new double[]{0.0820,0.0049,-0.0319,0.5041,0.2407,0.2003});
 //		writeSSandPercentiles(simplePairAdderB, numberOfRuns);
 //		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
 		
 //		collusiveShillPairMultipleRuns(hybridAdderB, numberOfRuns);
-//		buildFeaturesAndSSFromDB("shillingResults/hybridlp", "syn_hybridlp_", hybridAdderC, 30);
+		buildFeaturesAndSSFromDB("shillingResults/hybridlp", "syn_hybridlp_", hybridAdderC, 30);
 //		buildFeaturesAndSSFromDB("shillingResults/hybridtvc", "syn_hybridtvc_", hybridAdderTVC, 30);
 //		buildFeaturesAndSSFromDB("shillingResults/hybridnormal", "syn_hybridLP_", hybridAdderD, 30);
 //		collusiveShillPairMultipleRuns(randomHybridAdderA, numberOfRuns);
@@ -101,19 +101,17 @@ public class GenerateShillData {
 //		collusiveShillPairMultipleRuns(nonAltHybridA, numberOfRuns);11
 	}
 	
-	public static final AgentAdder doNothingAdder() {
-		return new AgentAdder() {
-			@Override
-			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur,
-					ArrayList<ItemType> types) {
-			}
-			
-			@Override
-			public String toString() {
-				return "NoAdder";
-			}
-		};
-	}
+	public static final AgentAdder doNothingAdder = new AgentAdder() {
+		@Override
+		public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur,
+				ArrayList<ItemType> types) {
+		}
+		
+		@Override
+		public String toString() {
+			return "NoAdder";
+		}
+	};
 	
 	public static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
 		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {

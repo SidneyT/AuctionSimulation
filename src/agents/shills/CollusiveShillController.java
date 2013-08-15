@@ -1,6 +1,7 @@
 package agents.shills;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -16,15 +17,18 @@ import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
+import simulator.buffers.ItemSender.ItemSold;
+import simulator.buffers.PaymentSender.Payment;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
+import simulator.objects.Feedback;
+import simulator.objects.Feedback.Val;
 import simulator.records.UserRecord;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import agents.EventListener;
 import agents.SimpleUserI;
+import agents.shills.puppets.Puppet;
 import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.puppets.PuppetI;
-import agents.shills.puppets.PuppetSeller;
 import agents.shills.strategies.Strategy;
 
 public abstract class CollusiveShillController extends EventListener implements Controller {
@@ -36,7 +40,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 	protected ItemSender is;
 	protected AuctionHouse ah;
 	
-	protected final List<PuppetSeller> css;
+	protected final List<PuppetI> css;
 	protected final List<PuppetI> cbs;
 	
 	protected final Set<Auction> currentShillAuctions; // auctions ready to be bid on by collaborating agents
@@ -58,7 +62,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 		// set up the shill seller, only need 1.
 		css = new ArrayList<>(numSeller);
 		for (int i = 0; i < numSeller; i++) {
-			PuppetSeller ss = new PuppetSeller(bh, ps, is, ah, this, types);
+			Puppet ss = new Puppet(bh, ps, is, ah, this, types);
 			ur.addUser(ss);
 			css.add(ss);
 		}
@@ -150,7 +154,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 	}
 	
 	@Override
-	public void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, int time) {
 		super.newAction(auction, time);
 		if (allShillAuctions.contains(auction)) {
 			ah.registerForAuction(this, auction);
@@ -159,52 +163,67 @@ public abstract class CollusiveShillController extends EventListener implements 
 	}
 
 	@Override
-	public void priceChangeAction(Auction auction, long time) {
+	public void priceChangeAction(Auction auction, int time) {
 		super.priceChangeAction(auction, time);
 	}
 
 	@Override
-	public void lossAction(Auction auction, long time) {
+	public void lossAction(Auction auction, int time) {
 		logger.debug("Shill auction " + auction + " has expired. Removing.");
 		assert currentShillAuctions.contains(auction);
 		currentShillAuctions.remove(auction);
 	}
 
 	@Override
-	public void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, int time) {
 		assert false : "This method should never be called, since this class can neither bid nor win.";
 	}
 
 	@Override
-	public void expiredAction(Auction auction, long time) {
+	public void expiredAction(Auction auction, int time) {
 		super.expiredAction(auction, time);
 	}
 
 	@Override
-	public void soldAction(Auction auction, long time) {
-		super.soldAction(auction, time);
-		this.awaitingPayment.add(auction);
+	public void soldAction(Auction auction, int time) {
+		assert false : "This method should never be called, since this class can not submit auctions.";
 	}
-
+	
 	@Override
 	public String toString() {
 		return super.toString() + ":" + strategy.toString(); 
 	}
 	
+	
 	protected abstract PuppetI pickBidder(Auction auction);
-	protected abstract PuppetSeller pickSeller();
+	protected abstract PuppetI pickSeller();
 	
 	
 	@Override
-	public void winAction(SimpleUserI agent, Auction auction) {
-	}
+	public void winAction(SimpleUserI agent, Auction auction) {}
 
 	@Override
-	public void lossAction(SimpleUserI agent, Auction auction) {
-	}
+	public void lossAction(SimpleUserI agent, Auction auction) {}
+	
 	
 	@Override
 	public boolean isFraud(Auction auction) {
-		throw new NotImplementedException();
+		return allShillAuctions.contains(auction);
 	}
+	
+	@Override
+	public void soldAction(SimpleUserI agent, Auction auction) {}
+
+	@Override
+	public void expiredAction(SimpleUserI agent, Auction auction) {}
+
+	@Override
+	public void gotPaidAction(SimpleUserI agent, Collection<Payment> paymentSet) {}
+	
+	@Override
+	public void itemReceivedAction(PuppetI agent, Set<ItemSold> itemSet) {}
+
+	@Override
+	public void endSoonAction(PuppetI agent, Auction auction) {}
+
 }

@@ -9,10 +9,10 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
-import agents.shills.puppets.PuppetBidder;
+import agents.SimpleUserI;
+import agents.shills.puppets.Puppet;
 import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.puppets.PuppetI;
-import agents.shills.puppets.PuppetSeller;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
 
@@ -64,8 +64,6 @@ public class Hybrid extends CollusiveShillController {
 			selected = shillsAssigned.get(auction);
 		}
 		
-		assert(selected.size() == 2);
-		
 		// pick the bidder to bid for this auction
 		return simplePickBidder(auction, selected);
 	}
@@ -107,7 +105,7 @@ public class Hybrid extends CollusiveShillController {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					Hybrid sc = new Hybrid(bh, ps, is, ah, ur, types, strategy, PuppetBidder.getFactory(), 1, bidderPerAgent, 2, 40);
+					Hybrid sc = new Hybrid(bh, ps, is, ah, ur, types, strategy, Puppet.getFactory(), 1, bidderPerAgent, 2, 40);
 					ah.addEventListener(sc);
 				}
 			}
@@ -127,8 +125,8 @@ public class Hybrid extends CollusiveShillController {
 	}
 
 	@Override
-	protected PuppetSeller pickSeller() {
+	protected PuppetI pickSeller() {
 		return css.get(r.nextInt(css.size())); // pick the next seller randomly
 	}
-	
+
 }

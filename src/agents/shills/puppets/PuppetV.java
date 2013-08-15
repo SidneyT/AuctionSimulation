@@ -33,12 +33,12 @@ final class PuppetV extends Puppet {
 	}
 
 	@Override
-	public void winAction(Auction auction, long time) {
+	public void winAction(Auction auction, int time) {
 		controller.winAction(this, auction);
 	}
 
 	@Override
-	public void soldAction(Auction auction, long time) {
+	public void soldAction(Auction auction, int time) {
 		controller.soldAction(this, auction);
 	}
 

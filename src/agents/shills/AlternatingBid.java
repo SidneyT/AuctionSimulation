@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import agents.shills.puppets.PuppetBidder;
+import agents.SimpleUserI;
+import agents.shills.puppets.Puppet;
 import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.puppets.PuppetI;
-import agents.shills.puppets.PuppetSeller;
 import agents.shills.strategies.Strategy;
 import agents.shills.strategies.TrevathanStrategy;
 
@@ -59,7 +59,7 @@ public class AlternatingBid extends CollusiveShillController {
 	 * @param bidders
 	 * @return
 	 */
-	public PuppetI simplePickBidder(Auction auction, List<PuppetBidder> bidders) {
+	public PuppetI simplePickBidder(Auction auction, List<Puppet> bidders) {
 		if (!alternatingBidderAssigned.containsKey(auction)) {
 			PuppetI chosen = bidders.get(0);
 			alternatingBidderAssigned.put(auction, 1);
@@ -76,7 +76,7 @@ public class AlternatingBid extends CollusiveShillController {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfGroups; i++) {
-					AlternatingBid sc = new AlternatingBid(bh, ps, is, ah, ur, types, strategy, PuppetBidder.getFactory(), numBidder);
+					AlternatingBid sc = new AlternatingBid(bh, ps, is, ah, ur, types, strategy, Puppet.getFactory(), numBidder);
 					ah.addEventListener(sc);
 				}
 			}
@@ -94,7 +94,7 @@ public class AlternatingBid extends CollusiveShillController {
 	}
 
 	@Override
-	protected PuppetSeller pickSeller() {
+	protected PuppetI pickSeller() {
 		return css.get(0);
 	}
 

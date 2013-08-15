@@ -14,7 +14,7 @@ import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
 import simulator.records.UserRecord;
 import util.Sample;
-import agents.shills.puppets.PuppetBidder;
+import agents.shills.puppets.Puppet;
 import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.puppets.PuppetI;
 import agents.shills.strategies.Strategy;
@@ -44,7 +44,7 @@ public class RandomHybrid extends Hybrid {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					Hybrid sc = new RandomHybrid(bh, ps, is, ah, ur, types, strategy, PuppetBidder.getFactory(), numBidder);
+					Hybrid sc = new RandomHybrid(bh, ps, is, ah, ur, types, strategy, Puppet.getFactory(), numBidder);
 					ah.addEventListener(sc);
 				}
 			}

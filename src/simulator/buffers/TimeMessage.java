@@ -3,7 +3,7 @@ package simulator.buffers;
 public class TimeMessage {
 	
 //	private boolean ahTurn;
-	private long time;
+	private int time;
 	
 	public TimeMessage() {
 //		this.ahTurn = true;
@@ -12,7 +12,7 @@ public class TimeMessage {
 	/**
 	 * NOT TO BE CALLED BY AuctionHouse
 	 */
-	public synchronized Long getTime() {
+	public synchronized int getTime() {
 //		while(this.ahTurn) {
 //			try {
 //				wait();
@@ -27,7 +27,7 @@ public class TimeMessage {
 	/**
 	 * ONLY TO BE CALLED BY AuctionHouse
 	 */
-	public synchronized void setTime(long time) {
+	public synchronized void setTime(int time) {
 //		while(!this.ahTurn) {
 //			try {
 //				wait();

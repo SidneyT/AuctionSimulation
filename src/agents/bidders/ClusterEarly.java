@@ -1,6 +1,7 @@
 package agents.bidders;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,13 +36,14 @@ public class ClusterEarly extends ClusterBidder {
 	public void run() {
 		super.run();
 		
-		long currentTime = this.bh.getTime();
+		int currentTime = this.bh.getTime();
 		selectAuctionsToBidIn();
 		
 		Set<Auction> alreadyBidOn = new HashSet<Auction>();
 		if (this.auctionsToBidIn.containsKey(currentTime)) {
 			for (Auction auction : this.auctionsToBidIn.removeAll(currentTime)) {
-				if (!alreadyBidOn.contains(auction)) {
+//				if (!alreadyBidOn.contains(auction)) {
+				assert !alreadyBidOn.contains(auction);
 					if (r.nextDouble() < valuationEffect(auction.getCurrentPrice(), privateValuationProportion * auction.getCurrentPrice())) {
 						// if item is under 50% value, made a bid greater than the minimum
 //						if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.7) {
@@ -55,8 +57,10 @@ public class ClusterEarly extends ClusterBidder {
 						}
 						revisitLater(auction);
 						alreadyBidOn.add(auction);
+					} else {
+						interestTimes.add((int) currentTime);
 					}
-				}
+//				}
 			}
 		}
 			
@@ -144,9 +148,9 @@ public class ClusterEarly extends ClusterBidder {
 //		
 //	}
 	
-	HashMultimap<Long, Auction> revisitForRebids = HashMultimap.create();
+	HashMultimap<Integer, Auction> revisitForRebids = HashMultimap.create();
 	private void revisitLater(Auction auction) {
-		long currentTime = this.bh.getTime();
+		int currentTime = this.bh.getTime();
 //		int delayForRevisit = 288; // since this runs before action(), if delay is zero, auction will be revisited immediately
 		int delayForRevisit = 188 + r.nextInt(200);
 		
@@ -184,7 +188,7 @@ public class ClusterEarly extends ClusterBidder {
 
 	@Override
 	//y = 4.5727*e^(8.2147* x); y is bid-time, x is U[0-1]
-	protected long firstBidTime() {
+	protected int firstBidTime() {
 		double bidTimeBeforeEnd;
 		do {
 			double random = r.nextDouble();
@@ -195,7 +199,7 @@ public class ClusterEarly extends ClusterBidder {
 			else
 				bidTimeBeforeEnd = 169.6812 * Math.pow(66.27293, random) / 5;
 		} while (bidTimeBeforeEnd <= 260 || bidTimeBeforeEnd >= 2016);
-		return SEVEN_DAYS - (long) bidTimeBeforeEnd;
+		return SEVEN_DAYS - (int) bidTimeBeforeEnd;
 	}
 	
 

@@ -70,7 +70,7 @@ public class GraphOperations {
 	 * @param edgeType
 	 * @return
 	 */
-	static <T extends AuctionObject> HashMap<Integer, HashMultiset<Integer>> duplicateAdjacencyList(Iterator<Pair<T, List<BidObject>>> auctionIterator, EdgeTypeI edgeType) {
+	public static <T extends AuctionObject> HashMap<Integer, HashMultiset<Integer>> duplicateAdjacencyList(Iterator<Pair<T, List<BidObject>>> auctionIterator, EdgeTypeI edgeType) {
 		ArrayList<int[]> allTuples = new ArrayList<>();
 		while(auctionIterator.hasNext()) {
 			Pair<T, List<BidObject>> pair = auctionIterator.next();
@@ -85,7 +85,9 @@ public class GraphOperations {
 		
 		// construct adjacency list
 		HashMap<Integer, HashMultiset<Integer>> adjacencyList = adjacencyList(allTuples);
-		
+//		for (Integer key : adjacencyList.keySet()) {
+//			System.out.println(key + " || " + adjacencyList.get(key));
+//		}
 		return adjacencyList;
 	}
 	

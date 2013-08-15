@@ -11,7 +11,7 @@ import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
 import simulator.records.UserRecord;
 import util.Sample;
-import agents.shills.puppets.PuppetBidder;
+import agents.shills.puppets.Puppet;
 import agents.shills.puppets.PuppetFactoryI;
 import agents.shills.puppets.PuppetI;
 import agents.shills.strategies.Strategy;
@@ -39,7 +39,7 @@ public class HybridTVaryCollusion extends HybridT {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					HybridTVaryCollusion sc = new HybridTVaryCollusion(bh, ps, is, ah, ur, types, strategy, PuppetBidder.getFactory());
+					HybridTVaryCollusion sc = new HybridTVaryCollusion(bh, ps, is, ah, ur, types, strategy, Puppet.getFactory());
 					ah.addEventListener(sc);
 				}
 			}

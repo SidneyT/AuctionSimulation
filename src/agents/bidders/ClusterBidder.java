@@ -1,17 +1,20 @@
 package agents.bidders;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.commons.math3.util.FastMath;
 import org.apache.log4j.Logger;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 
 import distributions.Exponential;
 import distributions.Normal;
@@ -20,13 +23,14 @@ import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
-import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.records.ReputationRecord;
+import util.Sample;
 import util.Util;
 import agents.SimpleUser;
+import agents.SimpleUserI;
 import agents.sellers.TMSeller;
 
 /**
@@ -37,28 +41,15 @@ public abstract class ClusterBidder extends SimpleUser {
 //	private static final List<Integer> allClusterBidderIds = new ArrayList<>();
 	
 	// constants...
-	private static final int ONE_DAY = 24*60/AuctionHouse.UNIT_LENGTH;
+	protected static final int ONE_DAY = 24*60/AuctionHouse.UNIT_LENGTH;
 	protected static final int SEVEN_DAYS = ONE_DAY * 7;
-	private static int num_users = -1;
-	protected double probInterest;
 	// probability of bidding when auction has 1-7 days to go, adjusted by number of users 
 	
 	// parameters
 	private static final Logger logger = Logger.getLogger(ClusterBidder.class);
 	
-//	protected final Set<Auction> oneBidAuctionsUnprocessed; // auctions with more than 1 bid to be processed 
 	protected final List<Auction> newAuctionsUnprocessed; // should be empty at the beginning of each time unit
-	protected final HashMultimap<Long, Auction> auctionsToBidIn;
-	
-	// Auctions for which this bidder is much more likely to bid on.
-	// Simulates motivation...
-//	private final boolean willRebid;
-//	protected final double likelihoodOfRebid;
-	
-	protected double numberOfAuctionsPer100Days;
-//	protected Exponential nextInterestDist;
-	
-//	protected final Map<Long, Set<Auction>> nextBid;
+	protected final HashMultimap<Integer, Auction> auctionsToBidIn;
 	
 	protected double privateValuationProportion;
 
@@ -66,61 +57,36 @@ public abstract class ClusterBidder extends SimpleUser {
 	
 	protected final List<ItemType> itemTypes;
 	
+	protected final Multiset<SimpleUserI> seenUsers; // records the set of users whose auctions this agent has bid in, and the frequency
+	
 	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes) {
 		super(bh, ps, is, ah);
 
-		assert(num_users > 0);
-		
 		this.itemTypes = itemTypes;
 		
-//		this.oneBidAuctionsUnprocessed = new HashSet<Auction>();
 		this.newAuctionsUnprocessed = new ArrayList<Auction>();
 		this.auctionsToBidIn = HashMultimap.create();
 		
 		r = new Random();
 		ReputationRecord.generateRep(rr, r);
-
-		
-//		this.nextBid = new HashMap<Long, Set<Auction>>();
-		
-//		willRebid = willRebid();
-//		if (willRebid)
-//			likelihoodOfRebid = likelihoodOfRebid();
-//		else
-//			likelihoodOfRebid = 0;
-		
-//		probInterest = oneBidAuctionProb(num_users);
-		probInterest = oneBidAuctionProb(num_users) * Exponential.nextDouble(r.nextDouble(), 1);
-//		probInterest = oneBidAuctionProb(num_users)
+		seenUsers = HashMultiset.create();
 		
 		// normal distribution, mean 1, std dev 0.15
 		privateValuationProportion = Normal.nextDouble(r.nextDouble(), 1, 0.2);
 		if (privateValuationProportion < 0)
 			privateValuationProportion *= -1;
-//		privateValuationProportion = Normal.twoNormal(r.nextDouble(), r.nextDouble(), 1, 0.2, 0.6, 1.4, 0.1, 0.4);
 		
-		// these values are based on 100 days of auctions and for this number of users in TM.
-		// if number of auctions or users changes, does this value change??  
-//		numberOfAuctionsPer100Days = numberOfAuctionsPer100Days(r.nextDouble());
-//		average+= numberOfAuctionsPer100Days;
-////		System.out.println("numberOfAuctionsPer100Days: " + numberOfAuctionsPer100Days);
-//		nextInterestDist = new Exponential(28800 / numberOfAuctionsPer100Days);
+		maxAuctions = numberOfAuctionsPer100Days(r.nextDouble());
+		List<Integer> times = Sample.randomSample(100 * ONE_DAY - SEVEN_DAYS, maxAuctions, r); // equals 26784 time units which is (100 - 7) days
+		Collections.sort(times, Collections.reverseOrder());
+		interestTimes = new ArrayDeque<>(times);
 		
-		int numAuctions = numberOfAuctionsPer100Days(r.nextDouble());
-		interestTimes = new ArrayList<>(numAuctions);
-//		debugAverage += numAuctions;
-		for (int i = 0; i < numAuctions; i++) {
-			interestTimes.add((long) r.nextInt(28800));
-		}
-		Collections.sort(interestTimes, Collections.reverseOrder());
-		
-		this.numberOfInterestedCategories = numberOfInterestedCategories(interestTimes.size());
-//		System.out.println(interestTimes.size() + " vs " + numberOfInterestedCategories);
+		this.maxNumberOfInterestedCategories = numberOfInterestedCategories(interestTimes.size());
 	}
 	
-	protected abstract long firstBidTime();
+	protected abstract int firstBidTime();
 	
-	private final int numberOfInterestedCategories; 
+	private final int maxNumberOfInterestedCategories; 
 	
 	private int numberOfInterestedCategories(int totalNumberOfAuctions) {
 		int numberOfCategories = 0;
@@ -135,89 +101,105 @@ public abstract class ClusterBidder extends SimpleUser {
 	
 	private Set<ItemType> itemTypesBidOn = new HashSet<>();
 	private static final double logParam = 2.4;
+	
 	/**
 	 * Selects auctions to bid in, and the time to begin bidding in them.
 	 */
 	public void selectAuctionsToBidIn() {
-		long currentTime = this.bh.getTime();
+		int currentTime = this.bh.getTime();
 
-		// don't do anything if you're not scheduled to bid in an auction yet.
-		if (!shouldParticipateInAuction(currentTime)) {
-			newAuctionsUnprocessed.clear();
-			return;
-		}
-		
 		Collections.shuffle(newAuctionsUnprocessed); // randomise order of the newAuctions
 		for (Auction auction : newAuctionsUnprocessed) {
-			// less likely to be interested in an auction if they have a low popularity
-			if (r.nextDouble() > auction.getPopularity())
-				continue; 
 			
-			// check if the auction is in a category you're interested in
-			if (itemTypesBidOn.contains(auction.getItem().getType())) { // if yes, then bid.
-				this.ah.registerForAuction(this, auction);
-				long timeToMakeBid = firstBidTime() + currentTime;
-				logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
-				auctionsToBidIn.put(timeToMakeBid, auction);
-				participated();
-				break;
-			} else { // if not, check if you are willing to buy things from another category
+			if (timeToParticipateInAuction(currentTime)) { // standard path: time to make a bid in an auction
 				
-				// check if the number of categories you participated in has reached the predetermined number
-				if (numberOfInterestedCategories == itemTypesBidOn.size()) {
+				// less likely to be interested in an auction if they have a low popularity
+				if (r.nextDouble() > auction.getPopularity())
+					continue; 
+				
+				// check if the auction is in a category you're interested in
+				if (itemTypesBidOn.contains(auction.getItem().getType())) { // if yes, then bid.
+					this.ah.registerForAuction(this, auction);
+					int timeToMakeBid = firstBidTime() + currentTime;
+					logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
+					scheduleBid(timeToMakeBid, auction);
+					break;
+				} else { // if not, check if you are willing to buy things from another category
+					
+					// check if the number of categories you participated in has reached the predetermined number
+					if (maxNumberOfInterestedCategories < itemTypesBidOn.size()) {
+						continue;
+					}
+					
+					itemTypesBidOn.add(auction.getItem().getType()); // record the new category you'll bid in
+					
+					this.ah.registerForAuction(this, auction);
+					int timeToMakeBid = firstBidTime() + currentTime;
+					logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
+					scheduleBid(timeToMakeBid, auction);
+					break;
+				}
+				
+			} else if (seenUsers.contains(auction.getSeller())) { // non-standard path: auction belongs to someone seen before
+				if (!itemTypesBidOn.contains(auction.getItem().getType())) { // if yes, then bid.
 					continue;
 				}
 				
-				itemTypesBidOn.add(auction.getItem().getType()); // record the new category you'll bid in
+				int timesSeen = seenUsers.count(auction.getSeller());
+//				double probBid = FastMath.pow(timesSeen - 1, 1.55) / 800;
+				double probBid;
+//				if (timesSeen >= 50)
+//					probBid = 0.022;
+//				else {
+					probBid = probabilities.get(timesSeen - 1) * maxAuctions / 4;
+					probBid = Math.min(0.012, probBid);
+//				}
+				if (probBid > r.nextDouble()) {
+//					itemTypesBidOn.add(auction.getItem().getType()); // record the new category you'll bid in
+					int timeToMakeBid = firstBidTime() + currentTime;
+					scheduleBid(timeToMakeBid, auction);
+					break;
+				}
 				
-				this.ah.registerForAuction(this, auction);
-				long timeToMakeBid = firstBidTime() + currentTime;
-				logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
-				auctionsToBidIn.put(timeToMakeBid, auction);
-				participated();
-				break;
+			} else {
+				assert false: "Should be 1 of those if cases above. Should not reach here.";
 			}
 		}
 		
 		newAuctionsUnprocessed.clear();
 	}
 	
+	static {
+		ArrayList<Double> probabilities = new ArrayList<>(100);
+		for (int i = 0; i < 50; i++) {
+			probabilities.add(FastMath.pow(i, 1.8) / 12000);
+		}
+	}
+	
+	private void scheduleBid(int timeToMakeBid, Auction auction) {
+		auctionsToBidIn.put(timeToMakeBid, auction);
+		seenUsers.add(auction.getSeller()); // record that this agent has interacted with this seller
+		participated();
+	}
+	
 //	public static int debugAverage = 0;
 	
-	public final ArrayList<Long> interestTimes; // sorted in decreasing order
-	// returns number of auctions this user should bid in at this time
-//	protected int shouldBid(int currentTime) {
-//		int result = 0;
-//		for (int i = bidTimes.size() - 1; i >= 0; i--) {
-//			if (bidTimes.get(i) < currentTime) {
-//				bidTimes.remove(i);
-//				result++;
-//			} else {
-//				break;
-//			}
-//		}
-//		return result;
-//	}
+	public final Deque<Integer> interestTimes; // times at which to bid in auctions, sorted in decreasing order
+	public final int maxAuctions;
 	/**
 	 * If the scheduled time for participating for an auction has passed,
 	 * return true.
 	 * @param currentTime
 	 * @return
 	 */
-	protected boolean shouldParticipateInAuction(long currentTime) {
+	protected boolean timeToParticipateInAuction(int currentTime) {
 		if (interestTimes.isEmpty()) {
 			return false;
 		}
-		long earliestBidTime = interestTimes.get(interestTimes.size() - 1);
-		if (earliestBidTime < currentTime) {
-//			interestTimes.remove(interestTimes.size() - 1);
-			return true;
-		} else {
-			return false;
-		}
+		return interestTimes.peekLast() <= currentTime;
 	}
 	public void participated() {
-		interestTimes.remove(interestTimes.size() - 1);
+		interestTimes.removeLast();
 	}
 	
 	/**
@@ -229,10 +211,6 @@ public abstract class ClusterBidder extends SimpleUser {
 	 * @param maximumBid
 	 * @return
 	 */
-//	protected static double valuationEffect(long bidAmount, double privateValuation) {
-//		int param = 4;
-//		return 1/Math.pow(bidAmount/privateValuation, param);
-//	}
 	protected static double valuationEffect(long bidAmount, double maximumBid) {
 //		if (bidAmount <= maximumBid)
 //			return 100000000;
@@ -240,37 +218,6 @@ public abstract class ClusterBidder extends SimpleUser {
 //			return 0;
 		return Util.sigmoid(bidAmount/maximumBid);
 	}
-	
-	public static void setNumUsers(int numUsers) {
-		num_users = numUsers;
-//		probInterest = oneBidAuctionProb(num_users);
-	}
-	
-	/**
-	 * 
-	 * Finds the probability for a binomial distribution, given the
-	 * number of trials, such that the probability for 0 successes
-	 * is 0.474758.
-	 * 
-	 * This is used to determine the probability that a user has 
-	 * interest in a particular auction, so that 47.47% auctions
-	 * will have no users interested in them, so that they will only
-	 * have 1 bid.
-	 * 
-	 * @param numberOfUsers
-	 * @return
-	 */
-	private static double oneBidAuctionProb(int numberOfUsers) {
-//		double target = 0.474758; // TODO: modified. change back?
-		double target = 0.3;
-		double p = 1 - Math.exp(Math.log(target) / numberOfUsers);
-		return p;
-	}
-
-//	@Override
-//	public void cleanUp() {
-//		alreadyBidThisTurn.clear();
-//	}
 	
 //	@Override
 //	public void priceChangeAction(Auction auction, long time) {
@@ -290,11 +237,19 @@ public abstract class ClusterBidder extends SimpleUser {
 //		
 //	}
 	
+	
 	@Override
-	public void newAction(Auction auction, long time) {
+	public void newAction(Auction auction, int time) {
 		super.newAction(auction, time);
 
-		this.newAuctionsUnprocessed.add(auction);
+		if (interestTimes.isEmpty())
+			return;
+		
+		if (timeToParticipateInAuction(time)) { // add the auction only if agent is scheduled to bid in an auction.
+			this.newAuctionsUnprocessed.add(auction);
+		} else if (seenUsers.contains(auction.getSeller())) { // if not, add the auction if the agent has seen this seller before
+			this.newAuctionsUnprocessed.add(auction);
+		}
 	}
 	
 //	@Override
@@ -370,20 +325,6 @@ public abstract class ClusterBidder extends SimpleUser {
 //		return 1; // TODO: modified. change back?
 //	}
 	
-	//	protected static double numberOfAuctionsPer100Days(double random) {
-	//		// x = [(x1^(n+1) - x0^(n+1))*y + x0^(n+1)]^(1/(n+1))
-	//		// modified to x = x0 - [(x1^(n+1) - x0^(n+1))*y + x0^(n+1)]^(1/(n+1))
-	//		double param = 60; 
-	//		
-	//		double number = 101 - Math.pow((Math.pow(1, param) - Math.pow(100, param)) * random + Math.pow(100, param), 1/param) - 5;
-	//		if (number < 1) {
-	//			return 1;
-	//		} else if (number > 8) {
-	//			return 8;
-	//		} else {
-	//			return number;
-	//		}
-	//	}
 	protected int numberOfAuctionsPer100Days(double random) {
 		if (random < 0.576816606) return 1;
 		else if (random < 0.758013403) return 2; 

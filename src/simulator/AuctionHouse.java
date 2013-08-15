@@ -41,7 +41,7 @@ public class AuctionHouse implements Runnable {
 	public static final int UNIT_LENGTH = 5; // length of each time unit
 	private static final Logger logger = Logger.getLogger(AuctionHouse.class);
 
-	long time;
+	int time;
 
 	private final UserRecord userRecord; // event messages are sent to those in the userRecords
 	private final Set<EventListener> eventListeners; // those who want event messages and who are not users
@@ -69,7 +69,8 @@ public class AuctionHouse implements Runnable {
 		this.bidRecord = new BidRecord(); //TODO
 		this.interestRecord = new AuctionInterestRecord();
 
-		snipingRecord = Collections.newSetFromMap(new ConcurrentHashMap<EventListenerI, Boolean>());
+//		snipingRecord = Collections.newSetFromMap(new ConcurrentHashMap<EventListenerI, Boolean>());
+		snipingRecord = new HashSet<>();
 
 		eventListeners = new HashSet<>();
 		
@@ -105,7 +106,7 @@ public class AuctionHouse implements Runnable {
 		Collection<Feedback> feedbacks = buffers.getFeedbackToAh().get();
 
 		for (Feedback feedback : feedbacks) {
-			SimpleUser user;
+			SimpleUserI user;
 			if (feedback.forSeller())
 				user = feedback.getAuction().getSeller();
 			else
@@ -142,8 +143,7 @@ public class AuctionHouse implements Runnable {
 		}
 	}
 
-	private void sendNewAuctionMessages(Collection<? extends EventListenerI> users, Auction newAuction,
-			MessagesToUsers buffer) {
+	private void sendNewAuctionMessages(Collection<? extends EventListenerI> users, Auction newAuction, MessagesToUsers buffer) {
 		for (EventListenerI user : users) {
 			buffer.putMessages(user.getId(), new Message(MessageType.NEW, newAuction));
 		}
@@ -217,7 +217,7 @@ public class AuctionHouse implements Runnable {
 	 * For telling agents who want to snipe, all auctions that are about to end.
 	 */
 	private void giveSnipeWarning() {
-		long time = this.time + 3; // get auctions that will end at this time
+		int time = this.time + 3; // get auctions that will end at this time
 		Set<Auction> endSoon = this.auctionRecord.getCurrentAuctions().get(time);
 		if (endSoon == null)
 			return;
@@ -247,7 +247,7 @@ public class AuctionHouse implements Runnable {
 			Set<EventListener> interestedSet = this.interestRecord.removeAuction(expired);
 
 			// notify winner
-			SimpleUser winner = expired.getWinner();
+			SimpleUserI winner = expired.getWinner();
 			if (winner != null) {
 				// boolean winnerWasInterested = interestedSet.remove(winner);
 				// assert winnerWasInterested : winner + " was not interested for auction " + expired + ".";
