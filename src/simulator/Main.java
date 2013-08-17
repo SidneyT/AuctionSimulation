@@ -29,6 +29,7 @@ import simulator.database.SaveToDatabase;
 import simulator.database.SaveObjects;
 import simulator.database.SimulationCreateTableStmts;
 import simulator.objects.Auction;
+import simulator.objects.Auction.AuctionLength;
 import simulator.objects.Feedback;
 import simulator.records.UserRecord;
 import util.CrashOnAssertionErrorRunnable;
@@ -39,6 +40,7 @@ import agents.SimpleUserI;
 import agents.bidders.ClusterBidder;
 import agents.bidders.ClusterEarly;
 import agents.bidders.ClusterSnipe;
+import agents.repFraud.RepFraudController;
 import agents.sellers.TMSeller;
 import agents.sellers.TimedSeller;
 import agents.shills.Hybrid;
@@ -76,11 +78,11 @@ public class Main {
 		Strategy waitStart = new WaitStartStrategy(0.95, 0.85, 0.85);
 		Strategy lowPrice = new LowPriceStrategy();
 
-//		String databaseName = "syn_normal_100k_test5";
+		String databaseName = "syn_normal_10k_test8";
 //		DBConnection.createDatabase(databaseName);
 //		SimulationCreateTableStmts.createSimulationTables(databaseName);
-//		// run the simulation and store everything into the database
-//		Main.run(SaveToDatabase.instance(databaseName));
+		// run the simulation and store everything into the database
+		Main.run(SaveToDatabase.instance(databaseName));
 
 //		AgentAdder trevathan = SimpleShillPair.getAgentAdder(30, travethan); // can use 20, since each submits 10 auctions.
 //		for (int i = 0; i < 30; i++) {
@@ -113,9 +115,9 @@ public class Main {
 //			// run the simulation and store everything into the database
 //			Main.run(SaveToDatabase.instance(databaseName), hybrid);
 //		}
-//		AgentAdder hybrid = HybridTVaryCollusion.getAgentAdder(10, waitStart); // can use 20, since each submits 10 auctions.
-//		for (int i = 0; i < 30; i++) {
-//			String databaseName = "syn_hybridTVC_" + i;
+//		AgentAdder hybrid = HybridTVaryCollusion.getAgentAdder(10 * 25, waitStart); // can use 20, since each submits 10 auctions.
+//		for (int i = 0; i < 1; i++) {
+//			String databaseName = "syn_hybridTVC_10k_" + i;
 //			// construct database and tables to store simulation data
 ////			DBConnection.createDatabase(databaseName);
 ////			SimulationCreateTableStmts.createSimulationTables(databaseName);
@@ -123,17 +125,28 @@ public class Main {
 //			// run the simulation and store everything into the database
 //			Main.run(SaveToDatabase.instance(databaseName), hybrid);
 //		}
-		AgentAdder hybrid = HybridT.getAgentAdder(10 * 25, waitStart, PuppetClusterBidderCombined.getFactory());
-//		Main.run(SaveToDatabase.instance(), hybrid);
-		for (int i = 0; i < 5; i++) {
-			String databaseName = "syn_hybridNormal_100k_" + i;
-			// construct database and tables to store simulation data
-			DBConnection.createDatabase(databaseName);
-			SimulationCreateTableStmts.createSimulationTables(databaseName);
-			
-			// run the simulation and store everything into the database
-			Main.run(SaveToDatabase.instance(databaseName), hybrid);
-		}
+//		AgentAdder hybrid = HybridT.getAgentAdder(10 * 25, waitStart, PuppetClusterBidderCombined.getFactory());
+////		Main.run(SaveToDatabase.instance(), hybrid);
+//		for (int i = 0; i < 5; i++) {
+//			String databaseName = "syn_hybridNormal_100k_" + i;
+//			// construct database and tables to store simulation data
+//			DBConnection.createDatabase(databaseName);
+//			SimulationCreateTableStmts.createSimulationTables(databaseName);
+//			
+//			// run the simulation and store everything into the database
+//			Main.run(SaveToDatabase.instance(databaseName), hybrid);
+//		}
+//		AgentAdder repFraud = RepFraudController.getAgentAdder(1, 20, 800);
+//		for (int i = 0; i < 5; i++) {
+//			String databaseName = "syn_repFraud_100k_" + i;
+//			// construct database and tables to store simulation data
+//			DBConnection.createDatabase(databaseName);
+//			SimulationCreateTableStmts.createSimulationTables(databaseName);
+//			
+//			// run the simulation and store everything into the database
+//			Main.run(SaveToDatabase.instance(databaseName), repFraud);
+//			System.out.println("finished run " + i);
+//		}
 }
 	
 	/**
@@ -182,7 +195,7 @@ public class Main {
 		final AuctionHouse ah = new AuctionHouse(userRecord, bh, saveObjects);
 
 		// parameters of simulator
-		final int numClusterBidder = 100000;
+		final int numClusterBidder = 10000;
 		final double numberOfDays = 100;
 //		final double auctionsPerBidder = 1.04; // value from TM data
 //		final double auctionsPerBidder = 1.25; // assuming 35.9% of auctions have no bids, 1.04 becomes 1.62
@@ -236,15 +249,20 @@ public class Main {
 			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(user)));
 //			userCallablesBuilder.add(Executors.callable(user));
 		}
-		for (EventListener listeners : ah.getEventListeners()) {
-			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(listeners)));
+		for (EventListener listener : ah.getEventListeners()) {
+			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(listener)));
 //			userCallablesBuilder.add(Executors.callable(listeners));
 		}
+		for (Runnable runnable : ah.getRunnables()) {
+			userCallablesBuilder.add(Executors.callable(new CrashOnAssertionErrorRunnable(runnable)));
+//			userCallablesBuilder.add(Executors.callable(listeners));
+		}
+		
 		ImmutableSet<Callable<Object>> userCallables = userCallablesBuilder.build();
 		
 		// starting the loops - each loop is 1 time unit
 		// 24 * 60 / 5 == 1 day
-		long timeUnits = (long) (numberOfDays * 24 * 60 / 5 + 0.5);
+		int timeUnits = AuctionLength.ONE_DAY.length() * 100;
 //		long tenPercent = (long) (timeUnits/10);
 		for (int i = 0; i < timeUnits; i++) {
 //			if ((i + 1) % tenPercent == 0) {
@@ -270,14 +288,6 @@ public class Main {
 		es.shutdown();
 		saveObjects.cleanup();
 
-//		System.out.println("debugAuctionCounter: " + ah.debugAuctionCounter);
-		
-		// print out the reputation for all users
-		// for (UserInterface user : this.ur.getMap().values()) {
-		// System.out.print(user + "," + user.getReputationRecord() + "|");
-		// }
-		// System.out.println();
-		
 		logger.debug("Simulation done.");
 	}
 

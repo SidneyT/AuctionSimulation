@@ -64,8 +64,8 @@ public class SaveToDatabase implements SaveObjects {
 //	}
 	PreparedStatement saveExpiredAuctionPstmt(Connection conn) throws SQLException {
 		return conn.prepareStatement("INSERT INTO auctions " +
-				"(listingId, startTime, sellerId, listingName, itemTypeId, duration, startPrice, reservePrice, endTime, winnerId) " +
-				"values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				"(listingId, startTime, sellerId, listingName, itemTypeId, duration, startPrice, reservePrice, endTime, winnerId, popularity) " +
+				"values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	}
 	PreparedStatement saveUserPstmt(Connection conn) throws SQLException {
 		return conn.prepareStatement("INSERT INTO users (userId, userType, posRep, neuRep, negRep, posUnique, negUnique) " +
@@ -212,6 +212,7 @@ public class SaveToDatabase implements SaveObjects {
 					saveExpiredAuctionPstmt.setNull(10, Types.INTEGER);
 				else
 					saveExpiredAuctionPstmt.setLong(10, auction.getWinner().getId());
+				saveExpiredAuctionPstmt.setDouble(11, auction.getPopularity());
 				saveExpiredAuctionPstmt.addBatch();
 			}
 			saveExpiredAuctionPstmt.executeBatch();

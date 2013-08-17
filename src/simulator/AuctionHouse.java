@@ -1,11 +1,9 @@
 package simulator;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -13,7 +11,6 @@ import com.google.common.collect.ListMultimap;
 
 import agents.EventListener;
 import agents.EventListenerI;
-import agents.SimpleUser;
 import agents.SimpleUserI;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.Message;
@@ -45,6 +42,7 @@ public class AuctionHouse implements Runnable {
 
 	private final UserRecord userRecord; // event messages are sent to those in the userRecords
 	private final Set<EventListener> eventListeners; // those who want event messages and who are not users
+	private final HashSet<Runnable> runnables; // agents that just want to be run each turn, who don't want messages from AH.
 	private final AuctionRecord auctionRecord;
 	private final BidRecord bidRecord;
 
@@ -66,13 +64,14 @@ public class AuctionHouse implements Runnable {
 		this.buffers = buffers;
 		// this.categoryRecord = categoryRecord;
 		this.auctionRecord = new AuctionRecord();
-		this.bidRecord = new BidRecord(); //TODO
+		this.bidRecord = new BidRecord();
 		this.interestRecord = new AuctionInterestRecord();
 
 //		snipingRecord = Collections.newSetFromMap(new ConcurrentHashMap<EventListenerI, Boolean>());
 		snipingRecord = new HashSet<>();
 
 		eventListeners = new HashSet<>();
+		runnables = new HashSet<>();
 		
 		this.saveObjects = saveObjects;
 	}
@@ -83,6 +82,14 @@ public class AuctionHouse implements Runnable {
 
 	public Set<EventListener> getEventListeners() {
 		return eventListeners;
+	}
+
+	public boolean addRunnable(Runnable runnable) {
+		return runnables.add(runnable);
+	}
+
+	public Set<Runnable> getRunnables() {
+		return runnables;
 	}
 
 	// public CategoryRecord getCategoryRecord() {

@@ -65,7 +65,9 @@ public class HiredRepInflaters extends EventListener implements Controller {
 //	}
 	
 	@Override
-	public void run2() {
+	public void run() {
+		super.run();
+		
 		Iterator<SimpleUserI> it = employerSellers.keySet().iterator();
 		while(it.hasNext()) {
 			// iterate through the employerSellers to see if any needs to have more auctions submitted and bid upon to make the threshold

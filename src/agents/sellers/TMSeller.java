@@ -37,7 +37,7 @@ public class TMSeller extends SimpleUser {
 		super(bh, ps, is, ah);
 		
 		int numberOfAuctions = numberOfAuctions(r.nextDouble());
-		int numberOfTimeUnits = AuctionLength.ONE_DAY.timeUnits() * (100 - 7);
+		int numberOfTimeUnits = AuctionLength.ONE_DAY.length() * (100 - 7);
 
 		List<Integer> listOfTimes = Sample.randomSample(numberOfTimeUnits, numberOfAuctions, r);
 		Collections.sort(listOfTimes, Collections.reverseOrder());
@@ -115,7 +115,7 @@ public class TMSeller extends SimpleUser {
 		return (int) (targetPerDay/7.17892371446915 * 60 + 0.5);
 	}
 	
-	public static int numberOfAuctions(double random) {
+	protected int numberOfAuctions(double random) {
 		// auction submission frequency modelled using a power law
 		for (int i = 0; i < probabilities.size(); i++) {
 			if (random < probabilities.get(i))
@@ -126,12 +126,13 @@ public class TMSeller extends SimpleUser {
 	
 	@Override
 	public void expiredAction(Auction auction, int time) {
-		// since the auction failed, just re-submit the exact same auction again immediately
-		Auction nAuction = new Auction(this, auction.getItem(), auction.getDuration(), auction.getStartPrice(), auction.getReservePrice(), auction.getPopularity());
-		submitAuction(nAuction);
+		// *** THIS IS A BAD IDEA: you end up with more and more empty auctions towards the end of the simulation...
+//		// since the auction failed, just re-submit the exact same auction again immediately
+//		Auction nAuction = new Auction(this, auction.getItem(), auction.getDuration(), auction.getStartPrice(), auction.getReservePrice(), auction.getPopularity());
+//		submitAuction(nAuction);
 	}
 	
-	static final ArrayList<Double> probabilities;
+	private static final ArrayList<Double> probabilities;
 	static {
 		probabilities = new ArrayList<>(373);
 		double sum = 0;
@@ -146,6 +147,5 @@ public class TMSeller extends SimpleUser {
 	}
 	public static void main(String[] args) {
 		System.out.println(probabilities);
-		System.out.println();
 	}
 }

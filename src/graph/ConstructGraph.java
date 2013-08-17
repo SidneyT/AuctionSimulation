@@ -47,8 +47,8 @@ import createUserFeatures.SimDBAuctionIterator;
 public class ConstructGraph {
 	public static void main(String[] args) {
 //		makeCharts();
-//		run2();
-		eigenValueTest();
+		run2();
+//		eigenValueTest();
 	}
 	
 	private static void eigenValueTest() {
@@ -102,15 +102,15 @@ public class ConstructGraph {
 	
 	private static void run2() {
 //		TMAuctionIterator it = new TMAuctionIterator(DBConnection.getTrademeConnection(), BuildTMFeatures.DEFAULT_QUERY);
-		SimDBAuctionIterator it = new SimDBAuctionIterator(DBConnection.getConnection("syn_normal_100k_test5"), true);
+		SimDBAuctionIterator it = new SimDBAuctionIterator(DBConnection.getConnection("syn_normal_10k_test7"), true);
 		
-		Iterator<Pair<SimAuction, List<BidObject>>> thing = it.getIterator();
-		int total = 0;
-		while (thing.hasNext()) {
-			int bidCount = thing.next().getValue().size();
-			total += bidCount;
-		}
-		System.out.println(total);
+//		Iterator<Pair<SimAuction, List<BidObject>>> thing = it.getIterator();
+//		int total = 0;
+//		while (thing.hasNext()) {
+//			int bidCount = thing.next().getValue().size();
+//			total += bidCount;
+//		}
+//		System.out.println(total);
 		
 		// gives the number of auctions sold by the seller
 		HashMap<Integer, HashMultiset<Integer>> winList = GraphOperations.duplicateAdjacencyList(it.getIterator(), EdgeType.reverse(EdgeType.WIN));
@@ -134,25 +134,25 @@ public class ConstructGraph {
 //			System.out.println(uid + "," + winList.get(uid).size() + "," + uniqueParticipantsCount.get(uid) + "," + totalParticipantsCount.get(uid));
 //		}
 		
-//		ValueFrequencies valueFrequenciesA = new ValueFrequencies();
-//		for (Double value : totalParticipantsCount.values()) {
-//			valueFrequenciesA.addValue(value);
-//		}
-//		System.out.println(valueFrequenciesA.toString());
-		try {
-			BufferedWriter bw = Files.newBufferedWriter(Paths.get("output.csv"), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-			
-			for (Integer uid : participants.keySet()) {
-				bw.append(uid + "," + totalParticipantsCount.get(uid) + "," + uniqueParticipantsCount.get(uid));
-//				bw.append(uid + "," + sellerAuctionCount.get(uid) + "," + sellerAuctionUniqueCount.get(uid));
-				bw.newLine();
-			}
-			
-//			bw.write(valueFrequenciesA.toString());
-			bw.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
+		ValueFrequencies valueFrequenciesA = new ValueFrequencies();
+		for (Double value : sellerAuctionCount.values()) {
+			valueFrequenciesA.addValue(value);
 		}
+		System.out.println(valueFrequenciesA.toString());
+//		try {
+//			BufferedWriter bw = Files.newBufferedWriter(Paths.get("output.csv"), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+//			
+//			for (Integer uid : participants.keySet()) {
+//				bw.append(uid + "," + totalParticipantsCount.get(uid) + "," + uniqueParticipantsCount.get(uid));
+////				bw.append(uid + "," + sellerAuctionCount.get(uid) + "," + sellerAuctionUniqueCount.get(uid));
+//				bw.newLine();
+//			}
+//			
+////			bw.write(valueFrequenciesA.toString());
+//			bw.flush();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 	
 	public static class ValueFrequencies {

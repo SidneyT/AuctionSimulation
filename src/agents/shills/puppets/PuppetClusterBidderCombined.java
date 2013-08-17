@@ -30,7 +30,7 @@ public class PuppetClusterBidderCombined implements PuppetI {
 	private static final Logger logger = Logger.getLogger(PuppetClusterBidderCombined.class); 
 	
 	private final ClusterBidder normal;
-	private final Puppet puppet;
+	private final Puppet puppetV;
 
 	private final Controller controller;
 	private final BufferHolder bh;
@@ -57,25 +57,25 @@ public class PuppetClusterBidderCombined implements PuppetI {
 		
 		// reuse the id, so that actions by both "normal" and "puppet" are viewed as by the same agent in the simulation.
 		int normalId = this.normal.getId();
-		this.puppet = new PuppetV(bh, ps, is, ah, itemTypes, controller, normalId);
+		this.puppetV = new PuppetV(bh, ps, is, ah, itemTypes, controller, normalId);
 	}
 
 	@Override
 	public void run() {
 		normal.run();
-		puppet.run();
+		puppetV.run();
 	}
 	
 	@Override
 	public void winAction(Auction auction, int time) {
 		normal.winAction(auction, time);
-		puppet.winAction(auction, time);
+		puppetV.winAction(auction, time);
 	}
 
 	@Override
 	public void lossAction(Auction auction, int time) {
 //		normal.lossAction(auction, time);
-		puppet.lossAction(auction, time);
+		puppetV.lossAction(auction, time);
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class PuppetClusterBidderCombined implements PuppetI {
 	@Override
 	public void soldAction(Auction auction, int time) {
 		normal.soldAction(auction, time); // only need to call with 1 field. Both normal & puppet calls the same method in SimpleUser
-		puppet.soldAction(auction, time);
+		puppetV.soldAction(auction, time);
 	}
 	
 	/**
@@ -101,7 +101,7 @@ public class PuppetClusterBidderCombined implements PuppetI {
 	@Override
 	public void gotPaidAction(Collection<Payment> paymentSet) {
 		normal.gotPaidAction(paymentSet); // only need to call with 1 field. Both normal & puppet calls the same method in SimpleUser
-		puppet.gotPaidAction(paymentSet);
+		puppetV.gotPaidAction(paymentSet);
 	}
 
 	/**
@@ -111,7 +111,7 @@ public class PuppetClusterBidderCombined implements PuppetI {
 	@Override
 	public void itemReceivedAction(Set<ItemSold> itemSet) {
 		normal.itemReceivedAction(itemSet); // only need to call with 1 field. Both normal & puppet calls the same method in SimpleUser
-		puppet.itemReceivedAction(itemSet);
+		puppetV.itemReceivedAction(itemSet);
 	}
 
 	@Override
@@ -146,7 +146,7 @@ public class PuppetClusterBidderCombined implements PuppetI {
 
 	@Override
 	public void makeBid(Auction auction, int bidPrice) {
-		puppet.makeBid(auction, bidPrice);
+		puppetV.makeBid(auction, bidPrice);
 	}
 
 	@Override

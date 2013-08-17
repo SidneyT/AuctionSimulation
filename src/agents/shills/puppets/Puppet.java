@@ -99,7 +99,7 @@ public class Puppet extends SimpleUser implements PuppetI {
 	// submit a default auction
 	public Auction submitAuction() {
 		Item item = new Item(CreateItemTypes.pickType(itemTypes, r.nextDouble()), "item" + r.nextInt());
-		Auction auction = new Auction(this, item, AuctionLength.SEVEN_DAYS.timeUnits(), getPrice(), 0, 1);
+		Auction auction = new Auction(this, item, AuctionLength.SEVEN_DAYS.length(), getPrice(), 0, 1);
 		this.bh.getAuctionMessagesToAh().put(auction);
 		
 		logger.debug(this + " submitting shill auction " + auction + " at " + bh.getTime());

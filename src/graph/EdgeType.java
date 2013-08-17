@@ -42,7 +42,7 @@ public enum EdgeType implements EdgeTypeI {
 	}, 
 	/**
 	 * Edges are between all bidders of the auction.
-	 * Note edges are undirected (i.e. 2 directed edges).
+	 * Note edges are undirected (i.e. 2 directed edges), so don't use {@link EdgeType#reverse(EdgeTypeI)}.
 	 */
 	IN_SAME_AUCTION {
 		public List<int[]> getTuples(AuctionObject auction, List<BidObject> bids) {
@@ -128,6 +128,16 @@ public enum EdgeType implements EdgeTypeI {
 		return new Undirected(edgeType);
 	}
 
+	/**
+	 * A marker class 
+	 */
+	public static class SellerEdges implements EdgeTypeI {
+		@Override
+		public List<int[]> getTuples(AuctionObject auction, List<BidObject> bids) {
+			throw new UnsupportedOperationException();
+		}
+	}
+	
 	private static class Undirected implements EdgeTypeI {
 		private final EdgeTypeI edgeType;
 		

@@ -235,7 +235,8 @@ public class Auction {
 		AuctionLength(int timeUnits) {
 			this.timeUnits = timeUnits;
 		}
-		public int timeUnits() {
+
+		public int length() {
 			return timeUnits;
 		}
 	}

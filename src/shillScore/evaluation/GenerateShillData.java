@@ -19,8 +19,8 @@ import createUserFeatures.SimAuctionIterator;
 import createUserFeatures.SimMemoryAuctionIterator;
 import createUserFeatures.UserFeatures;
 
+import agents.repFraud.MultipleRepFraud;
 import agents.repFraud.SingleRepFraud;
-import agents.repFraud.MultipleRepFraud_old;
 import agents.repFraud.SingleRepFraud;
 import agents.shills.Hybrid;
 import agents.shills.HybridT;
@@ -78,7 +78,7 @@ public class GenerateShillData {
 		AgentAdder hybridAdderD = HybridT.getAgentAdder(10, lateStart, PuppetClusterBidderCombined.getFactory());
 		
 		AgentAdder repFraudA = SingleRepFraud.getAgentAdder(1, 20);
-		AgentAdder repFraudB = MultipleRepFraud_old.getAgentAdder(1, 10, 20);
+		AgentAdder repFraudB = MultipleRepFraud.getAgentAdder(1, 10, 20);
 		
 		int numberOfRuns = 1;
 		

@@ -36,7 +36,8 @@ public class SimulationCreateTableStmts {
 		"`startPrice` bigint(20) NOT NULL, " + 
 		"`reservePrice` bigint(20) NOT NULL, " + 
 		"`endTime` bigint(20) NOT NULL, " + 
-		"`winnerId` int(11) NULL, " + 
+		"`winnerId` int(11) DEFAULT NULL, " +
+		"`popularity` double DEFAULT NULL, " +
 		"PRIMARY KEY (`listingId`), " + 
 		"UNIQUE KEY `id_UNIQUE` (`listingId`) " +
 		") ENGINE=InnoDB DEFAULT CHARSET=latin1;";

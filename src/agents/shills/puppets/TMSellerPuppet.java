@@ -35,8 +35,4 @@ public class TMSellerPuppet extends TMSeller {
 		return repInflationTarget;
 	}
 	
-	@Override
-	public void run2() {
-		super.run2();
-	}
 }
