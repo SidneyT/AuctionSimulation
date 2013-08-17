@@ -70,10 +70,11 @@ public abstract class SimpleUser extends EventListener implements SimpleUserI {
 		return this.rr;
 	}
 
+	/**
+	 * Gives the behaviour for receiving item/payment.
+	 */
 	@Override
-	public void run() {
-		super.run();
-
+	public void run2() {
 		// pick up payment messages from other users
 		Collection<Payment> paymentSet = ps.receive(this);
 		if (paymentSet != null && !paymentSet.isEmpty())
@@ -118,9 +119,10 @@ public abstract class SimpleUser extends EventListener implements SimpleUserI {
 		for (Payment payment : paymentSet) {
 			boolean exists = this.awaitingPayment.remove(payment.getAuction());
 			// assert exists;
-			if (!exists) {
-				System.out.println("");
-			}
+//			if (!exists) {
+//				System.out.println("");
+//			}
+			assert exists;
 
 			this.is.send(2, payment.getAuction(), payment.getAuction().getItem(), ItemCondition.GOOD, this,
 					payment.getSender());

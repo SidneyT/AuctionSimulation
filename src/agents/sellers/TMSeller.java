@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.math3.util.FastMath;
 import org.apache.log4j.Logger;
@@ -37,7 +38,7 @@ public class TMSeller extends SimpleUser {
 		super(bh, ps, is, ah);
 		
 		int numberOfAuctions = numberOfAuctions(r.nextDouble());
-		int numberOfTimeUnits = AuctionLength.ONE_DAY.timeUnits() * (100 - 7);
+		int numberOfTimeUnits = AuctionLength.ONE_DAY.length() * (100 - 7);
 
 		List<Integer> listOfTimes = Sample.randomSample(numberOfTimeUnits, numberOfAuctions, r);
 		Collections.sort(listOfTimes, Collections.reverseOrder());
@@ -49,7 +50,9 @@ public class TMSeller extends SimpleUser {
 
 	ArrayDeque<Integer> auctionSubmissionTimes; // the times at which this agent will submit an auction
 	
-	public void run() {
+	public void run2() {
+		super.run2();
+		
 		long currentTime = this.bh.getTime();
 		if (!auctionSubmissionTimes.isEmpty() && currentTime >= auctionSubmissionTimes.peekLast()) {
 			auctionSubmissionTimes.removeLast();
@@ -57,7 +60,7 @@ public class TMSeller extends SimpleUser {
 		}
 	}
 	
-	private int auctionsSubmitted = 0;
+	public int auctionsSubmitted = 0;
 	private void submitAuction() {
 		
 		double logParam = 2.5; // from TM data. See countCategorySpread.xlsx
@@ -67,7 +70,7 @@ public class TMSeller extends SimpleUser {
 			type = CreateItemTypes.pickType(itemTypes, r.nextDouble());
 			itemTypesUsed.add(type);
 		} else { // use an previously used type
-			type = chooseOldItemType(logParam, itemTypesUsed, r.nextDouble());
+			type = chooseAnOldItemType(logParam, itemTypesUsed, r.nextDouble());
 		}
 		
 		Item newItem = new Item(type, "item" + r.nextInt(100000));
@@ -99,7 +102,7 @@ public class TMSeller extends SimpleUser {
 		return rand < probNewCat; // new category
 	}
 	
-	public static ItemType chooseOldItemType(double logParam, List<ItemType> itemTypes, double rand) {
+	public static ItemType chooseAnOldItemType(double logParam, List<ItemType> itemTypes, double rand) {
 		// sum of log values for each category in itemTypesUsed
 		// log( (x + 1) / x), log-base to be given
 		double totalWeight = FastMath.log(logParam, itemTypes.size() + 1);
@@ -115,7 +118,7 @@ public class TMSeller extends SimpleUser {
 		return (int) (targetPerDay/7.17892371446915 * 60 + 0.5);
 	}
 	
-	public static int numberOfAuctions(double random) {
+	protected int numberOfAuctions(double random) {
 		// auction submission frequency modelled using a power law
 		for (int i = 0; i < probabilities.size(); i++) {
 			if (random < probabilities.get(i))
@@ -126,12 +129,15 @@ public class TMSeller extends SimpleUser {
 	
 	@Override
 	public void expiredAction(Auction auction, int time) {
-		// since the auction failed, just re-submit the exact same auction again immediately
-		Auction nAuction = new Auction(this, auction.getItem(), auction.getDuration(), auction.getStartPrice(), auction.getReservePrice(), auction.getPopularity());
-		submitAuction(nAuction);
+//		// since the auction failed, just re-submit the exact same auction again immediately
+//		Auction nAuction = new Auction(this, auction.getItem(), auction.getDuration(), auction.getStartPrice(), auction.getReservePrice(), auction.getPopularity());
+//		submitAuction(nAuction);
+		System.out.println("rs: " + atomicInteger.incrementAndGet());
 	}
 	
-	static final ArrayList<Double> probabilities;
+	static AtomicInteger atomicInteger = new AtomicInteger();
+	
+	private static final ArrayList<Double> probabilities;
 	static {
 		probabilities = new ArrayList<>(373);
 		double sum = 0;

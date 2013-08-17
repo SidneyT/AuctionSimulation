@@ -20,7 +20,7 @@ import simulator.objects.Auction;
  * Receives all events from AuctionHouse and ItemSender/PaymentSender and logs them.
  * Doesn't do anything.
  */
-public abstract class EventListener implements Runnable, EventListenerI {
+public abstract class EventListener implements EventListenerI {
 	private static final Logger logger = Logger.getLogger(EventListener.class);
 
 	private final static AtomicInteger userIdCount = new AtomicInteger(); // for assigning unique ids
@@ -28,15 +28,12 @@ public abstract class EventListener implements Runnable, EventListenerI {
 	public final BufferHolder bh;
 	protected final int id;
 
-	protected final Set<Auction> awaitingPayment;
-	protected final Set<Auction> awaitingItem;
+	protected final Set<Auction> awaitingPayment = new HashSet<Auction>();
+	protected final Set<Auction> awaitingItem = new HashSet<Auction>();
 	
 	public EventListener(BufferHolder bh) {
 		this.id = userIdCount.getAndIncrement();
-		
 		this.bh = bh;
-		this.awaitingPayment = new HashSet<Auction>();
-		this.awaitingItem = new HashSet<Auction>();
 	}
 
 	/**
@@ -47,10 +44,7 @@ public abstract class EventListener implements Runnable, EventListenerI {
 	 */
 	public EventListener(BufferHolder bh, int id) {
 		this.id = id;
-		
 		this.bh = bh;
-		this.awaitingPayment = new HashSet<Auction>();
-		this.awaitingItem = new HashSet<Auction>();
 	}
 	
 	public final int getId() {
@@ -64,7 +58,7 @@ public abstract class EventListener implements Runnable, EventListenerI {
 	/**
 	 * All subclasses must call this method if overriding.
 	 */
-	public void run() {
+	public final void run() {
 		List<Message> messages = this.bh.getMessagesToUsers().getMessages(id);
 		for (Message message : messages) {
 			Auction auction = message.getAuction();
@@ -93,7 +87,14 @@ public abstract class EventListener implements Runnable, EventListenerI {
 					break;
 			}
 		}
+		
+		run2();
 	}
+	
+	/**
+	 * Allows subclasses execute other behaviours after the run() method has been executed.
+	 */
+	public abstract void run2();
 	
 	/**
 	 * For bidders
