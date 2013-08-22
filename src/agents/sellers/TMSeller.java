@@ -50,6 +50,8 @@ public class TMSeller extends SimpleUser {
 	ArrayDeque<Integer> auctionSubmissionTimes; // the times at which this agent will submit an auction
 	
 	public void run() {
+		super.run();
+		
 		long currentTime = this.bh.getTime();
 		if (!auctionSubmissionTimes.isEmpty() && currentTime >= auctionSubmissionTimes.peekLast()) {
 			auctionSubmissionTimes.removeLast();
@@ -111,8 +113,8 @@ public class TMSeller extends SimpleUser {
 	}
 
 	public static int sellersRequired(double targetPerDay) {
-		// 7.17892371446915 is the number of auctions on average that each TMSeller submits every 60 days.
-		return (int) (targetPerDay/7.17892371446915 * 60 + 0.5);
+		// 4.64100548434843 is the number of auctions on average that each TMSeller submits every 60 days.
+		return (int) (targetPerDay/4.64100548434843 * 60 + 0.5);
 	}
 	
 	protected int numberOfAuctions(double random) {
@@ -133,17 +135,25 @@ public class TMSeller extends SimpleUser {
 	}
 	
 	private static final ArrayList<Double> probabilities;
+	/**
+	 * Equation model is shown in sellerFreq.xlsx, totalSold tab.
+	 */
 	static {
 		probabilities = new ArrayList<>(373);
 		double sum = 0;
-		for (int x = 1;; x++) {
-			double y = Math.round(17875 * Math.pow(x, -1.77)) / 34266d;
+		for (int x = 1; x <= 50; x++) {
+			double y = Math.round(17500 * Math.pow(x, -1.758)) / 32927d * 0.987941378;
 			sum += y;
 			probabilities.add(sum);
-//			System.out.println(sum);
-			if (sum > 0.999999999999)
+		}
+		for (int x = 51; x < 2000; x++) {
+			double y = Math.round(8000000 * Math.pow(x, -3.3)) / 394d * 0.0120586216159747;
+			sum += y;
+			probabilities.add(sum);
+			if (sum > 0.999999999)
 				break;
 		}
+		
 	}
 	public static void main(String[] args) {
 		System.out.println(probabilities);
