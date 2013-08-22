@@ -134,7 +134,7 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	 */
 	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
 		try (Connection conn = DBConnection.getTrademeConnection()) {
-			Iterator<Pair<TMAuction, List<BidObject>>> auctionIterator = new TMAuctionIterator(conn, query).getIterator();
+			Iterator<Pair<TMAuction, List<BidObject>>> auctionIterator = new TMAuctionIterator(conn, query).iterator();
 			
 			while(auctionIterator.hasNext()) {
 				Pair<TMAuction, List<BidObject>> pair = auctionIterator.next();
@@ -154,7 +154,7 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	 * Gives an iterator going through DB, giving a pair with Auction & Bids belonging to that auction.
 	 *
 	 */
-	public static class TMAuctionIterator {
+	public static class TMAuctionIterator implements Iterable<Pair<TMAuction, List<BidObject>>> {
 		private final ResultSet rs;
 		public TMAuctionIterator(Connection conn, String query) {
 			try {
@@ -171,11 +171,11 @@ public class BuildTMFeatures extends BuildUserFeatures {
 			private List<BidObject> bids;
 			private TMAuction auction;
 			private final ResultSet rss;
-			TMIteratorInstance(ResultSet rss) {
+			private TMIteratorInstance(ResultSet rs) {
 				try {
-					this.rss = rss;
-					this.hasNext = rss.first(); // see if there's anything in result set
-					rss.beforeFirst(); // put the cursor back
+					this.rss = rs;
+					this.hasNext = rs.first(); // see if there's anything in result set
+					rs.beforeFirst(); // put the cursor back
 				} catch (SQLException e) {
 					throw new RuntimeException(e);
 				}
@@ -239,7 +239,7 @@ public class BuildTMFeatures extends BuildUserFeatures {
 				}
 		}
 		
-		public Iterator<Pair<TMAuction, List<BidObject>>> getIterator() {
+		public Iterator<Pair<TMAuction, List<BidObject>>> iterator() {
 			return new TMIteratorInstance(rs);
 		}
 		

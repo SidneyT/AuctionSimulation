@@ -51,7 +51,7 @@ public class BuildShillScore {
 	}
 	
 	public static ShillScoreInfo build(SimAuctionIterator simAuctionIterator) {
-		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getIterator();
+		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.iterator();
 
 		Map<Integer, ShillScore> shillScores = new HashMap<>();
 		Map<SimAuction, List<Integer>> auctionBidders = new HashMap<>(); // Map(seller, bidderlist)
@@ -71,7 +71,7 @@ public class BuildShillScore {
 	public static ShillScoreInfo buildTM(String query) {
 		
 		TMAuctionIterator tmIterator = new BuildTMFeatures.TMAuctionIterator(DBConnection.getTrademeConnection(), query);
-		Iterator<Pair<TMAuction, List<BidObject>>> it = tmIterator.getIterator();
+		Iterator<Pair<TMAuction, List<BidObject>>> it = tmIterator.iterator();
 		
 		Map<Integer, ShillScore> shillScores = new HashMap<>();
 		Map<TMAuction, List<Integer>> auctionBidders = new HashMap<>(); // Map(seller, bidderlist)

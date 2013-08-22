@@ -10,9 +10,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.BoundType;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultiset;
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.BuildTMFeatures.TMAuctionIterator;
@@ -62,7 +64,7 @@ public class TestAuctionData {
 	
 	private static List<Integer> run2() {
 		TMAuctionIterator tmIt = new TMAuctionIterator(DBConnection.getTrademeConnection(), BuildTMFeatures.DEFAULT_QUERY);
-		HashMap<Integer, HashMultiset<Integer>> adjacencyList = GraphOperations.duplicateAdjacencyList(tmIt.getIterator(), EdgeType.reverse(EdgeType.PARTICIPATE));
+		Map<Integer, Multiset<Integer>> adjacencyList = GraphOperations.duplicateAdjacencyList(tmIt.iterator(), EdgeType.reverse(EdgeType.PARTICIPATE));
 		TreeMultiset<Integer> frequencies = TreeMultiset.create();
 		for (Integer key : adjacencyList.keySet()) {
 			frequencies.add(adjacencyList.get(key).size());

@@ -15,7 +15,7 @@ import agents.shills.strategies.TrevathanStrategy;
 
 import simulator.AgentAdder;
 import simulator.AuctionHouse;
-import simulator.Main;
+import simulator.Simulation;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
@@ -69,7 +69,7 @@ public class AlternatingAuction extends CollusiveShillController {
 	
 	public static void main(String[] args) {
 		final int numberOfGroups = 1;
-		Main.run(SaveToDatabase.instance(), getAgentAdder(numberOfGroups, new TrevathanStrategy(0.85, 0.85, 0.85), 4));
+		Simulation.run(SaveToDatabase.instance(), getAgentAdder(numberOfGroups, new TrevathanStrategy(0.85, 0.85, 0.85), 4));
 	}
 
 	@Override

@@ -63,6 +63,13 @@ public class RepFraudController implements Runnable {
 		}
 	}
 
+	/**
+	 * Each fraud seller wants 30-100 extra rep, so 65 auctions per user on average.
+	 * @param numberOfGroups
+	 * @param sellerCount
+	 * @param puppetCount
+	 * @return
+	 */
 	public static AgentAdder getAgentAdder(final int numberOfGroups, final int sellerCount, final int puppetCount) {
 		return new AgentAdder() {
 			@Override

@@ -45,7 +45,7 @@ public class SimDBAuctionIterator implements SimAuctionIterator {
 	 * @see createUserFeatures.SimAuctionIterator#iterator()
 	 */
 	@Override
-	public Iterator<Pair<SimAuction, List<BidObject>>> getIterator() {
+	public Iterator<Pair<SimAuction, List<BidObject>>> iterator() {
 		return new AuctionIterator();
 	}
 	
@@ -102,10 +102,8 @@ public class SimDBAuctionIterator implements SimAuctionIterator {
 							bids.add(bid);
 							
 							
-							if (auction == null) {
-								throw new RuntimeException("auction should never be null here.");
-							}
-							assert(resultPair.getValue().size() <= 20);
+							assert auction != null : "auction should never be null here.";
+							assert resultPair.getValue().size() <= 20;
 							return resultPair;
 						}
 					} 
@@ -118,13 +116,20 @@ public class SimDBAuctionIterator implements SimAuctionIterator {
 					throw new RuntimeException("To reach here, rs must've been empty to begin with.");
 				}
 				
-				return new Pair<>(auction, bids);
+				int lastResultPairBidCount = bids.size();
+				if (trim && lastResultPairBidCount > 20) { // logic for keeping the last 20 bids in the auction, like in TradeMe
+					List<BidObject> trimmedBids = new ArrayList<>(bids.subList(lastResultPairBidCount - 20, lastResultPairBidCount));
+					return new Pair<>(auction, trimmedBids);
+				} else {
+					return new Pair<>(auction, bids);
+				}
 				
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}
 		}
-			@Override
+		
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}

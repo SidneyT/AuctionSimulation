@@ -47,7 +47,7 @@ public class ShillWinLossPrice {
 
 		Map<Integer, UserObject> users = simAuctionIterator.users();
 		
-		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.getIterator();
+		Iterator<Pair<SimAuction, List<BidObject>>> it = simAuctionIterator.iterator();
 		while (it.hasNext()) {
 			Pair<SimAuction, List<BidObject>> pair = it.next();
 			SimAuction auction = pair.getKey();

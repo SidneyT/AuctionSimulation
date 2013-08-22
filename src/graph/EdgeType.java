@@ -92,10 +92,12 @@ public enum EdgeType implements EdgeTypeI {
 			}
 			return tuples;
 		}
-	};
+	}
+
+	;
 
 
-	public static EdgeTypeI reverse(EdgeTypeI edgeType) {
+	public static Reverse reverse(EdgeTypeI edgeType) {
 		return new Reverse(edgeType);
 	}
 	
@@ -122,12 +124,16 @@ public enum EdgeType implements EdgeTypeI {
 			return edges;
 		}
 	
+		@Override
+		public String toString() {
+			return "r_" + edgeType.toString();
+		}
+		
 	}
 	
-	public static EdgeTypeI undirected(EdgeTypeI edgeType) {
-		return new Undirected(edgeType);
+	public static SellerEdges sellerEdges() {
+		return new SellerEdges();
 	}
-
 	/**
 	 * A marker class 
 	 */
@@ -136,6 +142,15 @@ public enum EdgeType implements EdgeTypeI {
 		public List<int[]> getTuples(AuctionObject auction, List<BidObject> bids) {
 			throw new UnsupportedOperationException();
 		}
+		
+		@Override
+		public String toString() {
+			return "sellerEdges";
+		}
+	}
+	
+	public static Undirected undirected(EdgeTypeI edgeType) {
+		return new Undirected(edgeType);
 	}
 	
 	private static class Undirected implements EdgeTypeI {
@@ -155,5 +170,9 @@ public enum EdgeType implements EdgeTypeI {
 			return edgesCopy;
 		}
 	
+		@Override
+		public String toString() {
+			return "u_" + edgeType.toString();
+		}
 	}
 }

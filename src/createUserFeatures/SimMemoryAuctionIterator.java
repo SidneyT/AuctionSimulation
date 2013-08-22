@@ -34,7 +34,7 @@ public class SimMemoryAuctionIterator implements SimAuctionIterator {
 	}
 	
 	@Override
-	public Iterator<Pair<SimAuction, List<BidObject>>> getIterator() {
+	public Iterator<Pair<SimAuction, List<BidObject>>> iterator() {
 		return new AuctionIterator(savedObjects, trim);
 	}
 	

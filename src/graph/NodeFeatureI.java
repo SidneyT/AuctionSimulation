@@ -1,9 +1,9 @@
 package graph;
 
-import java.util.HashMap;
+import java.util.Map;
 
-import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 
 interface NodeFeatureI {
-	double value(HashMap<Integer, HashMultiset<Integer>> adjacencyList, int user);
+	double value(Map<Integer, Multiset<Integer>> adjacencyList, int user);
 }

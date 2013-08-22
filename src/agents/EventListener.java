@@ -93,7 +93,12 @@ public abstract class EventListener implements Runnable, EventListenerI {
 					break;
 			}
 		}
+	
+		run2();
+		
 	}
+	
+	public void run2() {}
 	
 	/**
 	 * For bidders

@@ -53,7 +53,7 @@ public class MultipleSimulationRuns {
 			
 			// run the simulator
 			KeepObjectsInMemory savedObjects = KeepObjectsInMemory.instance();
-			Main.run(savedObjects);
+			Simulation.run(savedObjects);
 			Map<Integer, UserFeatures> userFeatureMap = buildFeatures.build(new SimMemoryAuctionIterator(savedObjects, trim));
 			
 			String folder = "synData";

@@ -4,10 +4,11 @@ import simulator.database.DBConnection;
 import simulator.database.SaveToDatabase;
 import simulator.database.SimulationCreateTableStmts;
 import agents.repFraud.RepFraudController;
+import agents.shills.*;
+import agents.shills.puppets.*;
+import agents.shills.strategies.*;
 
 public class Main {
-
-	
 
 	public static void main(String[] args) throws InterruptedException {
 		System.out.println("Start.");
@@ -17,21 +18,21 @@ public class Main {
 		withFraudsIntoDiffDatabases();
 		
 		long delta = System.nanoTime() - t1;
-		System.out.println(delta / 1000000);
+		System.out.println(delta / 1000000000 + "s");
 		System.out.println("Finished.");
 	}
 
 
-	public static void withFraudsIntoDiffDatabases() {
-//		Strategy travethan = new TrevathanStrategy(0.95, 0.85, 0.85);
-//		Strategy waitStart = new WaitStartStrategy(0.95, 0.85, 0.85);
-//		Strategy lowPrice = new LowPriceStrategy();
-//
-//		String databaseName = "syn_normal_10k_test8";
-////		DBConnection.createDatabase(databaseName);
-////		SimulationCreateTableStmts.createSimulationTables(databaseName);
+	private static void withFraudsIntoDiffDatabases() {
+		Strategy travethan = new TrevathanStrategy(0.95, 0.85, 0.85);
+		Strategy waitStart = new WaitStartStrategy(0.95, 0.85, 0.85);
+		Strategy lowPrice = new LowPriceStrategy();
+
+//		String databaseName = "syn_normal_100k_0";
+//		DBConnection.createDatabase(databaseName);
+//		SimulationCreateTableStmts.createSimulationTables(databaseName);
 //		// run the simulation and store everything into the database
-//		Main.run(SaveToDatabase.instance(databaseName));
+//		Simulation.run(SaveToDatabase.instance(databaseName), 100000);
 
 //		AgentAdder trevathan = SimpleShillPair.getAgentAdder(30, travethan); // can use 20, since each submits 10 auctions.
 //		for (int i = 0; i < 30; i++) {
@@ -74,34 +75,36 @@ public class Main {
 //			// run the simulation and store everything into the database
 //			Main.run(SaveToDatabase.instance(databaseName), hybrid);
 //		}
-//		AgentAdder hybrid = HybridT.getAgentAdder(10 * 25, waitStart, PuppetClusterBidderCombined.getFactory());
-////		Main.run(SaveToDatabase.instance(), hybrid);
-//		for (int i = 0; i < 5; i++) {
-//			String databaseName = "syn_hybridNormal_100k_" + i;
-//			// construct database and tables to store simulation data
-//			DBConnection.createDatabase(databaseName);
-//			SimulationCreateTableStmts.createSimulationTables(databaseName);
-//			
-//			// run the simulation and store everything into the database
-//			Main.run(SaveToDatabase.instance(databaseName), hybrid);
-//		}
-		AgentAdder repFraud = RepFraudController.getAgentAdder(1, 40, 800);
-		for (int i = 0; i < 5; i++) {
-			String databaseName = "syn_repFraud_100k_" + i;
+		AgentAdder hybrid = HybridT.getAgentAdder(10 * 25, waitStart, PuppetClusterBidderCombined.getFactory());
+//		Main.run(SaveToDatabase.instance(), hybrid);
+		for (int i = 0; i < 2; i++) {
+			String databaseName = "syn_hybridNormal_100k_" + i;
 			// construct database and tables to store simulation data
 			DBConnection.createDatabase(databaseName);
 			SimulationCreateTableStmts.createSimulationTables(databaseName);
 			
 			// run the simulation and store everything into the database
-			Simulation.run(SaveToDatabase.instance(databaseName), repFraud);
+			Simulation.run(SaveToDatabase.instance(databaseName), 100000, hybrid);
 			System.out.println("finished run " + i);
 		}
+//		AgentAdder repFraud = RepFraudController.getAgentAdder(1, 40, 800);
+//		for (int i = 0; i < 1; i++) {
+//			String databaseName = "syn_repFraud_100k_" + i;
+//			// construct database and tables to store simulation data
+////			DBConnection.createDatabase(databaseName);
+////			SimulationCreateTableStmts.createSimulationTables(databaseName);
+//			
+//			// run the simulation and store everything into the database
+//			Simulation.run(SaveToDatabase.instance(databaseName), 100000, repFraud);
+//			
+//			System.out.println("finished run " + i);
+//		}
 }
 	
 	/**
 	 * Generates synthetic data with only normal users.
 	 */
-	public static void normalsOnly() {
+	private static void normalsOnly() {
 		Simulation.run(SaveToDatabase.instance());
 //		ClusterAnalysis.clusterSimData("");
 	}

@@ -45,7 +45,7 @@ import shillScore.BuildShillScore.ShillScoreInfo;
 import shillScore.CollusiveShillScore.ScoreType;
 import simulator.AgentAdder;
 import simulator.AuctionHouse;
-import simulator.Main;
+import simulator.Simulation;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
@@ -126,7 +126,7 @@ public class GenerateShillData {
 //			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator); // build features
 			
 			SimAuctionIterator simAuctionIterator = new SimDBAuctionIterator(DBConnection.getSimulationConnection(), true);
-			Main.run(SaveToDatabase.instance(), adder);
+			Simulation.run(SaveToDatabase.instance(), adder);
 			Map<Integer, UserFeatures> userFeatures = new BuildSimFeatures(true).build(simAuctionIterator);
 			
 			// write results to file
@@ -230,7 +230,7 @@ public class GenerateShillData {
 			System.out.println("starting run " + i);
 			
 			// run the simulator with the adder
-			Main.run(SaveToDatabase.instance(), adder);
+			Simulation.run(SaveToDatabase.instance(), adder);
 			
 			String runLabel = adder.toString() + "." + i;
 

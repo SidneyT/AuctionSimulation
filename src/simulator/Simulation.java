@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import agents.EventListener;
 import agents.SimpleUserI;
+import agents.bidders.ClusterBidder;
 import agents.bidders.ClusterEarly;
 import agents.bidders.ClusterSnipe;
 import agents.sellers.TMSeller;
@@ -47,16 +48,16 @@ public class Simulation {
 	 * Runs the simulator
 	 */
 	public static void run(SaveObjects saveObjects, AgentAdder... agentAdders) {
-		try {
-			Simulation.run(saveObjects, 4000, agentAdders);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		Simulation.run(saveObjects, 10000, agentAdders);
 //		CalculateStats.calculateStats();
 	}
 
-	public static void run(SaveObjects saveObjects, int numberOfBidders, AgentAdder... agentAdders) throws InterruptedException {
-		Simulation.go(saveObjects, numberOfBidders, agentAdders);
+	public static void run(SaveObjects saveObjects, int numberOfBidders, AgentAdder... agentAdders) {
+		try {
+			Simulation.go(saveObjects, numberOfBidders, agentAdders);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	static void go(SaveObjects saveObjects, int numberOfBidders, AgentAdder... agentAdders) throws InterruptedException {
@@ -166,6 +167,8 @@ public class Simulation {
 					// invokeAll() blocks until all tasks are complete
 					es.invokeAll(callables); 
 					es.invokeAll(userCallables);
+//					if (i % 10 == 0)
+//						System.out.println("e, s: " + ClusterBidder.earlyCount + "," + ClusterBidder.sniperCount);
 					
 					bh.startAhTurn();
 				} catch (InterruptedException e) {

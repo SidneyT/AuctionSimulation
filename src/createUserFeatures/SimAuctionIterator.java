@@ -10,15 +10,16 @@ import simulator.categories.ItemType;
 
 import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.BuildUserFeatures.SimAuction;
+import createUserFeatures.BuildUserFeatures.TMAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
 
-public interface SimAuctionIterator {
+public interface SimAuctionIterator extends Iterable<Pair<SimAuction, List<BidObject>>> {
 
 	/**
 	 * 
 	 * @return List of BidObjects ordered in price ascending order 
 	 */
-	public abstract Iterator<Pair<SimAuction, List<BidObject>>> getIterator();
+	public abstract Iterator<Pair<SimAuction, List<BidObject>>> iterator();
 	public abstract Map<Integer, UserObject> users();
 	public abstract Map<Integer, ItemType> itemTypes();
 
