@@ -38,7 +38,7 @@ public class ClusterSnipe extends ClusterBidder {
 		super.run();
 		Set<Auction> alreadyBidOn = new HashSet<Auction>();
 		
-		long currentTime = this.bh.getTime();
+		int currentTime = this.bh.getTime();
 		selectAuctionsToBidIn();
 		
 		if (this.auctionsToBidIn.containsKey(currentTime)) {
@@ -46,19 +46,17 @@ public class ClusterSnipe extends ClusterBidder {
 //				if (!alreadyBidOn.contains(auction)) {
 				assert !alreadyBidOn.contains(auction);
 				
-					// if item is under 50% value, made a bid greater than the minimum
-//					if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.6) {
-					if (r.nextDouble() < 0.2) {
-						int bidAmount = (int) (auction.trueValue() * 0.80);
-						if (bidAmount < auction.minimumBid())
-							bidAmount = auction.minimumBid();
-						makeBid(auction, bidAmount);
-					} else { // make the minimum possible bid
-						makeBid(auction);
-					}
-					revisitLater(auction);
-					alreadyBidOn.add(auction);
-//				}
+				if (r.nextDouble() < 0.2) {
+					int bidAmount = (int) (auction.trueValue() * 0.80);
+					int minBid = auction.minimumBid();
+					if (bidAmount < minBid)
+						bidAmount = minBid;
+					makeBid(auction, bidAmount);
+				} else { // make the minimum possible bid
+					makeBid(auction);
+				}
+				revisitLater(auction);
+				alreadyBidOn.add(auction);
 			}
 		}
 		
@@ -74,7 +72,7 @@ public class ClusterSnipe extends ClusterBidder {
 	
 	}
 	
-	HashMultimap<Integer, Auction> revisitForRebids = HashMultimap.create();
+	private final HashMultimap<Integer, Auction> revisitForRebids = HashMultimap.create();
 	private void revisitLater(Auction auction) {
 		int currentTime = this.bh.getTime();
 		int delayForRevisit = 1; // since this runs before action(), if delay is zero, auction will be revisited immediately 

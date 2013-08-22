@@ -44,22 +44,23 @@ public class ClusterEarly extends ClusterBidder {
 			for (Auction auction : this.auctionsToBidIn.removeAll(currentTime)) {
 //				if (!alreadyBidOn.contains(auction)) {
 				assert !alreadyBidOn.contains(auction);
-					if (r.nextDouble() < valuationEffect(auction.getCurrentPrice(), privateValuationProportion * auction.getCurrentPrice())) {
-						// if item is under 50% value, made a bid greater than the minimum
+				if (r.nextDouble() < valuationEffect(auction.getCurrentPrice(), privateValuationProportion * auction.getCurrentPrice())) {
+					// if item is under 50% value, made a bid greater than the minimum
 //						if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.5 && r.nextDouble() < 0.7) {
-						if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.4 && r.nextDouble() < 0.3) {
-							int bidAmount = (int) (auction.trueValue() * 0.6);
-							if (bidAmount < auction.minimumBid())
-								bidAmount = auction.minimumBid();
-							makeBid(auction, bidAmount);
-						} else { // make the minimum possible bid
-							makeBid(auction);
-						}
-						revisitLater(auction);
-						alreadyBidOn.add(auction);
-					} else {
-						interestTimes.add((int) currentTime);
+					if (auction.nextBidProportionOfTrueValuation() / privateValuationProportion < 0.4 && r.nextDouble() < 0.3) {
+						int bidAmount = (int) (auction.trueValue() * 0.6);
+						if (bidAmount < auction.minimumBid())
+							bidAmount = auction.minimumBid();
+						makeBid(auction, bidAmount);
+					} else { // make the minimum possible bid
+						makeBid(auction);
 					}
+					revisitLater(auction);
+					alreadyBidOn.add(auction);
+				} else {
+					interestTimes.add(currentTime);
+//					System.out.println(this + " +1auc");
+				}
 //				}
 			}
 		}

@@ -102,6 +102,9 @@ public abstract class ClusterBidder extends SimpleUser {
 	private Set<ItemType> itemTypesBidOn = new HashSet<>();
 	private static final double logParam = 2.4;
 	
+	public static long earlyCount, sniperCount;
+	
+	
 	/**
 	 * Selects auctions to bid in, and the time to begin bidding in them.
 	 */
@@ -122,6 +125,12 @@ public abstract class ClusterBidder extends SimpleUser {
 					this.ah.registerForAuction(this, auction);
 					int timeToMakeBid = firstBidTime() + currentTime;
 					logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
+//					if (this instanceof ClusterEarly) {
+//						earlyCount++;
+//					} else {
+//						sniperCount++;
+////						System.out.println("pause");
+//					}
 					scheduleBid(timeToMakeBid, auction);
 					break;
 				} else { // if not, check if you are willing to buy things from another category
@@ -136,6 +145,12 @@ public abstract class ClusterBidder extends SimpleUser {
 					this.ah.registerForAuction(this, auction);
 					int timeToMakeBid = firstBidTime() + currentTime;
 					logger.debug(this + " is making first bid in the future at " + timeToMakeBid + " at time " + currentTime + ".");
+//					if (this instanceof ClusterEarly) {
+//						earlyCount++;
+//					} else {
+//						sniperCount++;
+////						System.out.println("pause");
+//					}
 					scheduleBid(timeToMakeBid, auction);
 					break;
 				}
@@ -151,12 +166,18 @@ public abstract class ClusterBidder extends SimpleUser {
 //				if (timesSeen >= 50)
 //					probBid = 0.022;
 //				else {
-					probBid = probabilities.get(timesSeen - 1) * maxAuctions / 4;
-					probBid = Math.min(0.012, probBid);
+					probBid = 0.05 * (timesSeen) * maxAuctions / 2;
+					probBid = Math.min(0.12, probBid);
 //				}
 				if (probBid > r.nextDouble()) {
 //					itemTypesBidOn.add(auction.getItem().getType()); // record the new category you'll bid in
 					int timeToMakeBid = firstBidTime() + currentTime;
+//					if (this instanceof ClusterEarly) {
+//						earlyCount++;
+//					} else {
+//						sniperCount++;
+////						System.out.println("pause");
+//					}
 					scheduleBid(timeToMakeBid, auction);
 					break;
 				}
@@ -211,7 +232,7 @@ public abstract class ClusterBidder extends SimpleUser {
 	 * @param maximumBid
 	 * @return
 	 */
-	protected static double valuationEffect(long bidAmount, double maximumBid) {
+	protected static double valuationEffect(int bidAmount, double maximumBid) {
 //		if (bidAmount <= maximumBid)
 //			return 100000000;
 //		else
