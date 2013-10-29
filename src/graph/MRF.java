@@ -26,7 +26,7 @@ public class MRF {
 	double[][] partialMessages; // double[][fraud belief, normal Belief]
 	double[][] messageFor; // stores messages for nodes. message for a node is in the corresponding index, e.g. messageFor[node][0] and messageFor[node][1]
 	
-	Integer ofInterest = 0;
+	Integer ofInterest = -1;
 	
 	public MRF(Map<Integer, Multiset<Integer>> graph, Map<Integer, Double> outlierScores) {
 		this(graph, outlierScores, 3);
@@ -49,8 +49,8 @@ public class MRF {
 				consecutiveToOriginal[count] = origId;
 
 				// TODO: can remove
-//				if (origId.equals(-1))
-				if (origId.equals(260118))
+				if (origId.equals(""))
+//				if (origId.equals(260118))
 					ofInterest = count;
 				count++;
 			}
@@ -126,10 +126,11 @@ public class MRF {
 			new double[]{0.2, 0.8}
 		}; 
 
-	int maxIt = 500;
+	int maxIt = 120;
+	int it = 0;
 	public HashMap<Integer, Double> run() {
 		while (!converged()) {
-			System.out.println("it: " + (500 - maxIt));
+			System.out.println("it: " + it);
 
 			for (int i = 0; i < messageFor.length; i++)
 				Arrays.fill(messageFor[i], 1d);
@@ -147,8 +148,10 @@ public class MRF {
 			
 			beliefUpdate();
 			
-			if (maxIt-- < 0)
+			if (it > maxIt)
 				break;
+			
+			it++;
 		}
 		normaliseAllBeliefs();
 		
@@ -219,11 +222,22 @@ public class MRF {
 			double normalBelief = 1;
 			for (Integer neighbour : neighbours.elementSet()) {
 				double neighbourFraudBelief = getFraudBelief(neighbour);
+				double neighbourNormalBelief = getNormalBelief(neighbour);
 				
 //				System.out.println(neighbourFraudBelief);
 				
 				fraudBelief *= neighbourFraudBelief;
-				normalBelief *= getNormalBelief(neighbour);
+				normalBelief *= neighbourNormalBelief;
+
+				if (fraudBelief * neighbourFraudBelief > 1 || normalBelief * neighbourNormalBelief > 1) {
+					assert false;
+				}
+				
+				// allow one of the beliefs to become zero, but not both
+				// this can be fixed in propagateMessage();
+				if (fraudBelief * neighbourFraudBelief == 0 && normalBelief * neighbourNormalBelief == 0) {
+					assert false;
+				}
 
 				//TODO: can remove
 				if (neighbours.contains(ofInterest)) {
@@ -235,12 +249,6 @@ public class MRF {
 				}
 			}
 			
-			if (fraudBelief > 1 || normalBelief > 1) {
-				assert false;
-			}
-			if (fraudBelief == 0 || normalBelief == 0) {
-				assert false;
-			}
 			partialMessages[node][0] = fraudBelief;
 			partialMessages[node][1] = normalBelief;
 		}
@@ -282,22 +290,51 @@ public class MRF {
 				double normalPsi = neighbourCompatibilityFunctionN(1 - fraudBeliefs[neighbour]);
 				normalBelief *= normalPsi;
 				
+				fraudBelief = normaliseToOne(fraudBelief, normalBelief);
+				normalBelief = 1 - fraudBelief;
+				
 				// factor in edge weight
 				int edgeWeight = neighbours.count(neighbour);
 				if (edgeWeight != 1) {
-					fraudBelief = FastMath.pow(fraudBelief, edgeWeight);
-					normalBelief = FastMath.pow(normalBelief, edgeWeight);
+					// TODO: remove
+//					if (originalToConsecutive.get(23621) == node && originalToConsecutive.get(23622) == neighbour)
+//						System.out.println("pause");
+					
+//					fraudBelief = FastMath.pow(fraudBelief, edgeWeight);
+//					normalBelief = FastMath.pow(normalBelief, edgeWeight);
+					
+					double ratio = fraudBelief / normalBelief;
+					ratio = FastMath.pow(ratio, edgeWeight);
+					fraudBelief = normaliseToOne(1, 1/ratio);
+					normalBelief = 1 - fraudBelief;
+					if (fraudBelief == 0 || normalBelief == 0) {
+//						assert false;
+					}
+				}
+				
+				if (fraudBelief == 0) {
+					fraudBelief = 0.001;
+					normalBelief = 0.999; 
+				} else if (normalBelief == 0) {
+					fraudBelief = 0.999;
+					normalBelief = 0.001; 
 				}
 				
 				// line 10: divide message to exclude the belief of the node this message is for
 				// fraudBelief and normalBelief together makes up the message.
 				double fraudPartialMessage = partialMessages[neighbour][0];
 				fraudPartialMessage /= targetFraudBelief;
-				
 				double normalPartialMessage = partialMessages[neighbour][1];
 				normalPartialMessage /= targetNormalBelief;
 
-				fraudPartialMessage = scale(fraudPartialMessage, normalPartialMessage);
+				assert fraudPartialMessage > 0 || normalPartialMessage > 0 : "partialMessages: " + fraudPartialMessage + ", " + normalPartialMessage;
+				if (fraudPartialMessage == 0) {
+					fraudPartialMessage = 0.01;
+				} else if (normalPartialMessage == 0) {
+					fraudPartialMessage = 0.99;
+				} else {
+					fraudPartialMessage = scale(fraudPartialMessage, normalPartialMessage);
+				}
 				normalPartialMessage = 1 - fraudPartialMessage;
 				
 				fraudBelief *= fraudPartialMessage;
@@ -316,11 +353,16 @@ public class MRF {
 					assert false;
 				}
 
-				fraudBelief = fraudBelief * 0.8 + .1;
-				normalBelief = normalBelief * 0.8 + .1;
+				// TODO: Fudging
+//				fraudBelief = fraudBelief * 0.8 + .1;
+//				normalBelief = normalBelief * 0.8 + .1;
+				
+				// normalise fraudBelief/normalBelief so they sum to 1
+				fraudBelief = normaliseToOne(fraudBelief, normalBelief);
+				normalBelief = 1 - fraudBelief;
 				
 				if (messageFor[node][0] * fraudBelief == 0 || messageFor[node][1] * normalBelief == 0) {
-					assert false;
+//					assert false;
 				}
 				if (messageFor[node][0] * fraudBelief > 1 || messageFor[node][1] * normalBelief > 1) {
 					assert false;
@@ -331,6 +373,10 @@ public class MRF {
 
 				messageFor[node][0] *= fraudBelief;
 				messageFor[node][1] *= normalBelief;
+				
+				messageFor[node][0] = normaliseToOne(messageFor[node][0], messageFor[node][1]);
+				messageFor[node][1] = 1 - messageFor[node][0];
+				
 			}
 			
 		}
@@ -344,18 +390,26 @@ public class MRF {
 		double fraudScaled = 1 - loggedFraud / (loggedFraud + loggedNormal);
 		
 		if (Double.isNaN(fraudScaled) || Double.isInfinite(fraudScaled) || fraudScaled <= 0 || fraudScaled >= 1)
-			System.out.println("pause");
+			assert false;
 		
 		return fraudScaled;
 	}
 	
 	private void beliefUpdate() {
 		for (int node = 0; node < nodeCount; node++) {
+			if (messageFor[node][0] < 0.001) {
+				messageFor[node][0] = 0.001;
+				messageFor[node][1] = 0.999; 
+			} else if (messageFor[node][1] < 0.001) {
+				messageFor[node][0] = 0.999;
+				messageFor[node][1] = 0.001; 
+			}
+			
 			double fraudMsg = messageFor[node][0];
 			double normalMsg = messageFor[node][1];
 			
 			if (fraudMsg == 0 || normalMsg == 0) {
-				System.out.println("pause");
+				assert false;
 			}
 			
 			//TODO: can remove
@@ -395,9 +449,34 @@ public class MRF {
 			if (normalisedFraud > 1 || normalisedNormal > 1) {
 				assert false;
 			}
+			
+			double maxChange = 0.02;
+			if (normalisedFraud - fraudBeliefs[node] > maxChange) {
+				normalisedFraud = fraudBeliefs[node] + maxChange;
+			} else if (fraudBeliefs[node] - normalisedFraud > maxChange) {
+				normalisedFraud = fraudBeliefs[node] - maxChange;
+			}
+			
+			if (normalisedNormal - normalBeliefs[node] > maxChange) {
+				normalisedNormal = normalBeliefs[node] + maxChange;
+			} else if (normalBeliefs[node] - normalisedNormal > maxChange) {
+				normalisedNormal = normalBeliefs[node] - maxChange;
+			}
+
 			fraudBeliefs[node] = normalisedFraud;
 			normalBeliefs[node] = normalisedNormal;
 		}
+	}
+	
+	/**
+	 * Normalise 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private static double normaliseToOne(double a, double b) {
+		double normalisedA = a / (a + b);
+		return normalisedA;
 	}
 	
 	private static double geometricMean(double num1, double num2) {
@@ -405,6 +484,11 @@ public class MRF {
 		assert !Double.isInfinite(num1);
 		assert !Double.isNaN(num2);
 		assert !Double.isInfinite(num2);
+		assert num1 != 0 && num2 != 0;
+		
+		double result = FastMath.sqrt(num1) * FastMath.sqrt(num2);
+		
+		assert result != 0;
 		
 		return FastMath.sqrt(num1 * num2);
 	}
@@ -421,6 +505,8 @@ public class MRF {
 			double diff = Math.abs((previousFraudBelief[i] - fraudBeliefs[i]) / previousFraudBelief[i]);
 			if (diff > 0.001) {
 				converged = false;
+				if (it > 20)
+					System.out.println(consecutiveToOriginal[i] + " has not converged " + previousFraudBelief[i] + ", " + fraudBeliefs[i]);
 			}
 		}
 		
@@ -446,7 +532,8 @@ public class MRF {
 //			return 0.05;
 //		else 
 //			return selfHiddenFraudBelief;
-		return selfHiddenFraudBelief * 0.8 + 0.1;
+//		return selfHiddenFraudBelief * 0.8 + 0.1;
+		return selfHiddenFraudBelief;
 //		return geometricMean(selfHiddenFraudBelief, 0.5);
 	}
 	public double neighbourCompatibilityFunctionN(double selfHiddenNormalBelief) {
@@ -456,7 +543,8 @@ public class MRF {
 //			return 0.05;
 //		else 
 //			return selfHiddenNormalBelief;
-		return selfHiddenNormalBelief * 0.8 + 0.1;
+//		return selfHiddenNormalBelief * 0.8 + 0.1;
+		return selfHiddenNormalBelief;
 //		return geometricMean(selfHiddenNormalBelief, 0.5);
 	}
 	
@@ -483,7 +571,8 @@ public class MRF {
 	private static double normaliseOutlierScore(double outlierScore) {
 		double score = normaliseOutlierScoreInner(outlierScore);
 		
-		score = (score * 0.7) + 0.2; 
+//		score = (score * 0.7) + 0.2; 
+		score = (score * 0.8) + 0.1; 
 		return score;
 		
 	}
