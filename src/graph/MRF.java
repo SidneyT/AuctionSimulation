@@ -29,12 +29,8 @@ public class MRF {
 	Integer ofInterest = -1;
 	
 	public MRF(Map<Integer, Multiset<Integer>> graph, Map<Integer, Double> outlierScores) {
-		this(graph, outlierScores, 3);
-	}
-	public MRF(Map<Integer, Multiset<Integer>> graph, Map<Integer, Double> outlierScores, int normaliseConst) {
 		int nodeCount = outlierScores.size();
 		this.nodeCount = nodeCount;
-		this.normaliseConst = normaliseConst;
 		
 		/**
 		 * Map the user ids to a set of consecutive integers. </br>
@@ -305,6 +301,7 @@ public class MRF {
 					
 					double ratio = fraudBelief / normalBelief;
 					ratio = FastMath.pow(ratio, edgeWeight);
+//					ratio = FastMath.pow(ratio, Math.pow(edgeWeight, 2));
 					fraudBelief = normaliseToOne(1, 1/ratio);
 					normalBelief = 1 - fraudBelief;
 					if (fraudBelief == 0 || normalBelief == 0) {
@@ -312,10 +309,10 @@ public class MRF {
 					}
 				}
 				
-				if (fraudBelief == 0) {
+				if (fraudBelief < 0.001) {
 					fraudBelief = 0.001;
 					normalBelief = 0.999; 
-				} else if (normalBelief == 0) {
+				} else if (normalBelief < 0.001) {
 					fraudBelief = 0.999;
 					normalBelief = 0.001; 
 				}
@@ -328,9 +325,9 @@ public class MRF {
 				normalPartialMessage /= targetNormalBelief;
 
 				assert fraudPartialMessage > 0 || normalPartialMessage > 0 : "partialMessages: " + fraudPartialMessage + ", " + normalPartialMessage;
-				if (fraudPartialMessage == 0) {
+				if (fraudPartialMessage < 0.01) {
 					fraudPartialMessage = 0.01;
-				} else if (normalPartialMessage == 0) {
+				} else if (normalPartialMessage < 0.01) {
 					fraudPartialMessage = 0.99;
 				} else {
 					fraudPartialMessage = scale(fraudPartialMessage, normalPartialMessage);
@@ -397,6 +394,8 @@ public class MRF {
 	
 	private void beliefUpdate() {
 		for (int node = 0; node < nodeCount; node++) {
+
+			assert messageFor[node][0] > 0.001 || messageFor[node][1] > 0.001;
 			if (messageFor[node][0] < 0.001) {
 				messageFor[node][0] = 0.001;
 				messageFor[node][1] = 0.999; 
@@ -450,7 +449,7 @@ public class MRF {
 				assert false;
 			}
 			
-			double maxChange = 0.02;
+			double maxChange = 0.05;
 			if (normalisedFraud - fraudBeliefs[node] > maxChange) {
 				normalisedFraud = fraudBeliefs[node] + maxChange;
 			} else if (fraudBeliefs[node] - normalisedFraud > maxChange) {
@@ -490,7 +489,7 @@ public class MRF {
 		
 		assert result != 0;
 		
-		return FastMath.sqrt(num1 * num2);
+		return result;
 	}
 	
 	double[] previousFraudBelief = null;
@@ -532,7 +531,7 @@ public class MRF {
 //			return 0.05;
 //		else 
 //			return selfHiddenFraudBelief;
-//		return selfHiddenFraudBelief * 0.8 + 0.1;
+//		return selfHiddenFraudBelief * 0.8 + 0.1; // TODO: changed
 		return selfHiddenFraudBelief;
 //		return geometricMean(selfHiddenFraudBelief, 0.5);
 	}
@@ -543,7 +542,7 @@ public class MRF {
 //			return 0.05;
 //		else 
 //			return selfHiddenNormalBelief;
-//		return selfHiddenNormalBelief * 0.8 + 0.1;
+//		return selfHiddenNormalBelief * 0.8 + 0.1; // TODO: changed
 		return selfHiddenNormalBelief;
 //		return geometricMean(selfHiddenNormalBelief, 0.5);
 	}
@@ -583,16 +582,13 @@ public class MRF {
 	 * @param outlierScore
 	 * @return
 	 */
-	public final double normaliseConst;
 	private static double normaliseOutlierScoreInner(double outlierScore) {
-//		return (outlierScore - 1) / (outlierScore - 0.2);
 		if (outlierScore <= 1)
 			return 0;
-//		return (FastMath.pow(outlierScore, normaliseConst) - 1) / (FastMath.pow(normaliseConst, 3));
 		
 		// y = -1/a*(x - b) + 1
 		// b = 1 - 1/a
-		double a = 2d;
+		double a = 2; // TODO: param for inital outlier score calc
 		double b = 1d - 1d/a;
 		double newScore = -1/(a * (outlierScore - b)) + 1;
 		return newScore;
@@ -602,7 +598,7 @@ public class MRF {
 		return consecutiveToOriginal[consecutiveId];
 	}
 	
-	public static void main(String[] args) {
+//	public static void main(String[] args) {
 //		for (int i = 0; i < 40; i++) {
 //			System.out.println(i * 0.1 + "," + normaliseOutlierScore(i * 0.1));
 //		}
@@ -613,7 +609,7 @@ public class MRF {
 //		System.out.println("init: " + Arrays.toString(mrf.outlierScores));
 //		System.out.println("belief: " + Arrays.toString(mrf.fraudBeliefs) + ", " + Arrays.toString(mrf.normalBeliefs));
 //		System.out.println("Finished");
-	}
+//	}
 	
 	public static MRF test3() {
 		Map<Integer, Multiset<Integer>> mockGraph = new HashMap<>();
