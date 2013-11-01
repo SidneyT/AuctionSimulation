@@ -58,22 +58,52 @@ enum NodeFeature implements NodeFeatureI {
 	NodeEdgeCount {
 		@Override
 		public double value(Map<Integer, Multiset<Integer>> adjacencyList, int user) {
-		if (!adjacencyList.containsKey(user))
-			return 0;
-		else 
-			return adjacencyList.get(user).elementSet().size();
+			if (!adjacencyList.containsKey(user))
+				return 0;
+			else 
+				return adjacencyList.get(user).elementSet().size();
 		}
 	},
 	NodeWeightCount {
 		@Override
 		public double value(Map<Integer, Multiset<Integer>> adjacencyList, int user) {
-		if (!adjacencyList.containsKey(user))
-			return 0;
-		else 
-			return adjacencyList.get(user).size();
+			if (!adjacencyList.containsKey(user))
+				return 0;
+			else 
+				return adjacencyList.get(user).size();
+		}
+	}, 
+	/**
+	 * Number of times that a known user is seen. (Turns out to be node edge weight - node edge count)
+	 */
+	NodeRepeatCount {
+		@Override
+		public double value(Map<Integer, Multiset<Integer>> adjacencyList, int user) {
+			Multiset<Integer> neighbours = adjacencyList.get(user);
+			int uniqueNeighbours = neighbours.elementSet().size();
+			int repeatCount = neighbours.size() - uniqueNeighbours;
+			
+			return repeatCount;
+		}
+	},
+	/**
+	 * Number of users that have been seen twice or more.
+	 */
+	NodeRepeatCountUnique {
+		@Override
+		public double value(Map<Integer, Multiset<Integer>> adjacencyList, int user) {
+			Multiset<Integer> neighbours = adjacencyList.get(user);
+			int count = 0;
+			for (Integer neighbour : neighbours.elementSet()) {
+				int timesSeen = neighbours.count(neighbour);
+				if (timesSeen > 1) {
+					count++;
+				}
+			}
+			return count;
 		}
 	};
-	
+
 	/**
 	 * Finds the jaccard value between this user and each of its neighbours. These values are then combined.
 	 * </br>
@@ -228,11 +258,33 @@ enum NodeFeature implements NodeFeatureI {
 //	}
 	
 	public static HashMap<Integer, Double> values(Map<Integer, Multiset<Integer>> adjacencyList, NodeFeatureI feature) {
-		HashMap<Integer, Double> edgeCounts = new HashMap<>();
+		HashMap<Integer, Double> featureValue = new HashMap<>();
 		for (Integer user : adjacencyList.keySet()) {
 			double weight = feature.value(adjacencyList, user);
-			edgeCounts.put(user, weight);
+			featureValue.put(user, weight);
 		}
-		return edgeCounts;
+		return featureValue;
 	}
+	
+	/**
+	 * Similar to {@link #values(Map, NodeFeatureI)} but only users with ids contained in wantedUsers are returned.
+	 * @param adjacencyList
+	 * @param feature
+	 * @param wantedUsers
+	 * @return
+	 */
+	public static HashMap<Integer, Double> values(Map<Integer, Multiset<Integer>> adjacencyList, NodeFeatureI feature, Set<Integer> wantedUsers) {
+		HashMap<Integer, Double> featureValue = new HashMap<>();
+		for (Integer user : wantedUsers) {
+			// only want to find values for users we are interested in
+			if (!adjacencyList.containsKey(user)) {
+				continue;
+			}
+			
+			double weight = feature.value(adjacencyList, user);
+			featureValue.put(user, weight);
+		}
+		return featureValue;
+	}
+	
 }
