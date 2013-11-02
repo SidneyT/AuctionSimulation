@@ -155,21 +155,15 @@ enum NodeFeature implements NodeFeatureI {
 	 * Returns the first eigenvalue of node's egonet.
 	 * Matrix should be symmetric.
 	 */
-	public static FirstEigenvalue firstEigenvalue_sym(Map<Integer, Multiset<Integer>> adjacencyList) {
-		return new FirstEigenvalue(adjacencyList);
+	public static FirstEigenvalue firstEigenvalue_sym() {
+		return new FirstEigenvalue();
 	}
 
 	public static class FirstEigenvalue implements NodeFeatureI {
-		final Map<Integer, Multiset<Integer>> adjacencyList;
-		final HashMap<Integer, Double> firstEigenvalues = new HashMap<>();
+		HashMap<Integer, Double> firstEigenvalues = null;
 		
-		public FirstEigenvalue(Map<Integer, Multiset<Integer>> adjacencyList) {
-			this.adjacencyList = adjacencyList;
-			
-			calculateEigenvalues();
-		}
-		
-		private void calculateEigenvalues() {
+		private void calculateEigenvalues(Map<Integer, Multiset<Integer>> adjacencyList) {
+			firstEigenvalues = new HashMap<>();
 			for (int userId : adjacencyList.keySet()) {
 				Map<Integer, Multiset<Integer>> egonet = GraphOperations.egonetAdjacencyMatrix(adjacencyList, userId);
 				
@@ -190,6 +184,8 @@ enum NodeFeature implements NodeFeatureI {
 
 		@Override
 		public double value(Map<Integer, Multiset<Integer>> adjacencyList, int user) {
+			if (firstEigenvalues == null)
+				calculateEigenvalues(adjacencyList);
 			return firstEigenvalues.get(user);
 		}
 		

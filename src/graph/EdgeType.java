@@ -153,7 +153,7 @@ public enum EdgeType implements EdgeTypeI {
 		return new Undirected(edgeType);
 	}
 	
-	private static class Undirected implements EdgeTypeI {
+	public static class Undirected implements EdgeTypeI {
 		private final EdgeTypeI edgeType;
 		
 		Undirected(EdgeTypeI edgeType) {
