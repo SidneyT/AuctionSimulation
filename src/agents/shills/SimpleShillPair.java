@@ -66,14 +66,17 @@ public class SimpleShillPair extends EventListener implements Controller {
 		this.is = is;
 		this.ah = ah;
 		this.types = types;
+		this.r = new Random();
 		
 		// set up the shill seller
 		Puppet ss = new Puppet(bh, ps, is, ah, this, types);
+		ss.setName("ss");
 		ur.addUser(ss);
 		this.ss = ss;
 		
 		// set up the shill bidder
 		Puppet sb = new Puppet(bh, ps, is, ah, this, types);
+		sb.setName("sb");
 		ur.addUser(sb);
 		this.sb = sb;
 	
@@ -83,7 +86,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 		setNumberOfAuctions(10);
 
 		this.strategy = strategy;
-		this.r = new Random();
+		
 	}
 	
 	private final Set<Auction> waiting = new HashSet<>();
@@ -137,7 +140,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 	private List<Integer> auctionTimes;
 	private void setNumberOfAuctions(int numberOfAuctions) {
 		auctionTimes = new ArrayList<>();
-		int latest = 100 * 24 * 60 / 5;
+		int latest = (100 - 7) * 24 * 60 / 5;
 		for (int i = 0; i < numberOfAuctions; i++) {
 			auctionTimes.add(r.nextInt(latest));
 		}
@@ -165,7 +168,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 
 	@Override
 	public void winAction(SimpleUserI agent, Auction auction) {
-		bh.getFeedbackToAh().put(new Feedback(Val.POS, agent, auction));
+//		bh.getFeedbackToAh().put(new Feedback(Val.POS, agent, auction));
 	}
 	@Override
 	public void lossAction(SimpleUserI agent, Auction auction) {}
@@ -175,7 +178,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 	}
 	@Override
 	public void soldAction(SimpleUserI agent, Auction auction) {
-		bh.getFeedbackToAh().put(new Feedback(Val.POS, agent, auction));
+//		bh.getFeedbackToAh().put(new Feedback(Val.POS, agent, auction));
 	}
 	@Override
 	public void expiredAction(SimpleUserI agent, Auction auction) {

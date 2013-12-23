@@ -46,6 +46,19 @@ public class TMSeller extends SimpleUser {
 		itemTypesUsed = new ArrayList<>();
 		this.itemTypes = itemTypes;
 	}
+	public TMSeller(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes, int id) {
+		super(bh, ps, is, ah, id);
+		
+		int numberOfAuctions = numberOfAuctions(r.nextDouble());
+		int numberOfTimeUnits = AuctionLength.ONE_DAY.length() * (100 - 7);
+
+		List<Integer> listOfTimes = Sample.randomSample(numberOfTimeUnits, numberOfAuctions, r);
+		Collections.sort(listOfTimes, Collections.reverseOrder());
+		auctionSubmissionTimes = new ArrayDeque<>(listOfTimes);
+//		System.out.println(auctionSubmissionTimes.size());
+		itemTypesUsed = new ArrayList<>();
+		this.itemTypes = itemTypes;
+	}
 
 	ArrayDeque<Integer> auctionSubmissionTimes; // the times at which this agent will submit an auction
 	

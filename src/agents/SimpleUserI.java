@@ -12,4 +12,6 @@ public interface SimpleUserI extends EventListenerI {
 
 	void submitAuction(Auction auction);
 	
+	String getName();
+	
 }

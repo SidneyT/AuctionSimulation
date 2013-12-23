@@ -1,5 +1,7 @@
 package util;
 
+import java.util.Collection;
+
 public class IncrementalMean {
 	protected int numElements;
 	protected double average;
@@ -16,6 +18,13 @@ public class IncrementalMean {
 	
 	public void addNext(double newValue) {
 		this.average = this.average + (newValue - this.average)/(++numElements);
+		assert !Double.isNaN(this.average);
+	}
+	
+	public void add(Collection<Double> values) {
+		for (Double value : values) {
+			addNext(value);
+		}
 	}
 	
 	public void addAverage(int numElements, double average) {

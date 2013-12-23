@@ -155,15 +155,6 @@ public abstract class BuildUserFeatures {
 	 * @param previousBid value of the previous bid
 	 * @param maximumBid the value of the last/highest bid in the auction
 	 */
-//	BufferedWriter bw2; 
-//	{
-//		try {
-//			bw2 = Files.newBufferedWriter(Paths.get("C:/asdf.txt"), Charset.defaultCharset());
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
 	public void addBid(UserFeatures uf, int bid, int previousBid, int maximumBid) {
 		if (previousBid > 0) { // test whether there's a previous bid
 			int increment = bid - previousBid; // find the difference between this and the previous bid amount

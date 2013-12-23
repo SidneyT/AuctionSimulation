@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -317,32 +319,43 @@ public class CsvManipulation {
 
 	public static void addColumn(Path inputCsvFile, Path outputCsvFile, String columnHeading, List<Double> columnValues) {
 		try {
-			
-			// read the file, save the lines
-			CSVReader reader = new CSVReader(new FileReader(inputCsvFile.toFile()));
-			String[] nextLine;
+			String[] headingRow;
 			List<String[]> lines = new ArrayList<>();
-			while ((nextLine = reader.readNext()) != null) {
-				lines.add(nextLine);
+			
+			// read the file, save the lines'
+			try {
+				CSVReader reader = new CSVReader(new FileReader(inputCsvFile.toFile()));
+				String[] nextLine;
+				while ((nextLine = reader.readNext()) != null) {
+					lines.add(nextLine);
+				}
+				reader.close();
+			} catch (IOException e) {
+				headingRow = new String[]{};
 			}
-			reader.close();
+			
+			if (lines.isEmpty())
+				headingRow = new String[]{};
+			else 
+				headingRow = lines.get(0);
 			
 			// write the lines, adding the extra element at the end
 			BufferedWriter writer = Files.newBufferedWriter(outputCsvFile, Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
 
-			String[] headingRow = lines.get(0);
 			for (String value : headingRow) {
 				writer.append(value + ",");
 			}
 			writer.append(columnHeading);
 			writer.newLine();
 			
-			for (int i = 1; i < lines.size(); i++) {
-				String[] line = lines.get(i);
-				for (String value : line) {
-					writer.append(value + ",");
+			for (int i = 0; i < columnValues.size(); i++) {
+				if (i + 1 < lines.size()) {
+					String[] line = lines.get(i + 1);
+					for (String value : line) {
+						writer.append(value + ",");
+					}
 				}
-				writer.append(columnValues.get(i - 1) + "");
+				writer.append(columnValues.get(i) + "");
 				writer.newLine();
 			}
 			
@@ -351,6 +364,33 @@ public class CsvManipulation {
 			throw new RuntimeException(e);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		}
+	}
+	public static void writeMaps(String outputPath, List<Map<Integer, String>> thing, String headingRow) {
+		try {
+			HashSet<Integer> allIds = new HashSet<>();
+			for (Map<Integer, ? extends Object> lofValues : thing) {
+				allIds.addAll(lofValues.keySet());
+			}
+			
+			BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputPath), Charset.defaultCharset());
+			writer.append(headingRow.toString());
+			writer.newLine();
+			
+			for (Integer id : allIds) {
+				writer.append(id + "");
+				for (Map<Integer, ? extends Object> lofValues : thing) {
+					if (lofValues.containsKey(id))
+						writer.append("," + lofValues.get(id));
+					else 
+						writer.append(",");
+				}
+				writer.newLine();
+			}
+			
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	

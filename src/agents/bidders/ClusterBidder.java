@@ -59,6 +59,31 @@ public abstract class ClusterBidder extends SimpleUser {
 	
 	protected final Multiset<SimpleUserI> seenUsers; // records the set of users whose auctions this agent has bid in, and the frequency
 	
+	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes, int id) {
+		super(bh, ps, is, ah, id);
+
+		this.itemTypes = itemTypes;
+		
+		this.newAuctionsUnprocessed = new ArrayList<Auction>();
+		this.auctionsToBidIn = HashMultimap.create();
+		
+		r = new Random();
+		ReputationRecord.generateRep(rr, r);
+		seenUsers = HashMultiset.create();
+		
+		// normal distribution, mean 1, std dev 0.15
+		privateValuationProportion = Normal.nextDouble(r.nextDouble(), 1, 0.2);
+		if (privateValuationProportion < 0)
+			privateValuationProportion *= -1;
+		
+		maxAuctions = numberOfAuctionsPer100Days(r.nextDouble());
+		List<Integer> times = Sample.randomSample(100 * ONE_DAY - SEVEN_DAYS, maxAuctions, r); // equals 26784 time units which is (100 - 7) days
+		Collections.sort(times, Collections.reverseOrder());
+		interestTimes = new ArrayDeque<>(times);
+		
+		this.maxNumberOfInterestedCategories = numberOfInterestedCategories(interestTimes.size());
+	}
+	
 	public ClusterBidder(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, List<ItemType> itemTypes) {
 		super(bh, ps, is, ah);
 

@@ -38,7 +38,7 @@ public class RepFraudController implements Runnable {
 		this.bh = bh;
 		
 		// controls the puppets making bids and inflating rep
-		repInflator = new HiredRepInflaters(bh, ps, is, ah, ur, itemTypes, 500);
+		repInflator = new HiredRepInflaters(bh, ps, is, ah, ur, itemTypes, puppetCount);
 		
 		// sellers getting rep from the repInflator
 		List<Integer> randomStartTimes = Sample.randomSample(AuctionLength.ONE_DAY.length() * 80, sellerCount, r);

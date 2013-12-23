@@ -1,12 +1,15 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+
+import com.google.common.primitives.Doubles;
 
 public class Util {
 	/**
@@ -146,4 +149,34 @@ public class Util {
 		}
 		return sample;
 	}
+	
+	/**
+	 * For each value in values2, calculate the percentile that value falls in in values1.
+	 * @param values1
+	 * @param values2
+	 * @return number between 0 and 1.
+	 */
+	public static List<Double> percentiles(List<Double> values1, List<Double> values2) {
+		double[] valuesA = Doubles.toArray(values1);
+		Arrays.sort(valuesA);
+		
+		List<Double> percentiles = new ArrayList<>(values2.size());
+		
+//		int i = 1;
+		for (double vB : values2) {
+//			if (vB == 1)
+//				vB = 0.9999999999;
+//			System.out.println("value " + vB);
+			int insIndex = Arrays.binarySearch(valuesA, vB);
+			if (insIndex < 0)
+				insIndex = -insIndex + 1;
+			double percentile = (double) insIndex / valuesA.length;
+			percentiles.add(percentile * percentile);
+//			System.out.println(i++ + " " + percentile);
+			
+		}
+		
+		return percentiles;
+	}
+	
 }

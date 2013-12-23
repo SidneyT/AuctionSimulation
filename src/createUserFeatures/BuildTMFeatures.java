@@ -240,7 +240,14 @@ public class BuildTMFeatures extends BuildUserFeatures {
 		}
 		
 		public Iterator<Pair<TMAuction, List<BidObject>>> iterator() {
-			return new TMIteratorInstance(rs);
+			TMIteratorInstance it = new TMIteratorInstance(rs);
+			ArrayList<Pair<TMAuction, List<BidObject>>> all = new ArrayList<>();
+			while (it.hasNext()) {
+				Pair<TMAuction, List<BidObject>> pair = it.next();
+				all.add(pair);
+			}
+			return all.iterator();
+//			return new TMIteratorInstance(rs);
 		}
 		
 	}
@@ -255,7 +262,6 @@ public class BuildTMFeatures extends BuildUserFeatures {
 			);
 			ResultSet usersResultSet = usersQuery.executeQuery();
 			while (usersResultSet.next()) {
-				
 				int userId = usersResultSet.getInt("userId");
 				UserObject user = new UserObject(userId, usersResultSet.getInt("posUnique"), usersResultSet.getInt("negUnique"), "TMUser");
 				userObjects.put(userId, user);

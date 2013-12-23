@@ -21,6 +21,11 @@ public class IncrementalSD extends IncrementalMean {
 		return "(sd: " + this.stdDev + ", avg: " + this.average + ", numEle: " + this.numElements + ")";
 	}
 
+	public String toStringShort() {
+		return this.average + "," + this.stdDev + "," + this.numElements;
+	}
+
+	
 	public static void main(String[] args) {
 		IncrementalSD sd = new IncrementalSD();
 		sd.addNext(1.0);

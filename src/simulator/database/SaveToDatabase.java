@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.common.collect.TreeMultimap;
+
 import simulator.categories.CategoryNode;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
@@ -95,7 +97,7 @@ public class SaveToDatabase implements SaveObjects {
 			PreparedStatement saveUserPstmt = saveUserPstmt(conn);
 			for (SimpleUserI user : userStore) {
 				saveUserPstmt.setInt(1, user.getId());
-				saveUserPstmt.setString(2, user.getClass().getSimpleName());
+				saveUserPstmt.setString(2, user.getName());
 				saveUserPstmt.setInt(3, user.getReputationRecord().getPos());
 				saveUserPstmt.setInt(4, user.getReputationRecord().getNeu());
 				saveUserPstmt.setInt(5, user.getReputationRecord().getNeg());

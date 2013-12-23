@@ -60,7 +60,6 @@ public abstract class CollusiveShillController extends EventListener implements 
 		this.itemTypes = itemTypes;
 		this.strategy = strategy;
 		
-		// set up the shill seller, only need 1.
 		css = new ArrayList<>(numSeller);
 		for (int i = 0; i < numSeller; i++) {
 			Puppet ss = new Puppet(bh, ps, is, ah, this, itemTypes);

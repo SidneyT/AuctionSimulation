@@ -313,7 +313,7 @@ public enum Features {
 			return FastMath.log(uf.getAvgFinalBidAmount().average());
 		}
 	},
-	AvgLastBidAmount19SD {
+	AvgFinalBidAmount19SD {
 		@Override
 		public double value(UserFeatures uf) {
 			return uf.getAvgFinalBidAmount().getSD();

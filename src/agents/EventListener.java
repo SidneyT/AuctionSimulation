@@ -58,8 +58,13 @@ public abstract class EventListener implements Runnable, EventListenerI {
 	}
 
 	public String toString() {
-		return this.getClass().getSimpleName() + ":" + this.getId();
+		return getName() + ":" + this.getId();
 	}
+	
+	public String getName() {
+		return this.getClass().getSimpleName();
+	}
+	
 
 	/**
 	 * All subclasses must call this method if overriding.

@@ -59,7 +59,7 @@ public class Sample <T> {
 	 * @param sampleSize
 	 * @return
 	 */
-	public static <T> List<T> randomSample(List<T> items, int sampleSize, Random r){
+	public static <T> ArrayList<T> randomSample(List<T> items, int sampleSize, Random r){
 	    HashSet<T> res = new HashSet<T>(sampleSize);
 	    int n = items.size();
 	    for(int i = n - sampleSize; i < n; i++){

@@ -22,10 +22,10 @@ import java.util.Set;
 
 import shillScore.ShillScore;
 import shillScore.evaluation.BayseanAverageSS.BayseanSS;
+import util.Util;
 import au.com.bytecode.opencsv.CSVReader;
 
 import com.google.common.collect.Multiset;
-import com.google.common.primitives.Doubles;
 
 import createUserFeatures.BuildUserFeatures.AuctionObject;
 import createUserFeatures.BuildUserFeatures.UserObject;
@@ -100,36 +100,7 @@ public class ShillVsNormalSS {
 
 //		writePercentiles(Paths.get("shillingResults/comparisons/normal" + runNum + ".csv"), normalShillScores);
 //		writePercentiles(Paths.get("shillingResults/comparisons/shill" + runNum + ".csv"), shillerShillScores);
-		return percentiles(normalSS, shillerSS);
-	}
-	
-	/**
-	 * For each value in values2, calculate the percentile that value falls in in values1.
-	 * @param values1
-	 * @param values2
-	 * @return number between 0 and 1.
-	 */
-	public static List<Double> percentiles(List<Double> values1, List<Double> values2) {
-		double[] valuesA = Doubles.toArray(values1);
-		Arrays.sort(valuesA);
-		double[] valuesB = Doubles.toArray(values2);
-		Arrays.sort(valuesB);
-		
-		List<Double> percentiles = new ArrayList<>(values2.size());
-		
-//		int i = 1;
-		for (double vB : valuesB) {
-//			System.out.println("value " + vB);
-			int insIndex = Arrays.binarySearch(valuesA, vB);
-			if (insIndex < 0)
-				insIndex = -insIndex + 1;
-			double percentile = (double) insIndex / valuesA.length;
-			percentiles.add(percentile);
-//			System.out.println(i++ + " " + percentile);
-			
-		}
-		
-		return percentiles;
+		return Util.percentiles(normalSS, shillerSS);
 	}
 	
 	public static List<TpFpPair> generateTpFp(List<Double> percentiles) {

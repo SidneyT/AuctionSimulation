@@ -100,12 +100,12 @@ public class Hybrid extends CollusiveShillController {
 		}
 	}
 
-	public static AgentAdder getAgentAdder(final int numberOfAgents, final Strategy strategy, final int bidderPerAgent) {
+	public static AgentAdder getAgentAdder(final int numberOfAgents, final Strategy strategy, final int shillPerAuction) {
 		return new AgentAdder() {
 			@Override
 			public void add(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, ArrayList<ItemType> types) {
 				for (int i = 0; i < numberOfAgents; i++) {
-					Hybrid sc = new Hybrid(bh, ps, is, ah, ur, types, strategy, Puppet.getFactory(), 1, bidderPerAgent, 2, 40);
+					Hybrid sc = new Hybrid(bh, ps, is, ah, ur, types, strategy, Puppet.getFactory(), 1, shillPerAuction, 2, 40);
 					ah.addEventListener(sc);
 				}
 			}

@@ -32,6 +32,7 @@ public class Puppet extends SimpleUser implements PuppetI {
 	
 	protected final Controller controller;
 	private final List<ItemType> itemTypes;
+	private String name;
 	
 	final Random r = new Random();
 	
@@ -45,6 +46,10 @@ public class Puppet extends SimpleUser implements PuppetI {
 		super(bh, ps, is, ah, id);
 		this.controller = controller;
 		this.itemTypes = itemTypes;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@Override
@@ -108,6 +113,15 @@ public class Puppet extends SimpleUser implements PuppetI {
 	}
 	
 	private int getPrice() { return 100; }
+	
+	@Override
+	public String getName() {
+		if (name != null) {
+			return name;
+		} else {
+			return this.getClass().getSimpleName();
+		}
+	}
 	
 	public static PuppetFactoryI getFactory() {
 		return new PuppetFactoryI() {

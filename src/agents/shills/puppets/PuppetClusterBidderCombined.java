@@ -43,13 +43,13 @@ public class PuppetClusterBidderCombined implements PuppetI {
 		if (Math.random() < 0.5) {
 			this.normal = new ClusterEarly(bh, ps, is, ah, itemTypes) {
 				protected int numberOfAuctionsPer100Days(double random) { // modify behaviour to participate make it participate in more auctions...
-					return super.numberOfAuctionsPer100Days(r.nextDouble()) + 4;
+					return Math.min(4, super.numberOfAuctionsPer100Days(r.nextDouble()));
 				}
 			};
 		} else {
 			this.normal = new ClusterSnipe(bh, ps, is, ah, itemTypes) {
 				protected int numberOfAuctionsPer100Days(double random) { // modify behaviour to participate make it participate in more auctions...
-					return super.numberOfAuctionsPer100Days(r.nextDouble()) + 4;
+					return Math.min(4, super.numberOfAuctionsPer100Days(r.nextDouble()));
 				}
 			};
 		}
@@ -58,6 +58,10 @@ public class PuppetClusterBidderCombined implements PuppetI {
 		// reuse the id, so that actions by both "normal" and "puppet" are viewed as by the same agent in the simulation.
 		int normalId = this.normal.getId();
 		this.puppetV = new PuppetV(bh, ps, is, ah, itemTypes, controller, normalId);
+	}
+
+	public String getName() {
+		return this.getClass().getSimpleName();
 	}
 
 	@Override
