@@ -56,13 +56,13 @@ public class ShillWinLossPrice {
 			boolean sellerIsShill = sellerType.toLowerCase().contains("puppet");
 			boolean winnerIsShill = bidderType.toLowerCase().contains("puppet");
 			if (sellerIsShill && winnerIsShill) { // seller is shill && winner is shill
-				shillWinAvg.addNext(ratio(pair, itemTypes));
+				shillWinAvg.add(ratio(pair, itemTypes));
 			} else if (sellerIsShill && !winnerIsShill) { // seller is shill && winner is shill
-				shillLossAvg.addNext(ratio(pair, itemTypes));
+				shillLossAvg.add(ratio(pair, itemTypes));
 			} else if (!sellerIsShill && winnerIsShill) { // seller is shill && winner is shill
-				nonShillShillWinAvg.addNext(ratio(pair, itemTypes));
+				nonShillShillWinAvg.add(ratio(pair, itemTypes));
 			} else if (!sellerIsShill && !winnerIsShill) { // seller is shill && winner is shill
-				nonShillNonShillWinAvg.addNext(ratio(pair, itemTypes));
+				nonShillNonShillWinAvg.add(ratio(pair, itemTypes));
 			}
 		}
 		
@@ -152,7 +152,7 @@ public class ShillWinLossPrice {
 			int trueValuation = rs.getInt("trueValuation");
 			
 			double ratio = (double) finalPrice / trueValuation;
-			incAvg.addNext(ratio);
+			incAvg.add(ratio);
 		}
 		return incAvg;
 	}
@@ -178,7 +178,7 @@ public class ShillWinLossPrice {
 			int trueValuation = rs.getInt("trueValuation");
 			
 			double ratio = (double) finalPrice / trueValuation;
-			incAvg.addNext(ratio);
+			incAvg.add(ratio);
 		}
 		return incAvg;
 	}
@@ -200,7 +200,7 @@ public class ShillWinLossPrice {
 			int trueValuation = rs.getInt("trueValuation");
 
 			double ratio = (double) finalPrice / trueValuation;
-			incAvg.addNext(ratio);
+			incAvg.add(ratio);
 		}
 		return incAvg;
 	}
@@ -226,7 +226,7 @@ public class ShillWinLossPrice {
 			int trueValuation = rs.getInt("trueValuation");
 
 			double ratio = (double) finalPrice / trueValuation;
-			incAvg.addNext(ratio);
+			incAvg.add(ratio);
 		}
 		return incAvg;
 	}

@@ -1,5 +1,7 @@
 package graph;
 
+import graph.outliers.evaluation.ConvergenceMonitor;
+
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,23 +31,45 @@ public class MRF_NetProbe {
 	
 	Integer ofInterest = -1;
 	
-	// fraud, accomplice, honest matrix
-	final static double[][] propMat = new double[][]{
-			new double[]{0.05, 0.9, 0.05}, 
-			new double[]{0.5, 0.1, 0.4}, 
-			new double[]{0.05, 0.475, 0.475}};
 	
+	// author params
+//	public static double eo = 0.2;
+//	public static double ep = 0.05;
+	
+	// tuned using synthetic data
+	public static double eo = 0.04;
+	public static double ep = 0.12;
+
 	// observation matrix
-	final static double[][] obsMat = new double[][]{
-		new double[]{0.8, 0.2}, 
-		new double[]{0.2, 0.2}, 
-		new double[]{0.2, 0.8}};
+	private double[][] obsMat = new double[][]{
+		new double[]{1 - eo, 	eo}, 
+		new double[]{eo, 		eo}, 
+		new double[]{eo, 		1 - eo}};
 	
+	// fraud, accomplice, honest matrix
+	private double[][] propMat = new double[][]{
+			new double[]{ep, 	1d - 2d*ep, 	ep}, 
+			new double[]{0.5, 	2d * ep, 		0.5 - 2d*ep},
+			new double[]{ep, 	(1d - ep)/2, 	(1d - ep)/2}};
+
+	public final ConvergenceMonitor cm;
 	
 	public MRF_NetProbe(Map<Integer, Multiset<Integer>> graph, Map<Integer, Double> outlierScores) {
-		int nodeCount = outlierScores.size();
+		this.nodeCount = graph.keySet().size();
 		this.origOutlierScores = outlierScores;
-		this.nodeCount = nodeCount;
+		
+		this.cm = new ConvergenceMonitor();
+		
+		for (Integer id : graph.keySet()) {
+			if (!outlierScores.containsKey(id)) {
+				System.out.println("uh oh: " + id);
+			}
+		}
+		for (Integer id : outlierScores.keySet()) {
+			if (!graph.containsKey(id)) {
+				System.out.println("uh oh2: " + id);
+			}
+		}
 		
 		/**
 		 * Map the user ids to a set of consecutive integers. </br>
@@ -59,9 +83,9 @@ public class MRF_NetProbe {
 				originalToConsecutive.put(origId, count);
 				consecutiveToOriginal[count] = origId;
 
-				// TODO: can remove
-//				if (origId.equals(""))
-				if (origId.equals(500521))
+//				 TODO: can remove
+				if (origId.equals(""))
+//				if (origId.equals(500521))
 					ofInterest = count;
 				count++;
 			}
@@ -117,7 +141,6 @@ public class MRF_NetProbe {
 			normalBeliefs[i] = initialBeliefs[i][2];
 		}
 		
-		
 		partialMessages = new double[nodeCount][3];
 		
 		messageFor = new double[nodeCount][3];
@@ -139,12 +162,12 @@ public class MRF_NetProbe {
 		// simple threshold is easier. Everything over 1.2 is fraud
 		int fraudCount = 0; // just for counting how many are classed as fraud, can remove
 		for (int i = 0; i < outlierScores.length; i++) {
-			boolean isFraud = (outlierScores[i] < 1.2) ? false : true;
+			boolean isFraud = (outlierScores[i] < 1.5) ? false : true;
 			classifications[i] = isFraud;
 
 			fraudCount += isFraud ? 1 : 0;
 		}
-		System.out.println("initial with fraud belief: " + fraudCount + " vs " + (outlierScores.length - fraudCount));
+//		System.out.println("initial with fraud belief: " + fraudCount + " vs " + (outlierScores.length - fraudCount));
 		
 		return classifications;
 	}
@@ -159,11 +182,11 @@ public class MRF_NetProbe {
 		double[][] initialBeliefs = new double[nodeCount][3];
 		
 		for (int i = 0; i < initialObservations.length; i++) {
-			int isFraud = initialObservations[i] ? 0 : 1;
+			int index = initialObservations[i] ? 0 : 1;
 			
-			initialBeliefs[i][0] = obsMat[0][isFraud];
-			initialBeliefs[i][1] = obsMat[1][isFraud];
-			initialBeliefs[i][2] = obsMat[2][isFraud]; 
+			initialBeliefs[i][0] = obsMat[0][index];
+			initialBeliefs[i][1] = obsMat[1][index];
+			initialBeliefs[i][2] = obsMat[2][index]; 
 		}
 		
 		return initialBeliefs;
@@ -171,9 +194,10 @@ public class MRF_NetProbe {
 	
 	int maxIt = 120;
 	int it = 0;
-	public HashMap<Integer, Node> run() {
+	public HashMap<Integer, Node> run(String label) {
+		cm.monitor(normalBeliefs);
 		while (!converged()) {
-			System.out.println("it: " + it);
+//			System.out.println("it: " + it);
 
 			multiplyMessages();
 			propagateMessages();
@@ -192,8 +216,10 @@ public class MRF_NetProbe {
 				break;
 			
 			it++;
+			cm.monitor(normalBeliefs);
 		}
-		normaliseAllBeliefs();
+		
+		cm.writeResults(label + "_NP");
 		
 		return convertBackToOriginalIds();
 	}
@@ -212,11 +238,6 @@ public class MRF_NetProbe {
 		}
 		
 		return nodeBeliefs;
-	}
-	
-	private void normaliseAllBeliefs() {
-		if (ofInterest > 0)
-			System.out.println("fraudBelief: " + fraudBeliefs[ofInterest] + "|" + " normalBelief: " + normalBeliefs[ofInterest]);
 	}
 	
 	private Multiset<Integer> getNeighbours(int node) {
@@ -240,27 +261,70 @@ public class MRF_NetProbe {
 			// adding effects of the observation on this node's beliefs
 			multiply(beliefs, initialBeliefs[node]);
 			
+			int[] countTo0 = new int[3];
 			for (Integer neighbour : neighbours.elementSet()) {
 				double neighbourFraudBelief = fraudBeliefs[neighbour];
 				double neighbourAccompliceBelief = accompliceBeliefs[neighbour];
 				double neighbourNormalBelief = normalBeliefs[neighbour];
 				double[] neighbourPropoagatedBelief = propMatrix(neighbourFraudBelief, neighbourAccompliceBelief, neighbourNormalBelief);
 				
+				if (beliefs[0] < 1e-100 && beliefs[1] < 1e-100 && beliefs[2] < 1e-100) {
+					beliefs[0] *= 1e100;
+					beliefs[1] *= 1e100;
+					beliefs[1] *= 1e100;
+				}
+				
+//				add in the if < e-233 stuff
+				for (int i = 0; i < beliefs.length; i++) {
+					if (beliefs[i] * neighbourPropoagatedBelief[i] <= 1e-320) {
+						countTo0[i]++;
+						beliefs[i] *= 1e120;
+					}
+				}
+				
 //				System.out.println("beliefs: " + Arrays.toString(beliefs));
 				multiply(beliefs, neighbourPropoagatedBelief);
-
 				
 				//TODO: can remove
 				if (neighbours.contains(ofInterest)) {
 //					System.out.println(toOrigId(ofInterest) + "'s neighbour: " + toOrigId(node) + ", "+ toOrigId(neighbour) + "|" + Arrays.toString(neighbourPropoagatedBelief));
 				}
 				
-				beliefsTestEasy(beliefs);
+				notNanOrInf(beliefs);
 			}
-			normalise(beliefs); // Trying to avoid multiplying to 0...
 			
+			beliefs = increaseBeliefs(countTo0, beliefs);
+			
+			normalise(beliefs); // Trying to avoid multiplying to 0...
 			partialMessages[node] = beliefs;
 		}
+	}
+	
+	private static double[] increaseBeliefs(int[] countTo0, double[] beliefs) {
+		int max = Integer.MIN_VALUE;
+		int min = Integer.MAX_VALUE;
+		for (int i = 0; i < countTo0.length; i++) {
+			max = Math.max(countTo0[i], max);
+			min = Math.min(countTo0[i], min);
+		}
+		
+		if (max == 0)
+			return beliefs;
+		
+		int[] newCountTo0 = new int[3];
+		for (int i = 0; i < countTo0.length; i++) {
+			newCountTo0[i] = countTo0[i] - min;
+		}
+		
+		double[] newBeliefs = new double[beliefs.length];
+		for (int i = 0; i < beliefs.length; i++) {
+			newBeliefs[i] = beliefs[i];
+			for (int j = 0; j < newCountTo0[i]; j++) {
+				newBeliefs[i] *= 1e-120;
+			}
+		}
+		
+		return newBeliefs;
 	}
 	
 	/**
@@ -298,15 +362,38 @@ public class MRF_NetProbe {
 				
 //				normalise(completeSingleMessage);			
 //				System.out.println("array: " + Arrays.toString(messageFor[node]));
-				beliefsTestEasy(messageFor[node]);
+				notNanOrInf(messageFor[node]);
+				
+				messageFor[node] = decreaseBeliefs(messageFor[node]);
 				
 				// line 16: multiplying message
 				multiply(messageFor[node], completeSingleMessage);
 //				normalise(messageFor[node]);
 
-				beliefsTestEasy(messageFor[node]);
+				notNanOrInf(messageFor[node]);
 			}
 		}
+	}
+	
+	public static double[] decreaseBeliefs(double[] beliefs) {
+		double[] newBeliefs = beliefs.clone();
+		
+		boolean closeToMax = false;
+		for (int i = 0; i < beliefs.length; i++) {
+			if (beliefs[i] > 1e280) {
+				closeToMax = true;
+				break;
+			}
+		}
+		
+		if (closeToMax) {
+			for (int i = 0; i < beliefs.length; i++) {
+				newBeliefs[i] /= 1e50;
+			}
+		}
+
+		return newBeliefs;
+		
 	}
 	
 	/**
@@ -320,10 +407,10 @@ public class MRF_NetProbe {
 		assert array1.length == array2.length;
 		
 		for (int i = 0; i < array1.length; i++) {
-			array1[i] = array1[i] * array2[i];
-			
 			assert !Double.isNaN(array1[i]);
 			assert !Double.isNaN(array2[i]);
+
+			array1[i] = array1[i] * array2[i];
 		}
 	}
 	
@@ -342,7 +429,7 @@ public class MRF_NetProbe {
 	 * @param normal
 	 * @return
 	 */
-	private static double[] propMatrix(double fraud, double accomplice, double normal) {
+	private double[] propMatrix(double fraud, double accomplice, double normal) {
 		double fraudResult = 0;
 		double accompliceResult = 0;
 		double normalResult = 0;
@@ -365,7 +452,6 @@ public class MRF_NetProbe {
 			// factor in observation for this node 
 			multiply(completeMessage, initialBeliefs[node]);
 			
-			
 			beliefsTest(completeMessage);
 			
 			//TODO: can remove
@@ -383,7 +469,7 @@ public class MRF_NetProbe {
 			normalBeliefs[node] = completeMessage[2];
 			
 			
-			beliefsTestEasy(completeMessage);
+			notNanOrInf(completeMessage);
 		}
 
 		// empty out the old messages
@@ -395,31 +481,38 @@ public class MRF_NetProbe {
 		assert beliefs.length == 3;
 		
 		double sum = beliefs [0] + beliefs[1] + beliefs[2];
-		assert !Double.isNaN(sum);
-		assert !Double.isInfinite(sum);
+
+		notNanOrInf(beliefs);
+		notAllZeros(beliefs);
+		
 		for (int i = 0; i < beliefs.length; i++) {
 			beliefs[i] = beliefs[i] / sum; 
 		}
 	}
 	
 	double[] previousFraudBelief = null;
+	double[] previousAccompliceBelief = null;
 	private boolean converged() {
-		if (previousFraudBelief == null) {
+		if (previousFraudBelief == null || previousAccompliceBelief == null) {
 			previousFraudBelief = Arrays.copyOf(fraudBeliefs, fraudBeliefs.length);
+			previousAccompliceBelief = Arrays.copyOf(accompliceBeliefs, accompliceBeliefs.length);
 			return false;
 		}
 		
 		boolean converged = true;
 		for (int i = 0; i < previousFraudBelief.length; i++) {
-			double diff = Math.abs((previousFraudBelief[i] - fraudBeliefs[i]) / previousFraudBelief[i]);
-			if (diff > 0.001) {
+			double diffF = Math.abs((previousFraudBelief[i] - fraudBeliefs[i]) / previousFraudBelief[i]);
+			double diffA = Math.abs((previousAccompliceBelief[i] - accompliceBeliefs[i]) / previousAccompliceBelief[i]);
+			if (diffF > 0.001 || diffA > 0.001) {
 				converged = false;
-				if (it > 20)
-					System.out.println(consecutiveToOriginal[i] + " has not converged " + previousFraudBelief[i] + ", " + fraudBeliefs[i]);
+//				if (it > 20) {
+//					System.out.println(consecutiveToOriginal[i] + " has not converged " + previousFraudBelief[i] + ", " + fraudBeliefs[i]);
+//				}
 			}
 		}
 		
-		previousFraudBelief = Arrays.copyOf(fraudBeliefs, fraudBeliefs.length);
+		previousFraudBelief = fraudBeliefs.clone();
+		previousAccompliceBelief = accompliceBeliefs.clone();
 		
 		return converged;
 	}
@@ -465,19 +558,29 @@ public class MRF_NetProbe {
 	private static void beliefsTest(double... beliefs) {
 		assert beliefs.length == 3;
 		for (int i = 0; i < beliefs.length; i++) {
-			assert beliefs[i] > 0 : Arrays.toString(beliefs);
+//			assert beliefs[i] > 0 : Arrays.toString(beliefs);
 //			assert beliefs[i] <= 1;
 			assert !Double.isNaN(beliefs[i]) : Arrays.toString(beliefs);
 			assert !Double.isInfinite(beliefs[i]) : Arrays.toString(beliefs);
 		}
 		
 	}
-	private static void beliefsTestEasy(double... beliefs) {
+	private static void notNanOrInf(double... beliefs) {
 		assert beliefs.length == 3;
 		for (int i = 0; i < beliefs.length; i++) {
 			assert !Double.isNaN(beliefs[i]) : Arrays.toString(beliefs);
 			assert !Double.isInfinite(beliefs[i]) : Arrays.toString(beliefs);
 		}
+		
+	}
+	private static void notAllZeros(double... beliefs) {
+		assert beliefs.length == 3;
+		boolean allZeros = true;
+		for (int i = 0; i < beliefs.length; i++) {
+			if (beliefs[i] > 0)
+				allZeros = false;
+		}
+		assert !allZeros: "All zeros: " + Arrays.toString(beliefs);
 		
 	}
 	

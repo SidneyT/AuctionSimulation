@@ -2,6 +2,7 @@ package graph.outliers;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -26,7 +27,12 @@ public class FixBidderGraphFeatures {
 
 	private static void run() throws IOException {
 		String path = "F:/workstuff2011/AuctionSimulation/lof_features_fixed2";
-		File[] files = new File(path).listFiles();
+		File[] files = new File(path).listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return !pathname.isDirectory();
+			}
+		});
 		for (File file : files) {
 			String[] filenameParts = file.getName().split("_");
 			String runNum = filenameParts[filenameParts.length - 2];
@@ -37,7 +43,7 @@ public class FixBidderGraphFeatures {
 			System.out.println("processing: " + dbName);
 			
 			SimDBAuctionIterator it = new SimDBAuctionIterator(DBConnection.getConnection(dbName), true);
-			Map<Integer, UserObject> users = it.users();
+//			Map<Integer, UserObject> users = it.users();
 			
 			List<String[]> lines = CsvManipulation.readWholeFile(file.toPath(), false);
 			BufferedWriter writer = Files.newBufferedWriter(file.toPath(), Charset.defaultCharset());
@@ -47,7 +53,8 @@ public class FixBidderGraphFeatures {
 			for (int i = 1; i < lines.size(); i++) {
 				String[] line = lines.get(i);
 				
-				String completeLine = join(line[0], users.get(Integer.parseInt(line[0])).userType, Arrays.asList(line).subList(1, line.length));
+//				String completeLine = join(line[0], users.get(Integer.parseInt(line[0])).userType, Arrays.asList(line).subList(1, line.length));
+				String completeLine = join(line[0], "unknown", Arrays.asList(line).subList(1, line.length));
 				writer.append(completeLine);
 				writer.newLine();
 			}

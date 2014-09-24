@@ -167,7 +167,7 @@ public class BuyerSellerTrends {
 			
 			if (!averagePrices.containsKey(sellerId))
 				averagePrices.put(sellerId, new IncrementalSD());
-			averagePrices.get(sellerId).addNext(finalPrice);
+			averagePrices.get(sellerId).add(finalPrice);
 			
 			categoryCount.put(sellerId, AnalyseAuctionCategories.shorten(category));
 		}
@@ -217,7 +217,7 @@ public class BuyerSellerTrends {
 			
 			if (!averagePrices.containsKey(winnerId))
 				averagePrices.put(winnerId, new IncrementalSD());
-			averagePrices.get(winnerId).addNext(finalPrice);
+			averagePrices.get(winnerId).add(finalPrice);
 			
 			categoryCount.put(winnerId, AnalyseAuctionCategories.shorten(category));
 		}

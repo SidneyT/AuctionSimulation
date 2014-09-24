@@ -29,12 +29,8 @@ public class MRF {
 	Integer ofInterest = -1;
 	
 	public MRF(Map<Integer, Multiset<Integer>> graph, Map<Integer, Double> outlierScores) {
-		this(graph, outlierScores, 3);
-	}
-	public MRF(Map<Integer, Multiset<Integer>> graph, Map<Integer, Double> outlierScores, int normaliseConst) {
 		int nodeCount = outlierScores.size();
 		this.nodeCount = nodeCount;
-		this.normaliseConst = normaliseConst;
 		
 		/**
 		 * Map the user ids to a set of consecutive integers. </br>
@@ -88,8 +84,7 @@ public class MRF {
 			for (Entry<Integer, Double> entry : outlierScores.entrySet()) {
 				int conseId = originalToConsecutive.get(entry.getKey());
 				this.outlierScores[conseId] = normaliseOutlierScore(entry.getValue());
-				if (this.outlierScores[conseId] > 1)
-					System.out.println("pause");
+				assert this.outlierScores[conseId] < 1 && this.outlierScores[conseId] > 0;
 			}
 		}
 		
@@ -106,7 +101,7 @@ public class MRF {
 			Arrays.fill(messageFor[i], 1d);
 	}
 	
-	public Map<Integer, Double> normalisedOutlierScores() {
+	public Map<Integer, Double> normalisedInitialBeliefs() {
 		HashMap<Integer, Double> outlierScores = new HashMap<>();
 		
 		for (int consecutiveId = 0; consecutiveId < this.outlierScores.length; consecutiveId++) {
@@ -295,6 +290,7 @@ public class MRF {
 				
 				// factor in edge weight
 				int edgeWeight = neighbours.count(neighbour);
+				edgeWeight = 1;
 				if (edgeWeight != 1) {
 					// TODO: remove
 //					if (originalToConsecutive.get(23621) == node && originalToConsecutive.get(23622) == neighbour)
@@ -312,10 +308,10 @@ public class MRF {
 					}
 				}
 				
-				if (fraudBelief == 0) {
+				if (fraudBelief < 0.001) {
 					fraudBelief = 0.001;
 					normalBelief = 0.999; 
-				} else if (normalBelief == 0) {
+				} else if (normalBelief < 0.001) {
 					fraudBelief = 0.999;
 					normalBelief = 0.001; 
 				}
@@ -328,14 +324,26 @@ public class MRF {
 				normalPartialMessage /= targetNormalBelief;
 
 				assert fraudPartialMessage > 0 || normalPartialMessage > 0 : "partialMessages: " + fraudPartialMessage + ", " + normalPartialMessage;
-				if (fraudPartialMessage == 0) {
-					fraudPartialMessage = 0.01;
-				} else if (normalPartialMessage == 0) {
-					fraudPartialMessage = 0.99;
-				} else {
+
+				if (fraudPartialMessage < 0.001 && normalPartialMessage < 0.001 && fraudPartialMessage > 0 && normalPartialMessage > 0) {
 					fraudPartialMessage = scale(fraudPartialMessage, normalPartialMessage);
+					normalPartialMessage = 1 - fraudPartialMessage;
 				}
-				normalPartialMessage = 1 - fraudPartialMessage;
+				if (fraudPartialMessage < 0.001 || normalPartialMessage > 0.999) {
+					fraudPartialMessage = 0.001;
+					normalPartialMessage = 0.999;
+				} else if (normalPartialMessage < 0.001 || fraudPartialMessage > 0.999) {
+					fraudPartialMessage = 0.999;
+					normalPartialMessage = 0.001;
+				}
+//				if (fraudPartialMessage == 0) {
+//					fraudPartialMessage = 0.001;
+//				} else if (normalPartialMessage == 0) {
+//					fraudPartialMessage = 0.999;
+//				} else {
+//					fraudPartialMessage = scale(fraudPartialMessage, normalPartialMessage);
+//				}
+//				normalPartialMessage = 1 - fraudPartialMessage;
 				
 				fraudBelief *= fraudPartialMessage;
 				normalBelief *= normalPartialMessage;
@@ -450,18 +458,18 @@ public class MRF {
 				assert false;
 			}
 			
-			double maxChange = 0.02;
-			if (normalisedFraud - fraudBeliefs[node] > maxChange) {
-				normalisedFraud = fraudBeliefs[node] + maxChange;
-			} else if (fraudBeliefs[node] - normalisedFraud > maxChange) {
-				normalisedFraud = fraudBeliefs[node] - maxChange;
-			}
-			
-			if (normalisedNormal - normalBeliefs[node] > maxChange) {
-				normalisedNormal = normalBeliefs[node] + maxChange;
-			} else if (normalBeliefs[node] - normalisedNormal > maxChange) {
-				normalisedNormal = normalBeliefs[node] - maxChange;
-			}
+//			double maxChange = 0.02;
+//			if (normalisedFraud - fraudBeliefs[node] > maxChange) {
+//				normalisedFraud = fraudBeliefs[node] + maxChange;
+//			} else if (fraudBeliefs[node] - normalisedFraud > maxChange) {
+//				normalisedFraud = fraudBeliefs[node] - maxChange;
+//			}
+//			
+//			if (normalisedNormal - normalBeliefs[node] > maxChange) {
+//				normalisedNormal = normalBeliefs[node] + maxChange;
+//			} else if (normalBeliefs[node] - normalisedNormal > maxChange) {
+//				normalisedNormal = normalBeliefs[node] - maxChange;
+//			}
 
 			fraudBeliefs[node] = normalisedFraud;
 			normalBeliefs[node] = normalisedNormal;
@@ -532,8 +540,8 @@ public class MRF {
 //			return 0.05;
 //		else 
 //			return selfHiddenFraudBelief;
-//		return selfHiddenFraudBelief * 0.8 + 0.1;
-		return selfHiddenFraudBelief;
+		return selfHiddenFraudBelief * 0.8 + 0.1;
+//		return selfHiddenFraudBelief;
 //		return geometricMean(selfHiddenFraudBelief, 0.5);
 	}
 	public double neighbourCompatibilityFunctionN(double selfHiddenNormalBelief) {
@@ -543,8 +551,8 @@ public class MRF {
 //			return 0.05;
 //		else 
 //			return selfHiddenNormalBelief;
-//		return selfHiddenNormalBelief * 0.8 + 0.1;
-		return selfHiddenNormalBelief;
+		return selfHiddenNormalBelief * 0.8 + 0.1;
+//		return selfHiddenNormalBelief;
 //		return geometricMean(selfHiddenNormalBelief, 0.5);
 	}
 	
@@ -583,7 +591,6 @@ public class MRF {
 	 * @param outlierScore
 	 * @return
 	 */
-	public final double normaliseConst;
 	private static double normaliseOutlierScoreInner(double outlierScore) {
 //		return (outlierScore - 1) / (outlierScore - 0.2);
 		if (outlierScore <= 1)

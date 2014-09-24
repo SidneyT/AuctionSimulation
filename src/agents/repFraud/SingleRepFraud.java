@@ -51,7 +51,7 @@ public class SingleRepFraud extends EventListener implements Controller {
 		ah.registerForSniping(this); // to get notifications when the auctions are about to end, for bidding on low priced items
 		
 		// on average, try to get 1 rep every 3 days.
-		exp = new ExponentialDistribution(3 * 24 * 60 / 5);
+		exp = new ExponentialDistribution(AuctionHouse.ONE_DAY * 3);
 		nextBidTime = Math.round(exp.sample());
 	}
 

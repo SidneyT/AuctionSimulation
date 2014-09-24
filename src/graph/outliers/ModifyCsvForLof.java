@@ -1,8 +1,11 @@
 package graph.outliers;
 
+import graph.outliers.OutlierDetection.Triplet;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -14,6 +17,7 @@ import org.apache.commons.math3.util.Pair;
 
 import util.CsvManipulation;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
@@ -25,12 +29,17 @@ public class ModifyCsvForLof {
 	public static void main(String[] args) throws IOException {
 //		new ModifyCsvForLof().run();
 		String path = "F:/workstuff2011/AuctionSimulation/lof_features_fixed2";
-		File[] files = new File(path).listFiles();
+		File[] files = new File(path).listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return !pathname.isDirectory();
+			}
+		});
 		for (File file : files) {
 			addJitter(file.getCanonicalPath());
 		}
 	}
-	
+
 	public void run() {
 		try {
 			Multimap<Pair<Double, Double>, Integer> values = readFile("bidder_uniquevstotal_test.csv");
@@ -43,7 +52,6 @@ public class ModifyCsvForLof {
 	String headings;
 //	Multimap<Pair<Double, Double>, Integer> values;
 	private void writeFile(String filePath, Multimap<Pair<Double, Double>, Integer> values) throws IOException {
-		
 		BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath), Charset.defaultCharset());
 		
 		for (Pair<Double, Double> pair : values.keySet()) {
@@ -68,19 +76,14 @@ public class ModifyCsvForLof {
 					val2 += (Math.random() - 0.5) / 10000000;
 				}
 					
-					
 				writer.append(val1 + "," + val2);
 				writer.newLine();
 
 				if (i++ > pairFreq)
 					break;
 			}
-			
-			
 		}
-		
 		writer.flush();
-		
 	}
 	
 	
@@ -133,13 +136,20 @@ public class ModifyCsvForLof {
 					continue;
 				}
 				String value = line[j];
-				if (value.equals("null") && !lines.get(0)[j].endsWith("Count")) {
+				double valueD;
+				if (value.equals("null") || value.contains("Infinity") && !lines.get(0)[j].endsWith("Count")) {
 					value = "0";
-					writer.append(addJitter(Math.log1p(Double.parseDouble(value))) + "");
+					valueD = Double.parseDouble(value);
+//					valueD = Math.log1p(valueD);
+					valueD = addJitter(valueD);
+					writer.append(valueD + "");
 				} else {
-					if (value.equals("null"))
+					if (value.equals("null") || value.contains("Infinity"))
 						value = "0";
-					writer.append(addJitter(Math.log1p(Double.parseDouble(value))) + "");
+					valueD = Double.parseDouble(value);
+//					valueD = Math.log1p(valueD);
+					valueD = addJitter(valueD);
+					writer.append(valueD + "");
 				}
 				if (j < line.length - 1) {
 					writer.append(",");
@@ -147,7 +157,6 @@ public class ModifyCsvForLof {
 			}
 			writer.newLine();	
 		}
-		
 		writer.close();
 	}
 	private static String join(String... parts) {

@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.math3.util.Pair;
@@ -29,6 +31,8 @@ import com.google.common.collect.Sets.SetView;
 
 import createUserFeatures.BuildUserFeatures.AuctionObject;
 import createUserFeatures.BuildUserFeatures.BidObject;
+import createUserFeatures.BuildUserFeatures.UserObject;
+import createUserFeatures.SimDBAuctionIterator;
 
 public class GraphOperations {
 
@@ -235,6 +239,129 @@ public class GraphOperations {
 		}
 
 		return immutableEgonetAdjacency;
+	}
+
+	/**
+	 * Remove links between fraudulent and normal users
+	 * @param it
+	 * @param graph
+	 * @return 
+	 */
+	static Map<Integer, Multiset<Integer>> fudgeGraph(SimDBAuctionIterator it, Map<Integer, Multiset<Integer>> graph, double proportion) {
+		Map<Integer, Multiset<Integer>> mutableGraph = new HashMap<>();
+		for (Integer key : graph.keySet()) {
+			mutableGraph.put(key, HashMultiset.create(graph.get(key)));
+		}
+
+//		System.out.println(mutableGraph.get(500521));
+		
+		Map<Integer, UserObject> users = it.users();
+		HashSet<Integer> normalUserIds = new HashSet<>();
+		for (Integer id : users.keySet()) {
+			UserObject uo = users.get(id);
+			String userType = uo.userType;
+			if (userType.startsWith("Cluster") || userType.equals("TMSeller")) {
+				normalUserIds.add(id);
+			}
+		}
+		
+		Random r = new Random();
+		
+		// randomly choose fraud-normal edges and record them
+		List<Pair<Integer, Integer>> toRemove = new ArrayList<>(); 
+		for (Integer id : graph.keySet()) {
+			
+			// skip this user if this user is normal; i.e. only want fraudulent ones.
+			if (normalUserIds.contains(id))
+				continue;
+			
+			Multiset<Integer> neighbours = graph.get(id);
+			
+//			for (Integer neighbour : neighbours.elementSet()) {
+			for (Integer neighbour : neighbours) {
+				// if this fraud user is interacting with a normal user, maybe remove the link
+				if (normalUserIds.contains(neighbour)) { 
+					if (r.nextDouble() < proportion) {
+						toRemove.add(new Pair<Integer, Integer>(id, neighbour));
+					}
+				}
+			}
+		}
+		
+		// remove the chosen fraud-normal edges
+		for (Pair<Integer, Integer> entry : toRemove) {
+			Integer id1 = entry.getKey();
+			Integer id2 = entry.getValue();
+			
+			mutableGraph.get(id1).remove(id2);
+			mutableGraph.get(id2).remove(id1);
+//			System.out.println("removing edge: " + id1 + ", " + id2 );
+		}
+		
+//		System.out.println(mutableGraph.get(500521));
+		
+		return mutableGraph;
+	}
+
+	/**
+	 * Remove links between Fraudulent users
+	 * @param it
+	 * @param graph
+	 * @return 
+	 */
+	public static Map<Integer, Multiset<Integer>> fudgeGraphFraudsOnly(SimDBAuctionIterator it, Map<Integer, Multiset<Integer>> graph, double proportion) {
+		Map<Integer, Multiset<Integer>> mutableGraph = new HashMap<>();
+		for (Integer key : graph.keySet()) {
+			mutableGraph.put(key, HashMultiset.create(graph.get(key)));
+		}
+		
+		
+		Map<Integer, UserObject> users = it.users();
+		HashSet<Integer> normalUserIds = new HashSet<>();
+		for (Integer id : users.keySet()) {
+			UserObject uo = users.get(id);
+			String userType = uo.userType;
+			if (userType.startsWith("Cluster") || userType.equals("TMSeller")) {
+				normalUserIds.add(id);
+			}
+		}
+		
+		Random r = new Random();
+		
+		// randomly choose fraud-fraud edges and record them
+		List<Pair<Integer, Integer>> toRemove = new ArrayList<>(); 
+		for (Integer id : graph.keySet()) {
+			
+			// skip this user if it's not fraudulent
+			if (normalUserIds.contains(id))
+				continue;
+			
+			Multiset<Integer> neighbours = graph.get(id);
+			
+//			for (Integer neighbour : neighbours.elementSet()) {
+			for (Integer neighbour : neighbours) {
+				// continue if this user is not interacting with another fraudulent user
+				if (normalUserIds.contains(neighbour)) {
+					continue;
+				}
+				// if this fraud user is interacting with another fraud user, maybe remove the link
+				if (r.nextDouble() < proportion) {
+					toRemove.add(new Pair<Integer, Integer>(id, neighbour));
+				}
+			}
+		}
+		
+		// remove the chosen fraud-normal edges
+		for (Pair<Integer, Integer> entry : toRemove) {
+			Integer id1 = entry.getKey();
+			Integer id2 = entry.getValue();
+			
+			mutableGraph.get(id1).remove(id2);
+			mutableGraph.get(id2).remove(id1);
+//			System.out.println("removing edge: " + id1 + ", " + id2 );
+		}
+		
+		return mutableGraph;
 	}
 
 }

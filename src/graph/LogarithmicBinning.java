@@ -141,7 +141,7 @@ public class LogarithmicBinning {
 			List<Double> binValues = binsContents.get(i);
 			IncrementalMean mean = new IncrementalMean();
 			for (double value : binValues) {
-				mean.addNext(value);
+				mean.add(value);
 			}
 			binsMeans.add(mean.average());
 		}

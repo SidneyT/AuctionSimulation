@@ -103,7 +103,7 @@ public class BuildShillScore {
 	 * @param auction the auction associated with the bids being processed
 	 * @param bids bids of the same auction ordered by ascending time (or amount)
 	 */
-	static <T extends AuctionObject> void processBids(
+	static <T extends AuctionObject> void processBids (
 			Map<Integer, ShillScore> shillScores, 
 			Map<T, List<Integer>> auctionBidders, 
 			Multiset<Integer> auctionCounts, 
@@ -198,7 +198,7 @@ public class BuildShillScore {
 		// calculate average, and store it
 		for (Entry<Integer, Integer> countEntry : bidCounts.entrySet()) {
 //			System.out.println(countEntry.getKey() + " normalised bidProportion: " + countEntry.getValue() / worstCase);
-			shillScores.get(countEntry.getKey()).bidProportion.addNext(countEntry.getValue() / worstCase);
+			shillScores.get(countEntry.getKey()).bidProportion.add(countEntry.getValue() / worstCase);
 		}
 	}
 	
@@ -232,7 +232,7 @@ public class BuildShillScore {
 				timeDiffs.put(bidderId, incAvg);
 			}
 			
-			incAvg.addNext(bids.get(i).time.getTime() - previousTime.getTime());
+			incAvg.add(bids.get(i).time.getTime() - previousTime.getTime());
 			previousTime = bids.get(i).time;
 		}
 		
@@ -252,7 +252,7 @@ public class BuildShillScore {
 		// normalise, then average the interbid times with previous interbid times for the users
 		for (Entry<Integer, IncrementalMean> timeDiffsEntry : timeDiffs.entrySet()) {
 //			System.out.println(timeDiffsEntry.getKey() + " normalised interBidTime: " + normalise((timeDiffsEntry.getValue().getAverage()), min, max));
-			shillScores.get(timeDiffsEntry.getKey()).interBidTime.addNext(normalise((timeDiffsEntry.getValue().average()), min, max));
+			shillScores.get(timeDiffsEntry.getKey()).interBidTime.add(normalise((timeDiffsEntry.getValue().average()), min, max));
 		}
 	}
 	
@@ -269,7 +269,7 @@ public class BuildShillScore {
 				increments.put(bidderId, incAvg);
 			}
 			
-			incAvg.addNext(bids.get(i).amount - previousAmount);
+			incAvg.add(bids.get(i).amount - previousAmount);
 			previousAmount = bids.get(i).amount;
 		}
 		
@@ -288,7 +288,7 @@ public class BuildShillScore {
 		
 		for (Entry<Integer, IncrementalMean> incrementEntry : increments.entrySet()) {
 //			System.out.println(incrementEntry.getKey() + " normalised bidIncrement: " + normalise((incrementEntry.getValue().getAverage()), min, max));
-			shillScores.get(incrementEntry.getKey()).bidIncrement.addNext(normalise((incrementEntry.getValue().average()), min, max));
+			shillScores.get(incrementEntry.getKey()).bidIncrement.add(normalise((incrementEntry.getValue().average()), min, max));
 		}
 	}
 	
@@ -320,7 +320,7 @@ public class BuildShillScore {
 			double zeta = normalise((firstBidTimeEntry.getValue()), min, max);
 //			if (Double.isNaN(zeta))
 //				Util.normalise((firstBidTimeEntry.getValue()), min, max);
-			shillScores.get(firstBidTimeEntry.getKey()).firstBidTime.addNext(zeta);
+			shillScores.get(firstBidTimeEntry.getKey()).firstBidTime.add(zeta);
 		}
 	}
 	

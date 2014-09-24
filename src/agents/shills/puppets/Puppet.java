@@ -9,14 +9,13 @@ import org.apache.log4j.Logger;
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
-import simulator.buffers.PaymentSender;
 import simulator.buffers.ItemSender.ItemSold;
+import simulator.buffers.PaymentSender;
 import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
 import simulator.objects.Item;
-import simulator.objects.Auction.AuctionLength;
 import agents.SimpleUser;
 import agents.shills.Controller;
 
@@ -104,7 +103,7 @@ public class Puppet extends SimpleUser implements PuppetI {
 	// submit a default auction
 	public Auction submitAuction() {
 		Item item = new Item(CreateItemTypes.pickType(itemTypes, r.nextDouble()), "item" + r.nextInt());
-		Auction auction = new Auction(this, item, AuctionLength.SEVEN_DAYS.length(), getPrice(), 0, 1);
+		Auction auction = new Auction(this, item, AuctionHouse.SEVEN_DAYS, getPrice(), 0, 1);
 		this.bh.getAuctionMessagesToAh().put(auction);
 		
 		logger.debug(this + " submitting shill auction " + auction + " at " + bh.getTime());

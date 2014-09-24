@@ -190,17 +190,17 @@ public class ClusterEarly extends ClusterBidder {
 	@Override
 	//y = 4.5727*e^(8.2147* x); y is bid-time, x is U[0-1]
 	protected int firstBidTime() {
-		double bidTimeBeforeEnd;
+		double bidTimeBeforeEndInMins;
 		do {
 			double random = r.nextDouble();
 			if (random < 0.222)
-				bidTimeBeforeEnd = 1.720952 * Math.pow(88753792, random) / 5;
+				bidTimeBeforeEndInMins = 1.720952 * Math.pow(88753792, random) / AuctionHouse.UNIT_LENGTH;
 			else if (random < 0.4633)
-				bidTimeBeforeEnd = 12.46477 * Math.pow(16778.98, random) / 5;
+				bidTimeBeforeEndInMins = 12.46477 * Math.pow(16778.98, random) / AuctionHouse.UNIT_LENGTH;
 			else
-				bidTimeBeforeEnd = 169.6812 * Math.pow(66.27293, random) / 5;
-		} while (bidTimeBeforeEnd <= 260 || bidTimeBeforeEnd >= 2016);
-		return SEVEN_DAYS - (int) bidTimeBeforeEnd;
+				bidTimeBeforeEndInMins = 169.6812 * Math.pow(66.27293, random) / AuctionHouse.UNIT_LENGTH;
+		} while (bidTimeBeforeEndInMins <= 260 || bidTimeBeforeEndInMins >= 2016);
+		return AuctionHouse.SEVEN_DAYS - (int) bidTimeBeforeEndInMins;
 	}
 	
 

@@ -11,14 +11,12 @@ import java.util.Map;
 
 import com.google.common.collect.Multiset;
 
-
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.Features;
 import createUserFeatures.SimDBAuctionIterator;
 import createUserFeatures.SimAuctionIterator;
 import createUserFeatures.SimMemoryAuctionIterator;
 import createUserFeatures.UserFeatures;
-
 import agents.repFraud.MultipleRepFraud;
 import agents.repFraud.SingleRepFraud;
 import agents.repFraud.SingleRepFraud;
@@ -53,7 +51,9 @@ import simulator.categories.ItemType;
 import simulator.database.DBConnection;
 import simulator.database.KeepObjectsInMemory;
 import simulator.database.SaveToDatabase;
+import simulator.database.SimulationCreateTableStmts;
 import simulator.records.UserRecord;
+import util.Util;
 
 public class GenerateShillData {
 
@@ -65,8 +65,7 @@ public class GenerateShillData {
 		Strategy waitStart = new WaitStartStrategy(0.95, 0.85, 0.85);
 
 		// adders
-//		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethan); // can use 20, since each submits 10 auctions.
-		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(30, travethan); // can use 20, since each submits 10 auctions.
+		AgentAdder simplePairAdderA = SimpleShillPair.getAgentAdder(20, travethan); // can use 20, since each submits 10 auctions.
 		AgentAdder simplePairAdderB = SimpleShillPair.getAgentAdder(20, lateStart);
 		AgentAdder simplePairAdderC = LowBidShillPair.getAgentAdder(20, travethan, lowPrice);
 		AgentAdder simplePairAdderD = SimpleShillPair.getAgentAdder(20, waitStart);
@@ -82,6 +81,11 @@ public class GenerateShillData {
 		
 		int numberOfRuns = 1;
 		
+		for (int i = 1; i < 30; i++) {
+			runWithName(simplePairAdderA, "gen_simple", i);
+			runWithName(simplePairAdderB, "gen_lateStart", i);
+			runWithName(simplePairAdderC, "gen_lowBid", i);
+		}
 //		writeSSandPercentiles(simplePairAdderA, numberOfRuns, new double[]{1,1,1,1,1,1});
 //		run(simplePairAdderA, numberOfRuns);
 //		run(repFraudA, 1);
@@ -91,8 +95,10 @@ public class GenerateShillData {
 //		writeSSandPercentiles(simplePairAdderB, numberOfRuns);
 //		writeSSandPercentiles(simplePairAdderC, numberOfRuns);
 		
+//		buildFeaturesAndSSFromDB("shillingResults/trevathanALL", "auction_simulation_simple", simplePairAdderA, 30);
+
 //		collusiveShillPairMultipleRuns(hybridAdderB, numberOfRuns);
-		buildFeaturesAndSSFromDB("shillingResults/hybridlp", "syn_hybridlp_", hybridAdderC, 30);
+//		buildFeaturesAndSSFromDB("shillingResults/hybridlp", "syn_hybridlp_", hybridAdderC, 30);
 //		buildFeaturesAndSSFromDB("shillingResults/hybridtvc", "syn_hybridtvc_", hybridAdderTVC, 30);
 //		buildFeaturesAndSSFromDB("shillingResults/hybridnormal", "syn_hybridLP_", hybridAdderD, 30);
 //		collusiveShillPairMultipleRuns(randomHybridAdderA, numberOfRuns);
@@ -113,12 +119,21 @@ public class GenerateShillData {
 		}
 	};
 	
+	public static void runWithName(AgentAdder adder, String runName, int runNumber) {
+		String databaseName = runName + "_"+ runNumber;
+		System.out.println("running: " + databaseName);
+		DBConnection.createDatabase(databaseName);
+		SimulationCreateTableStmts.createSimulationTables(databaseName);
+		Simulation.run(SaveToDatabase.instance(databaseName), adder);
+	}
+	
 	public static void run(AgentAdder adder, int numberOfRuns, double[]... weightSets) {
 		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("starting run " + runNumber);
 			
 //			List<Features> featuresSelected = Features.defaultFeatures;
-			List<Features> featuresSelected = Features.ALL_FEATURES;
+			List<Features> featuresSelected = Features.FEATURES_FOR_DT;
+//			List<Features> featuresSelected = Features.ALL_FEATURES;
 
 //			KeepObjectsInMemory objInMem = KeepObjectsInMemory.instance();
 //			SimAuctionIterator simAuctionIterator = new SimMemoryAuctionIterator(objInMem, true);
@@ -147,7 +162,7 @@ public class GenerateShillData {
 		for (int runNumber = 0; runNumber < numberOfRuns; runNumber++) {
 			System.out.println("Reading run " + runNumber);
 			
-			List<Features> featuresSelected = Features.FEATURES_FOR_DT;
+			List<Features> featuresSelected = Features.ALL_FEATURES;
 
 			Connection conn = DBConnection.getConnection(databasePrefix + runNumber);
 			SimAuctionIterator simAuctionIterator = new SimDBAuctionIterator(conn, true);
@@ -222,7 +237,7 @@ public class GenerateShillData {
 			}
 		}
 //		System.out.println("fCount: " + fraudCount);
-		return ShillVsNormalSS.percentiles(normalSS, shillSS);
+		return Util.percentiles(normalSS, shillSS);
 	}
 	
 	private static void collusiveShillPairMultipleRuns(AgentAdder adder, int numberOfRuns) {

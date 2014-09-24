@@ -140,7 +140,7 @@ public class SimpleShillPair extends EventListener implements Controller {
 	private List<Integer> auctionTimes;
 	private void setNumberOfAuctions(int numberOfAuctions) {
 		auctionTimes = new ArrayList<>();
-		int latest = (100 - 7) * 24 * 60 / 5;
+		int latest = AuctionHouse.HUNDRED_DAYS - AuctionHouse.SEVEN_DAYS;
 		for (int i = 0; i < numberOfAuctions; i++) {
 			auctionTimes.add(r.nextInt(latest));
 		}

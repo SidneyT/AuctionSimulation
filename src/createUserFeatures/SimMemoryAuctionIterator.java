@@ -13,12 +13,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import agents.SimpleUser;
-
 import simulator.categories.ItemType;
 import simulator.database.SavedObjects;
 import simulator.objects.Auction;
 import simulator.objects.Bid;
-
 import createUserFeatures.BuildUserFeatures.BidObject;
 import createUserFeatures.BuildUserFeatures.SimAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;

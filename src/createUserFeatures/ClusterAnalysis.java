@@ -21,8 +21,8 @@ import java.util.Map;
 
 
 
-import util.IncrementalSD;
 
+import util.IncrementalSD;
 import weka.clusterers.RandomizableClusterer;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
@@ -91,9 +91,9 @@ public class ClusterAnalysis {
 	public static String generateFilename(Class<? extends BuildUserFeatures> clazz, boolean trim, int seed, List<Features> featuresToPrintString, int numberOfClusters, String suffix) {
 		String delimiter = "_";
 		if (trim)
-			return clazz.getSimpleName() + delimiter + Features.labels(featuresToPrintString) + delimiter + "t" + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;
+			return clazz.getSimpleName() + delimiter + Features.fileLabels(featuresToPrintString) + delimiter + "t" + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;
 		else
-			return clazz.getSimpleName() + delimiter + Features.labels(featuresToPrintString) + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;
+			return clazz.getSimpleName() + delimiter + Features.fileLabels(featuresToPrintString) + delimiter + SimpleKMeans.class.getSimpleName() + delimiter + seed + delimiter + numberOfClusters + "c" + suffix;
 	}
 	
 	// returns the Filename of the file written to
@@ -114,6 +114,10 @@ public class ClusterAnalysis {
 	 * @return
 	 */
 	private static String clusterToFile(BuildUserFeatures buf, int seed, List<Features> featuresToClusterOn, List<Features> featuresToPrint, int numberOfClusters, boolean usePca, boolean recluster, int clusterToRecluster, String suffix) {
+		Map<Integer, UserFeatures> userFeaturesMap = buf.build();
+		return clusterToFile(buf.getClass(), buf.trim(), userFeaturesMap, seed, featuresToClusterOn, featuresToPrint, numberOfClusters, usePca, recluster, clusterToRecluster, suffix);
+	}
+	public static String clusterToFile(Class<? extends BuildUserFeatures> class1, boolean trim, Map<Integer, UserFeatures> userFeaturesMap, int seed, List<Features> featuresToClusterOn, List<Features> featuresToPrint, int numberOfClusters, boolean usePca, boolean recluster, int clusterToRecluster, String suffix) {
 		File tempUserFeaturesFile = null;
 		String tempUserFeaturesFilePath = null;
 		try {
@@ -125,8 +129,6 @@ public class ClusterAnalysis {
 			e.printStackTrace();
 		}
 		
-		Map<Integer, UserFeatures> userFeaturesMap = buf.build();
-		String filename = "";
 //		if (recluster) {
 //			int clusterId = clusterToRecluster;
 //			userFeaturesMap = buf.reclustering_contructUserFeatures(clusterId);
@@ -134,7 +136,9 @@ public class ClusterAnalysis {
 //		}
 		BuildUserFeatures.writeToFile(userFeaturesMap.values(), featuresToClusterOn, tempUserFeaturesFile.toPath());
 		BuildUserFeatures.removeIncompleteUserFeatures(userFeaturesMap);
-//		
+		
+		String filename = "";
+		
 //		if (usePca) {
 //			try {
 //				filename += "_pca";
@@ -147,9 +151,9 @@ public class ClusterAnalysis {
 //			}
 //		}
 		
-		for (int seedInc = 0; seedInc < 1000; seedInc++) {
-		seed++;
-		filename = generateFilename(buf.getClass(), buf.trim(), seed, featuresToPrint, numberOfClusters, suffix);
+//		for (int seedInc = 0; seedInc < 1000; seedInc++) {
+//		seed++;
+		filename = generateFilename(class1, trim, seed, featuresToPrint, numberOfClusters, suffix);
 		
 //		filename += buf.getClass().getSimpleName() + buf.getFeaturesToPrintString();
 //		if (buf.trim())
@@ -197,34 +201,34 @@ public class ClusterAnalysis {
 			BufferedWriter outputBW = Files.newBufferedWriter(outputFilePath, Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
 			
 			// print out the centroids found by simpleKMeans
-			outputBW.append("@centroids");
-			outputBW.newLine();
-			Instances centroids = kMeans.getClusterCentroids();
-			for (int i = 0; i < centroids.numInstances(); i++) {
-				double[] centroid = centroids.instance(i).toDoubleArray();
-				for (int j = 0; j < centroid.length; j++) {
-					if (j == 0)
-						outputBW.append("" + centroid[j]);
-					else
-						outputBW.append("," + centroid[j]);
-				}
-				outputBW.newLine();
-			}
-			
-			outputBW.append("@data");
-			outputBW.newLine();
+//			outputBW.append("@centroids");
+//			outputBW.newLine();
+//			Instances centroids = kMeans.getClusterCentroids();
+//			for (int i = 0; i < centroids.numInstances(); i++) {
+//				double[] centroid = centroids.instance(i).toDoubleArray();
+//				for (int j = 0; j < centroid.length; j++) {
+//					if (j == 0)
+//						outputBW.append("" + centroid[j]);
+//					else
+//						outputBW.append("," + centroid[j]);
+//				}
+//				outputBW.newLine();
+//			}
+//			
+//			outputBW.append("@data");
+//			outputBW.newLine();
 			
 			// print out the headings
-//			outputBW.append(Features.labels(featuresToPrint)).append(",Cluster");
-//			outputBW.newLine();
+			outputBW.append(Features.labels(featuresToPrint)).append(",c");
+			outputBW.newLine();
 			writeUserFeaturesWithClustersToFile(featuresToPrint, userFeaturesMap, clusteringAssignments, outputBW);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		}
+//		}
 		
-		return null;
+		return clusteredDataFilename;
 	}
 	
 	/**
@@ -330,7 +334,7 @@ public class ClusterAnalysis {
 		for (UserFeatures uf : userFeaturesCol) {
 			
 			for (Features feature : features) {
-				ci.clusterMap.get(feature).addNext(feature.value(uf));
+				ci.clusterMap.get(feature).add(feature.value(uf));
 			}
 			count++;
 		}

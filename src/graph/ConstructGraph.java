@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,8 +24,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.math3.util.Pair;
-import org.jblas.DoubleMatrix;
-import org.jblas.Eigen;
 import org.jfree.data.xy.XYSeries;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -42,6 +40,7 @@ import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.BuildTMFeatures.TMAuctionIterator;
 import createUserFeatures.BuildUserFeatures.AuctionObject;
 import createUserFeatures.BuildUserFeatures.BidObject;
+import createUserFeatures.BuildUserFeatures.TMAuction;
 import createUserFeatures.BuildUserFeatures.UserObject;
 import createUserFeatures.SimDBAuctionIterator;
 
@@ -51,7 +50,12 @@ public class ConstructGraph {
 //		sellerEdges();
 //		allCombos();
 //		allCombosFraudOnlyMultiDB();
-		allCombosMultiDB();
+		
+//		System.out.println(isBidder("hybridBothVGS", "Puppet"));
+//		System.out.println(isSeller("hybridBothVGS", "Puppet"));
+		
+//		allCombosMultiDB();
+		tradeMe();
 	}
 	
 	/**
@@ -63,7 +67,7 @@ public class ConstructGraph {
 				"syn_repfraud_100k_0", "syn_repfraud_100k_1", "syn_repfraud_100k_2", "syn_repfraud_100k_3",
 				"syn_hybridnormal_100k_0", "syn_hybridnormal_100k_1", "syn_hybridnormal_100k_2", "syn_hybridnormal_100k_3");
 		for (String dbName : dbNames) {
-			System.out.println("doing " + dbName);
+			System.out.println("dbName: " + dbName);
 			SimDBAuctionIterator it = new SimDBAuctionIterator(DBConnection.getConnection(dbName), true);
 			Map<Integer, UserObject> users = it.users(); 
 			
@@ -123,7 +127,7 @@ public class ConstructGraph {
 //			System.out.println("starting edge type: " + edgeType);
 			Map<Integer, Multiset<Integer>> graph = GraphOperations.duplicateAdjacencyList(auctionIterable.iterator(), edgeType);
 			
-			FirstEigenvalue feature = NodeFeature.firstEigenvalue_sym(graph);
+			FirstEigenvalue feature = NodeFeature.firstEigenvalue_sym();
 			HashMap<Integer, Double> featureValues = NodeFeature.values(graph, feature, fraudIds);
 			headingBuffer.append(edgeType + "_" + feature);
 			for (Integer user : fraudIds) {
@@ -149,7 +153,7 @@ public class ConstructGraph {
 			StringBuffer sb = new StringBuffer();
 			for (Integer user : allFeaturesValues.keySet()) {
 				List<Double> values = allFeaturesValues.get(user);
-				if (allNull(values))
+				if (nulls20(values))
 					continue;
 				
 				sb.append(user + "," + fraudUsers.get(user).userType + ",");
@@ -167,11 +171,12 @@ public class ConstructGraph {
 			e.printStackTrace();
 		}
 	}
-	private static boolean allNull(List<Double> values) {
+	private static boolean nulls20(List<Double> values) {
+		double nullCount = 0;
 		for (Double value : values)
-			if (value != null)
-				return false;
-		return true;
+			if (value == null)
+				nullCount++;
+		return nullCount > 20;
 	}
 	
 	public static void allCombosMultiDB() {
@@ -181,16 +186,20 @@ public class ConstructGraph {
 //				"syn_hybridnormal_20k_0", "syn_hybridnormal_20k_1", "syn_hybridnormal_20k_2", "syn_hybridnormal_20k_3"
 //				);
 		List<String> dbNames = new ArrayList<String>();
-		for (String dbPrefix : Arrays.asList(
+		for (int i = 18; i < 20; i++) {
+			for (String dbPrefix : Arrays.asList(
 //				"syn_normal_20k_"
-//				"syn_hybridNormal_20k_"
-				"syn_hybridNormalE_20k_"
-//				"syn_repFraud_20k_"
+//				"syn_hybridNormal_20k_",
+//				"syn_hybridNormalE_20k_"
+				"syn_hybridNormalEE_20k_"
+//				"syn_hybridBothbs_20k_"
+//				"syn_simplews_20k_"
+//				"syn_repFraud_20k_",
 //				"syn_repFraud_20k_small_"
 //				"syn_repFraud_20k_3_"
+//				"syn_hybridBothVGS_20k_"
 				)
 				) {
-			for (int i = 0; i < 1; i++) {
 				dbNames.add(dbPrefix + i);
 			}
 		}
@@ -199,12 +208,12 @@ public class ConstructGraph {
 			System.out.println("doing " + dbName);
 			SimDBAuctionIterator it = new SimDBAuctionIterator(DBConnection.getConnection(dbName), true);
 			try {
-//				generateBidderValues(dbName, it, it.users().keySet());
+				generateBidderValues(dbName, it, it.users(), allBidderFeatures);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			try {
-				generateSellerValues(dbName, it, it.users().keySet());
+				generateSellerValues(dbName, it, it.users(), allSellerFeatures);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -212,17 +221,47 @@ public class ConstructGraph {
 		}
 		System.out.println("Finished.");
 	}
-	
+
+	static HashSet<Integer> tmSellers;
+	static HashSet<Integer> tmBidders;
+
+	public static void tradeMe() {
+		String dbName = "trademe";
+		
+		System.out.println("doing " + dbName);
+		Connection conn = DBConnection.getConnection(dbName);
+		TMAuctionIterator it = new TMAuctionIterator(conn, BuildTMFeatures.DEFAULT_QUERY);
+		
+		tmSellers = new HashSet<>();
+		tmBidders = new HashSet<>();
+		
+		Iterator<Pair<TMAuction, List<BidObject>>> thing = it.iterator();
+		while (thing.hasNext()) {
+			Pair<TMAuction, List<BidObject>> pair = thing.next();
+			tmSellers.add(pair.getKey().sellerId);
+			for (BidObject bid : pair.getValue()) {
+				tmBidders.add(bid.bidderId);
+			}
+		}
+		
+//		generateBidderValues(dbName, it, BuildTMFeatures.users(conn), selectedBidderFeatures);
+//		generateSellerValues(dbName, it, BuildTMFeatures.users(conn), selectedSellerFeatures);
+//		generateBidderValues(dbName, it, BuildTMFeatures.users(conn), simpleBidderFeatures, "simple");
+		generateSellerValues(dbName, it, BuildTMFeatures.users(conn), simpleSellerFeatures, "hard");
+
+		System.out.println("Finished.");
+	}
+
 	
 	public static void allCombos() {
 //		TMAuctionIterator it = new TMAuctionIterator(DBConnection.getTrademeConnection(), BuildTMFeatures.DEFAULT_QUERY);
 		String synDbName = "syn_normal_100k_0";
 //		String synDbName = "auction_simulation";
 		SimDBAuctionIterator it = new SimDBAuctionIterator(DBConnection.getConnection(synDbName), true);
-		generateBidderValues(synDbName, it, it.users().keySet());
+		generateBidderValues(synDbName, it, it.users(), allBidderFeatures);
 	}
 	
-	private static class GF {
+	public static class GF {
 		public final EdgeTypeI edgeType;
 		public final NodeFeatureI nodeFeature;
 		private GF(EdgeTypeI edgeType, NodeFeatureI nodeFeature) {
@@ -231,117 +270,275 @@ public class ConstructGraph {
 		}
 	}
 	
-	public static <T extends AuctionObject> ArrayListMultimap<Integer, Double> generateBidderValues(String filename, Iterable<Pair<T, List<BidObject>>> auctionIterable, Set<Integer> allUserIds) {
-		// instantiate different graphs
-		List<EdgeTypeI> edgeTypes = Arrays.<EdgeTypeI>asList(
-//				EdgeType.undirected(EdgeType.PARTICIPATE), 
-				EdgeType.PARTICIPATE, EdgeType.WIN, EdgeType.LOSS
-				, EdgeType.IN_SAME_AUCTION 
-				);
-		
-		List<NodeFeatureI> features = Arrays.asList(NodeFeature.NodeEdgeCount
-				, NodeFeature.NodeWeightCount, NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeightCount
-				, NodeFeature.jaccard(SumStat.Max)
-				);
-		
+	static final ArrayList<GF> allBidderFeatures = new ArrayList<>(Arrays.<GF>asList(
+			new GF(EdgeType.PARTICIPATE, NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.PARTICIPATE, NodeFeature.NodeWeightCount),
+			new GF(EdgeType.PARTICIPATE, NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.PARTICIPATE, NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.WIN, NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.WIN, NodeFeature.NodeWeightCount),
+			new GF(EdgeType.WIN, NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.WIN, NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.LOSS, NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.LOSS, NodeFeature.NodeWeightCount),
+			new GF(EdgeType.LOSS, NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.LOSS, NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.NodeWeightCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.EgonetEdgeCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.EgonetWeightCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.jaccard(SumStat.Max)),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.firstEigenvalue_sym()),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.EgonetEdgeCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.EgonetWeightCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.jaccard(SumStat.Max)),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.firstEigenvalue_sym())
+			));
+	
+	static final ArrayList<GF> simpleBidderFeatures = new ArrayList<>(Arrays.<GF>asList(
+			new GF(EdgeType.PARTICIPATE, NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.PARTICIPATE, NodeFeature.NodeWeightCount),
+			new GF(EdgeType.PARTICIPATE, NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.PARTICIPATE, NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.WIN, NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.WIN, NodeFeature.NodeWeightCount),
+			new GF(EdgeType.WIN, NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.WIN, NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.LOSS, NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.LOSS, NodeFeature.NodeWeightCount),
+			new GF(EdgeType.LOSS, NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.LOSS, NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.NodeWeightCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.EgonetEdgeCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.EgonetWeightCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.NodeRepeatCountUnique),
+//			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.jaccard(SumStat.Max)),
+//			new GF(EdgeType.IN_SAME_AUCTION, NodeFeature.firstEigenvalue_sym()),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.EgonetEdgeCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.EgonetWeightCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCountUnique)
+//			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.jaccard(SumStat.Max)),
+//			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.firstEigenvalue_sym())
+			));
+	
+	static final ArrayList<GF> selectedBidderFeatures = new ArrayList<>(Arrays.<GF>asList(
+			new GF(EdgeType.PARTICIPATE, NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.WIN, NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.LOSS, NodeFeature.NodeWeightCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.EgonetEdgeCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.firstEigenvalue_sym())
+			));
+			
+
+	public static <T extends AuctionObject> ArrayListMultimap<Integer, Double> generateBidderValues(String filename, Iterable<Pair<T, List<BidObject>>> auctionIterable, Map<Integer, UserObject> allUsers, ArrayList<GF> bidderFeatures) {
+		return generateBidderValues(filename, auctionIterable, allUsers, bidderFeatures, "");
+	}
+	public static <T extends AuctionObject> ArrayListMultimap<Integer, Double> generateBidderValues(String filename, Iterable<Pair<T, List<BidObject>>> auctionIterable, Map<Integer, UserObject> allUsers, ArrayList<GF> bidderFeatures, String label) {
 		ArrayListMultimap<Integer, Double> allFeaturesValues = ArrayListMultimap.create();
 		StringBuffer headingBuffer = new StringBuffer();
 		headingBuffer.append("id");
 		
-		for (EdgeTypeI edgeType : edgeTypes) {
-			System.out.println("starting edge type: " + edgeType);
-			Map<Integer, Multiset<Integer>> graph = GraphOperations.duplicateAdjacencyList(auctionIterable.iterator(), edgeType);
-//			System.out.println("size: " + graph.size());
-			for (int i = 0; i < features.size(); i++) {
-				NodeFeatureI feature = features.get(i);
-				headingBuffer.append("," + edgeType + "_" + feature);
-//				System.out.println("starting feature: " + feature);
-				HashMap<Integer, Double> featureValues = NodeFeature.values(graph, feature); 
-				for (Integer user : allUserIds) {
-					if (!featureValues.containsKey(user)) { // this user has no value for this feature... so just put a null there to signify no value.
-						allFeaturesValues.put(user, null);
-					} else {
-						allFeaturesValues.put(user, featureValues.get(user));
-					}
-				}
-			}
-		}
-		
-		// get eigenvalue for these edge types as well
-		for (EdgeTypeI edgeType : new EdgeTypeI[]{EdgeType.undirected(EdgeType.PARTICIPATE), EdgeType.IN_SAME_AUCTION}) {
-//			System.out.println("starting edge type: " + edgeType);
-			Map<Integer, Multiset<Integer>> graph = GraphOperations.duplicateAdjacencyList(auctionIterable.iterator(), edgeType);
+		HashMap<EdgeTypeI, Map<Integer, Multiset<Integer>>> storedGraphs = new HashMap<>();
+
+		for (GF graphFeature : bidderFeatures) {
+			EdgeTypeI edgeType = graphFeature.edgeType;
+			NodeFeatureI nodeFeature = graphFeature.nodeFeature;
 			
-			FirstEigenvalue feature = NodeFeature.firstEigenvalue_sym(graph);
-			HashMap<Integer, Double> featureValues = NodeFeature.values(graph, feature);
-			headingBuffer.append("," + edgeType + "_" + feature);
-			for (Integer user : allUserIds) {
-				if (!featureValues.containsKey(user)) { // this user has no value for this feature... so just put a NaN there to signify no value.
+			System.out.println("starting graph feature: " + edgeType + "-" + nodeFeature);
+			headingBuffer.append("," + edgeType + "_" + nodeFeature);
+			
+			Map<Integer, Multiset<Integer>> graph;
+			if (storedGraphs.containsKey(edgeType)) {
+				graph = storedGraphs.get(edgeType);
+			} else {
+				graph = GraphOperations.duplicateAdjacencyList(auctionIterable.iterator(), edgeType);
+				storedGraphs.put(edgeType, graph);
+			}
+			
+			HashMap<Integer, Double> featureValues = NodeFeature.values(graph, nodeFeature); 
+			for (Integer user : allUsers.keySet()) {
+				if (!featureValues.containsKey(user)) { // this user has no value for this feature... so just put a null there to signify no value.
 					allFeaturesValues.put(user, null);
 				} else {
 					allFeaturesValues.put(user, featureValues.get(user));
 				}
 			}
 		}
+
+		String fraudType;
+		if (filename.equals("trademe"))
+			fraudType = "trademe";
+		else
+			fraudType = filename.split("_")[1];
 		
-		writeAllValues(filename + "_bidderGraphFeatures.csv", headingBuffer, allFeaturesValues);
+		// filter out the sellers bidder from the allFeatureValues map
+		for (Integer id : allUsers.keySet()) {
+//			if (userType.equals("Puppet")) {
+//				System.out.println("puppet: " + id);
+//			}
+			
+			boolean isBidder;
+			if (fraudType.equals("trademe")) {
+				isBidder = tmBidders.contains(id);
+			} else { 
+				String userType = allUsers.get(id).userType;
+				isBidder = isBidder(fraudType, userType);
+			}
+			
+			if (!isBidder) {
+				allFeaturesValues.removeAll(id);
+			}
+		}
+		
+		String outputFilename;
+		if (label != null && !label.isEmpty())
+			outputFilename = filename + "_bidderGraphFeatures_" + label + ".csv";
+		else
+			outputFilename = filename + "_bidderGraphFeatures.csv";
+		
+		writeAllValues("graphFeatures/", outputFilename, headingBuffer, allFeaturesValues);
 		
 		return allFeaturesValues;
 	}
-	public static <T extends AuctionObject> ArrayListMultimap<Integer, Double> generateSellerValues(String filename, Iterable<Pair<T, List<BidObject>>> auctionIterable, Set<Integer> allUserIds) {
-		// instantiate different graphs
-		List<EdgeTypeI> edgeTypes_asym = Arrays.<EdgeTypeI>asList(
-				EdgeType.reverse(EdgeType.LOSS), EdgeType.reverse(EdgeType.PARTICIPATE), EdgeType.reverse(EdgeType.WIN) 
-				);
-		
-		List<NodeFeatureI> features_asym = Arrays.asList(
-				NodeFeature.RepeatCount,
-				NodeFeature.NodeEdgeCount, NodeFeature.NodeWeightCount, NodeFeature.EgonetEdgeCount, NodeFeature.EgonetWeightCount,
-				NodeFeature.jaccard(SumStat.Max));
-		
+	
+	public static boolean isBidder(String fraudType, String userType) {
+		switch (fraudType) {
+			case "hybridNormalEE": return !(userType.equals("TMSeller") || userType.equals("Puppet")); // also works for hybridNormaleE
+			case "repFraud": return !userType.startsWith("TMSeller");
+			case "hybridBothVGS": return !userType.equals("TMSeller");
+//			if (userType.equals("TMSeller") || userType.equals("ss")) { // is seller in simplews
+			default: throw new RuntimeException("unrecognised fraudType: " + fraudType);
+		}
+	}
+	
+	public static boolean isSeller(String fraudType, String userType) {
+		switch (fraudType) {
+			case "hybridNormalEE": return userType.equals("TMSeller") || userType.equals("Puppet"); // also works for hybridNormaleE
+			case "repFraud": return userType.startsWith("TMSeller");
+			case "hybridBothVGS": return userType.equals("TMSeller") || userType.equals("Puppet");
+//			if (userType.equals("TMSeller") || userType.equals("ss")) { // is seller in simplews
+			default: throw new RuntimeException("unrecognised fraudType: " + fraudType);
+		}
+	}
+	
+	static final ArrayList<GF> allSellerFeatures = new ArrayList<>(Arrays.<GF>asList(
+			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.reverse(EdgeType.LOSS), NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.reverse(EdgeType.LOSS), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.reverse(EdgeType.LOSS), NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.reverse(EdgeType.LOSS), NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.sellerEdges(), NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.EgonetEdgeCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.EgonetWeightCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.sellerEdges(), NodeFeature.jaccard(SumStat.Max)),
+			new GF(EdgeType.sellerEdges(), NodeFeature.firstEigenvalue_sym()),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.EgonetEdgeCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.EgonetWeightCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.jaccard(SumStat.Max)),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.firstEigenvalue_sym())
+			));
+	
+	static final ArrayList<GF> simpleSellerFeatures = new ArrayList<>(Arrays.<GF>asList(
+//			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeEdgeCount),
+//			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeWeightCount),
+//			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCount),
+//			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCountUnique),
+//			new GF(EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeEdgeCount),
+//			new GF(EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeWeightCount),
+//			new GF(EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeRepeatCount),
+//			new GF(EdgeType.reverse(EdgeType.WIN), NodeFeature.NodeRepeatCountUnique),
+//			new GF(EdgeType.reverse(EdgeType.LOSS), NodeFeature.NodeEdgeCount),
+//			new GF(EdgeType.reverse(EdgeType.LOSS), NodeFeature.NodeWeightCount),
+//			new GF(EdgeType.reverse(EdgeType.LOSS), NodeFeature.NodeRepeatCount),
+//			new GF(EdgeType.reverse(EdgeType.LOSS), NodeFeature.NodeRepeatCountUnique),
+//			new GF(EdgeType.sellerEdges(), NodeFeature.NodeEdgeCount),
+//			new GF(EdgeType.sellerEdges(), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.EgonetEdgeCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.EgonetWeightCount),
+//			new GF(EdgeType.sellerEdges(), NodeFeature.NodeRepeatCount),
+//			new GF(EdgeType.sellerEdges(), NodeFeature.NodeRepeatCountUnique),
+			new GF(EdgeType.sellerEdges(), NodeFeature.jaccard(SumStat.Max)),
+			new GF(EdgeType.sellerEdges(), NodeFeature.firstEigenvalue_sym()),
+//			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeEdgeCount),
+//			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.EgonetEdgeCount),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.EgonetWeightCount),
+//			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCount),
+//			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCountUnique)
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.jaccard(SumStat.Max)),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.firstEigenvalue_sym())
+			));
+
+	static final ArrayList<GF> selectedSellerFeatures = new ArrayList<>(Arrays.<GF>asList(
+			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.reverse(EdgeType.PARTICIPATE), NodeFeature.NodeRepeatCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.NodeEdgeCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.NodeWeightCount),
+			new GF(EdgeType.sellerEdges(), NodeFeature.jaccard(SumStat.Max)),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.jaccard(SumStat.Max)),
+			new GF(EdgeType.undirected(EdgeType.PARTICIPATE), NodeFeature.firstEigenvalue_sym())
+			));
+	
+	public static <T extends AuctionObject> ArrayListMultimap<Integer, Double> generateSellerValues(String filename, Iterable<Pair<T, List<BidObject>>> auctionIterable, Map<Integer, UserObject> allUsers, ArrayList<GF> sellerFeatures) {
+		return generateSellerValues(filename, auctionIterable, allUsers, sellerFeatures, "");
+	}
+	public static <T extends AuctionObject> ArrayListMultimap<Integer, Double> generateSellerValues(String filename, Iterable<Pair<T, List<BidObject>>> auctionIterable, Map<Integer, UserObject> allUsers, ArrayList<GF> sellerFeatures, String label) {
 		ArrayListMultimap<Integer, Double> allFeaturesValues = ArrayListMultimap.create();
 		StringBuffer headingBuffer = new StringBuffer();
-		headingBuffer.append("id,");
+		headingBuffer.append("id");
 		
-		for (EdgeTypeI edgeType : edgeTypes_asym) {
-			System.out.println("starting edge type: " + edgeType);
-			Map<Integer, Multiset<Integer>> graph = GraphOperations.duplicateAdjacencyList(auctionIterable.iterator(), edgeType);
+		HashMap<EdgeTypeI, Map<Integer, Multiset<Integer>>> storedGraphs = new HashMap<>();
+		
+		for (GF graphFeature : sellerFeatures) {
+			EdgeTypeI edgeType = graphFeature.edgeType;
+			NodeFeatureI nodeFeature = graphFeature.nodeFeature;
+			
+			System.out.println("starting graph feature: " + edgeType + "-" + nodeFeature);
+			headingBuffer.append("," + edgeType + "_" + nodeFeature);
+			
+			Map<Integer, Multiset<Integer>> graph;
+			if (storedGraphs.containsKey(edgeType)) {
+				graph = storedGraphs.get(edgeType);
+			} else {
+				if (edgeType instanceof SellerEdges) {
+					graph = GraphOperations.duplicateAdjacencyList(auctionIterable.iterator(), (SellerEdges) edgeType);
+				} else {
+					graph = GraphOperations.duplicateAdjacencyList(auctionIterable.iterator(), edgeType);
+				}
+				storedGraphs.put(edgeType, graph);
+			}
+			
 //			System.out.println("size: " + graph.size());
-			for (int i = 0; i < features_asym.size(); i++) {
-				NodeFeatureI feature = features_asym.get(i);
-				headingBuffer.append(edgeType + "_" + feature + ',');
-//				System.out.println("starting feature: " + feature);
-				HashMap<Integer, Double> featureValues = NodeFeature.values(graph, feature); 
-				System.out.println(feature + ": " + featureValues.get(24013));
-				for (Integer user : allUserIds) {
-					if (!featureValues.containsKey(user)) { // this user has no value for this feature... so just put a null there to signify no value.
-						allFeaturesValues.put(user, null);
-					} else {
-						allFeaturesValues.put(user, featureValues.get(user));
-					}
-				}
-			}
-		}
-		
-		{
-			SellerEdges edgeType = EdgeType.sellerEdges();
-			System.out.println("starting edge type: " + edgeType);
-			Map<Integer, Multiset<Integer>> graph = GraphOperations.duplicateAdjacencyList(auctionIterable.iterator(), edgeType);
-
-			for (NodeFeatureI feature : features_asym) {
-				headingBuffer.append(edgeType + "_" + feature + ',');
-				System.out.println("starting feature: " + feature);
-				HashMap<Integer, Double> featureValues = NodeFeature.values(graph, feature);
-				for (Integer user : featureValues.keySet()) {
-					allFeaturesValues.put(user, featureValues.get(user));
-				}
-			}
-	
-			FirstEigenvalue feature = NodeFeature.firstEigenvalue_sym(graph);
-			HashMap<Integer, Double> featureValues = NodeFeature.values(graph, feature);
-			headingBuffer.append(edgeType + "_" + feature);
-			for (Integer user : allUserIds) {
-				if (!featureValues.containsKey(user)) { // this user has no value for this feature... so just put a NaN there to signify no value.
+			HashMap<Integer, Double> featureValues = NodeFeature.values(graph, nodeFeature); 
+//			System.out.println(feature + ": " + featureValues.get(24013));
+			for (Integer user : allUsers.keySet()) {
+				if (!featureValues.containsKey(user)) { // this user has no value for this feature... so just put a null there to signify no value.
 					allFeaturesValues.put(user, null);
 				} else {
 					allFeaturesValues.put(user, featureValues.get(user));
@@ -349,14 +546,42 @@ public class ConstructGraph {
 			}
 		}
 		
-		writeAllValues(filename + "_sellerGraphFeatures.csv", headingBuffer, allFeaturesValues);
+		String fraudType;
+		if (filename.equals("trademe"))
+			fraudType = "trademe";
+		else
+			fraudType = filename.split("_")[1];
+		
+		for (Integer id : allUsers.keySet()) {
+			
+			boolean isSeller;
+			
+			if (fraudType.equals("trademe")) {
+				isSeller = tmSellers.contains(id);
+			} else { 
+				String userType = allUsers.get(id).userType;
+				isSeller = isSeller(fraudType, userType);
+			}
+			
+			if (!isSeller)
+				allFeaturesValues.removeAll(id);
+		}
+		
+		String outputFilename;
+		if (label != null && !label.isEmpty())
+			outputFilename = filename + "_sellerGraphFeatures_" + label + ".csv";
+		else
+			outputFilename = filename + "_sellerGraphFeatures.csv";
+		
+
+		writeAllValues("graphFeatures/", outputFilename, headingBuffer, allFeaturesValues);
 		
 		return allFeaturesValues;
 	}
 	
-	public static void writeAllValues(String filename, StringBuffer headings, ArrayListMultimap<Integer, Double> allFeaturesValues) {
+	public static void writeAllValues(String directory, String filename, StringBuffer headings, ArrayListMultimap<Integer, Double> allFeaturesValues) {
 		try {
-			BufferedWriter bw = Files.newBufferedWriter(Paths.get(filename), Charset.defaultCharset());
+			BufferedWriter bw = Files.newBufferedWriter(Paths.get(directory, filename), Charset.defaultCharset());
 			
 			bw.append(headings.toString());
 			bw.newLine();
@@ -364,9 +589,10 @@ public class ConstructGraph {
 			StringBuffer sb = new StringBuffer();
 			for (Integer user : allFeaturesValues.keySet()) {
 				List<Double> values = allFeaturesValues.get(user);
-				if (allNull(values))
+				if (nulls20(values))
 					continue;
-
+				
+				
 				sb.append(user + ",");
 
 				for (Double value : values) {

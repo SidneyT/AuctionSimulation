@@ -141,41 +141,61 @@ public class ShillScore {
 	 * bidder/seller pairs, given this bidder.
 	 */
 	public static final double[] DEFAULT_WEIGHTS = {9, 2, 5, 2, 2, 2}; //22
+	public static final double[] EQUAL_WEIGHTS = {1, 1, 1, 1, 1, 1}; //6
 	public double getShillScore(Multiset<Integer> auctionCounts, double[] weights) {
-		double score = 0;
-		score += this.getAlpha(auctionCounts).maxAlpha * weights[0];
-		score += this.getBeta() * weights[1];
-		score += this.getGamma() * weights[2];
-		score += this.getDelta() * weights[3];
-		score += this.getEpsilon() * weights[4];
-		score += this.getZeta() * weights[5];
+		double alpha = this.getAlpha(auctionCounts).maxAlpha * weights[0];
+		double beta = this.getBeta() * weights[1];
+		double gamma = this.getGamma() * weights[2];
+		double delta = this.getDelta() * weights[3];
+		double ep = this.getEpsilon() * weights[4];
+		double zeta = this.getZeta() * weights[5];
 
-		double weightSum = 0;
+		double score = alpha + beta + gamma + delta + ep + zeta;
+		int weightSum = 0;
 		for (int i = 0; i < weights.length; i++) {
 			weightSum += weights[i];
 		}
+
+		double result = score / weightSum * 10; 
 		
-		return score / weightSum * 10;
+		return result;
 	}
+	
+	public double[] getRawScores(Multiset<Integer> auctionCounts) {
+		double alpha = this.getAlpha(auctionCounts).maxAlpha;
+		double beta = this.getBeta();
+		double gamma = this.getGamma();
+		double delta = this.getDelta();
+		double ep = this.getEpsilon();
+		double zeta = this.getZeta();
+
+		return new double[]{alpha, beta, gamma, delta, ep, zeta};
+	}
+	
 	/**
 	 * Get the shill score. The alpha score used is the one calculated for
 	 * the sellerId given.
 	 */
 	public double getShillScore(Multiset<Integer> auctionCounts, int sellerId, double[] weights) {
-		double score = 0;
-		score += this.getAlpha(auctionCounts, sellerId) * weights[0];
-		score += this.getBeta() * weights[1];
-		score += this.getGamma() * weights[2];
-		score += this.getDelta() * weights[3];
-		score += this.getEpsilon() * weights[4];
-		score += this.getZeta() * weights[5];
+		double alpha = this.getAlpha(auctionCounts, sellerId) * weights[0];
+		double beta = this.getBeta() * weights[1];
+		double gamma = this.getGamma() * weights[2];
+		double delta = this.getDelta() * weights[3];
+		double ep = this.getEpsilon() * weights[4];
+		double zeta = this.getZeta() * weights[5];
 
+		double score = alpha * beta * gamma * delta * ep * zeta;
 		int weightSum = 0;
 		for (int i = 0; i < weights.length; i++) {
 			weightSum += weights[i];
 		}
+
+		double result = score / weightSum * 10; 
 		
-		return score / weightSum * 10;
+		if (Double.isNaN(result))
+			System.out.println("pause");
+		
+		return result;
 	}
 	
 	public double getShillScore(Multiset<Integer> auctionCounts) {

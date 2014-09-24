@@ -2,25 +2,43 @@ package simulator.modelEvaluation;
 
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.base.Joiner;
+
+import util.CsvManipulation;
 import util.HungarianAlgorithm;
+import util.Sample;
 import weka.classifiers.Classifier;
 import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.J48;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
-
 import createUserFeatures.BuildSimFeatures;
 import createUserFeatures.BuildTMFeatures;
 import createUserFeatures.ClusterAnalysis;
 import createUserFeatures.Features;
+import createUserFeatures.UserFeatures;
 
 /**
  * Runs a modified version of the evaluation described in Stability-based Clustering Evaluation by Lange et al.
@@ -64,22 +82,27 @@ public class AccuracyEvaluation implements Runnable {
 //		System.out.println("Finished.");
 //	}
 //	
-//	private static void makeBws() throws IOException {
-//		bw_full = Files.newBufferedWriter(new File("Evaluation_full_results_inv_1nn").toPath(), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-//		bw_short = Files.newBufferedWriter(new File("Evaluation_short_results_inv_1nn").toPath(), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-//	}
+	static {
+		try {
+			bw_full = Files.newBufferedWriter(new File("Evaluation_full_results_inv_1nn_f6").toPath(), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+			bw_short = Files.newBufferedWriter(new File("Evaluation_short_results_inv_1nn_f6").toPath(), Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 //
 //	private static void flushBws() throws IOException {
 //		bw_full.flush();
 //		bw_short.flush();
 //	}
-
+//
 	public synchronized static void writeResults(BufferedWriter bw_full, BufferedWriter bw_short, int numberOfClusters, 
 			List<Features> featuresForClustering, double[][] correctMatrix, int[][] assignment, int correct, int total, 
 			int tmSeed, int simSeed, int runNumber) throws IOException {
 		long currentTime = System.currentTimeMillis();
 		write(bw_full, "Clusters:" + numberOfClusters);
-		write(bw_full, "Clustering Features:" + featuresForClustering);
+		write(bw_full, "Clustering Features:" + Features.fileLabels(featuresForClustering));
 		write(bw_full, "Timestamp:" + new Date(currentTime).toString());
 		write(bw_full, "Run:" + runNumber);
 		write(bw_full, AccuracyEvaluation.multiArrayString(correctMatrix).toString());
@@ -88,7 +111,7 @@ public class AccuracyEvaluation implements Runnable {
 		write(bw_full, "tmSeed: " + tmSeed);
 		write(bw_full, "simSeed: " + simSeed);
 		bw_full.flush();
-		write(bw_short, numberOfClusters + "," + featuresForClustering + "," + currentTime + "," + correct + "," + tmSeed + "," + simSeed + "," + runNumber);
+		write(bw_short, numberOfClusters + "," + Features.fileLabels(featuresForClustering) + "," + currentTime + "," + correct + "," + tmSeed + "," + simSeed + "," + runNumber);
 		bw_short.flush();
 	}
 
@@ -137,6 +160,70 @@ public class AccuracyEvaluation implements Runnable {
 		}
 	}
 	
+	public static void main(String[] args) throws Exception {
+		Random r = new Random(12345678);
+		for (int seed = 0; seed < 30; seed++) {
+			for (int clusters = 2; clusters <= 10; clusters++) {
+				BuildTMFeatures tmFeatureBuilder = new BuildTMFeatures();
+				Map<Integer, UserFeatures> userFeatures = tmFeatureBuilder.build();
+				
+				HashSet<Integer> half = new HashSet<>(Sample.randomSample(userFeatures.keySet().iterator(), userFeatures.size() / 2, r));
+				Map<Integer, UserFeatures> aHalf = new HashMap<>();
+				Map<Integer, UserFeatures> bHalf = new HashMap<>();
+				userFeatures.forEach((id, features) -> {
+					if (half.contains(id)) 
+						aHalf.put(id, features); 
+					else 
+						bHalf.put(id, features);
+					});
+				
+				
+				int aSeed = seed * 123 + 13579;
+				int bSeed = seed * 123 + 24680;
+				String aHalfFilename = ClusterAnalysis.clusterToFile(tmFeatureBuilder.getClass(), tmFeatureBuilder.trim(), aHalf, aSeed, Features.DEFAULT_FEATURES_NOID, Features.DEFAULT_FEATURES_NOID, clusters, false, false, -1, "a");
+				String bHalfFilename = ClusterAnalysis.clusterToFile(tmFeatureBuilder.getClass(), tmFeatureBuilder.trim(), bHalf, bSeed, Features.DEFAULT_FEATURES_NOID, Features.DEFAULT_FEATURES_NOID, clusters, false, false, -1, "b");
+				logger.warn("TM clustered instances in file: " + aHalfFilename + " and " + bHalfFilename);
+				
+//				partition(dir, tmClusteredFile);
+				String dir = "C:/Users/Sidney Tsang/Desktop/Auction Simulation/";
+				
+				evaluate(dir + aHalfFilename, dir + bHalfFilename, clusters, bw_full, bw_short, Features.DEFAULT_FEATURES_NOID, seed * 123 + 13579, seed * 123 + 24680, seed);
+			}
+		}
+	}
+	
+//	private static void partition(String dir, String filename) {
+//		List<String[]> rows = CsvManipulation.readWholeFile(Paths.get(dir, filename), false);
+//		try {
+//			BufferedWriter bwA = Files.newBufferedWriter(Paths.get(dir, "a_" + filename), Charset.defaultCharset());
+//			BufferedWriter bwB = Files.newBufferedWriter(Paths.get(dir, "b_" + filename), Charset.defaultCharset());
+//
+//			Joiner joiner = Joiner.on(",");
+//			
+//			bwA.append(joiner.join(rows.get(0)));
+//			bwA.newLine();
+//			bwB.append(joiner.join(rows.get(0)));
+//			bwB.newLine();
+//			
+//			for (int i = 1; i < rows.size(); i++) {
+//				if (Math.random() < 0.5) {
+//					bwA.append(joiner.join(rows.get(i)));
+//					bwA.newLine();
+//				} else {
+//					bwB.append(joiner.join(rows.get(i)));
+//					bwB.newLine();
+//				}
+//			}
+//			bwA.flush();
+//			bwB.flush();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		
+//		
+//	}
+	
 	/**
 	 * Calculates the number users with matching cluster assignments between users from tmFile and simFile.
 	 * 
@@ -154,6 +241,7 @@ public class AccuracyEvaluation implements Runnable {
 	public static void evaluate(String tmFile, String simFile, int numberOfClusters, BufferedWriter bw_full, BufferedWriter bw_short, 
 			List<Features> featuresForClustering, int tmSeed, int simSeed, int runNumber) throws Exception {
 		Instances tmIs = new DataSource(tmFile).getDataSet();
+		System.out.println("files: " + tmFile + "," + simFile);
 //		tmIs.randomize(new Random());
 		tmIs.setClassIndex(tmIs.numAttributes() - 1); // the last attribute is the cluster assignment 
 		

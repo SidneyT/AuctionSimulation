@@ -48,7 +48,7 @@ public abstract class SimpleUser extends EventListener implements SimpleUserI {
 		this.ps = ps;
 		this.is = is;
 	}
-	
+
 	{ // Setup
 		this.rr = new ReputationRecord();
 		this.awaitingPayment = new HashSet<Auction>();

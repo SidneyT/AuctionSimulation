@@ -35,7 +35,20 @@ import simulator.records.UserRecord;
  */
 public class AuctionHouse implements Runnable {
 
-	public static final int UNIT_LENGTH = 5; // length of each time unit
+	public static int UNIT_LENGTH = 5; // length of each time unit
+	public static int ONE_DAY = 60 * 24 / UNIT_LENGTH;
+	public static int SEVEN_DAYS = ONE_DAY * 7;
+	public static int TEN_DAYS = ONE_DAY * 10;
+	public static int HUNDRED_DAYS = ONE_DAY * 100;
+	
+	public static void changeUnitLength(int unitLength) {
+		UNIT_LENGTH = unitLength;
+		ONE_DAY = 60 * 24;
+		SEVEN_DAYS = ONE_DAY * 7;
+		TEN_DAYS = ONE_DAY * 10;
+		HUNDRED_DAYS = ONE_DAY * 100;
+	}
+	
 	private static final Logger logger = Logger.getLogger(AuctionHouse.class);
 
 	int time;

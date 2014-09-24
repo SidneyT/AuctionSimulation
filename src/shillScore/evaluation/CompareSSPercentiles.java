@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import util.Util;
+
 import com.google.common.collect.ArrayListMultimap;
 
 public class CompareSSPercentiles {
@@ -49,7 +51,7 @@ public class CompareSSPercentiles {
 		List<List<Double>> percentileLists = new ArrayList<>();
 		for (int column : columnsWanted) {
 			System.out.println("calculating percentile for column " + column);
-			List<Double> percentiles = ShillVsNormalSS.percentiles(normalScores.get(column), fraudScores.get(column));
+			List<Double> percentiles = Util.percentiles(normalScores.get(column), fraudScores.get(column));
 			percentileLists.add(percentiles);
 		}
 		

@@ -151,7 +151,7 @@ public class LowBidShillPair extends EventListener implements Controller {
 	public final Random r = new Random();
 	private void setNumberOfAuctions(int numberOfAuctions) {
 		auctionTimes = new ArrayList<>();
-		int latest = 100 * 24 * 60 / 5;
+		int latest = (AuctionHouse.HUNDRED_DAYS - AuctionHouse.SEVEN_DAYS) / AuctionHouse.UNIT_LENGTH;;
 		for (int i = 0; i < numberOfAuctions; i++) {
 			auctionTimes.add(r.nextInt(latest));
 		}
@@ -277,12 +277,11 @@ public class LowBidShillPair extends EventListener implements Controller {
 
 	@Override
 	public void soldAction(SimpleUserI agent, Auction auction) {
-		if (isFraud(auction))
-			bh.getFeedbackToAh().put(new Feedback(Val.POS, agent, auction));
-		else {
+		if (isFraud(auction)) {
+//			bh.getFeedbackToAh().put(new Feedback(Val.POS, agent, auction));
+		} else {
 			this.awaitingPayment.add(auction);
 		}
-
 	}
 
 	@Override

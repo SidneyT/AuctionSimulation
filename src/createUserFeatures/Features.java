@@ -44,7 +44,7 @@ public enum Features {
 	AuctionCount1Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log1p(uf.getAuctionCount());
+			return FastMath.log(uf.getAuctionCount());
 		}
 	},
 	/**
@@ -141,7 +141,7 @@ public enum Features {
 	BidsPerAuc6Ln {
 		@Override
 		public double value(UserFeatures uf) {
-			return FastMath.log1p(uf.getBidsPerAuc().average());
+			return FastMath.log(uf.getBidsPerAuc().average());
 		}
 	},
 	BidsPerAuc6SD {
@@ -342,6 +342,10 @@ public enum Features {
 			return "ALL_FEATURES";
 		if (features == ALL_FEATURES_MINUS_TYPE)
 			return "ALL_FEATURES_MINUS_TYPE";
+		if (features == DEFAULT_FEATURES_NOID)
+			return "DEFAULT_FEATURES_NOID";
+		if (features == MANY_FEATURES)
+			return "MANY_FEATURES";
 
 		StringBuilder sb = new StringBuilder();
 		for (Features feature : features)
@@ -376,10 +380,86 @@ public enum Features {
 		return sb.toString();
 	}
 	
-	@Override
-	public String toString() {
-		throw new UnsupportedOperationException();
-	}
+//	@Override
+//	public String toString() {
+//		throw new UnsupportedOperationException();
+//	}
+	
+	public static final List<Features> CLUSTERING_FEATURES = Arrays.<Features>asList(
+			Features.PropWin5,
+			Features.BidsPerAuc6Ln,
+			Features.AvgBidPropMax10,
+			Features.AvgBidProp11
+			);
+	public static final List<Features> DEFAULT_FEATURES_NOID = Arrays.<Features>asList(
+			Features.AvgBid3Ln,
+			Features.AvgBidIncMinusMinInc4Ln,
+			Features.PropWin5,
+			Features.BidsPerAuc6Ln,
+			Features.BidTimesElapsed9,
+			Features.AvgBidPropMax10,
+			Features.AvgBidProp11,
+			Features.AuctionCount1Ln, 
+			Features.Rep2Ln,
+			Features.FirstBidTimes13Ln
+			);
+//	public static final List<Features> MANY_FEATURES = Arrays.<Features>asList(
+//			Features.AvgBid3Ln,
+//			Features.AvgBidIncMinusMinInc4Ln,
+//			Features.PropWin5,
+//			Features.BidsPerAuc6Ln,
+//			Features.BidTimesElapsed9,
+//			Features.AvgBidPropMax10,
+//			Features.AvgBidProp11,
+//			Features.AuctionCount1Ln, 
+//			Features.Rep2Ln,
+//			Features.FirstBidTimes13Ln,
+//			Features.AvgBid3SD, // phi1sd
+//			Features.AvgBidIncMinusMinInc4SD,
+//			Features.BidsPerAuc6SD,
+//			Features.BidTimesElapsed9SD,
+//			Features.AvgBidPropMax10SD,
+//			Features.AvgBidProp11SD,
+//			Features.SelfBidInterval16, // phi12
+//			Features.SelfBidInterval16SD,
+//			Features.AnyBidInterval17,
+//			Features.AnyBidInterval17SD,
+//			Features.BidTimesMinsBeforeEnd12, // phi14
+//			Features.BidTimesMinsBeforeEnd12SD,
+//			Features.AvgLastBidAmount19Ln, // phi15
+//			Features.AvgFinalBidAmount19SD,
+//			Features.AvgFinalBidAmountPropMax14, //phi16
+//			Features.AvgFinalBidAmountPropMax14SD
+//			);
+	public static final List<Features> MANY_FEATURES = Arrays.<Features>asList(
+			AvgBid3Ln, // 1
+			AvgBid3SD, // 1sd
+			AvgBidIncMinusMinInc4Ln, // 2
+			AvgBidIncMinusMinInc4SD, // 2sd
+			PropWin5, // 3
+			BidsPerAuc6Ln, // 4
+			BidsPerAuc6SD, // 4sd
+			BidTimesElapsed9, // 5
+			BidTimesElapsed9SD, // 5sd
+			AvgBidPropMax10, // 6
+			AvgBidPropMax10SD, // 6sd
+			AvgBidProp11, // 7 
+			AvgBidProp11SD, // 7sd
+			AuctionCount1Ln, // 8
+			Rep2Ln, // 9
+			FirstBidTimes13Ln, // 10
+			FirstBidTimes13SD, // 10sd
+			SelfBidInterval16, // 12
+			SelfBidInterval16SD, // 12sd
+			AnyBidInterval17, // 13
+			AnyBidInterval17SD, // 13sd
+			BidTimesMinsBeforeEnd12, // 14
+			BidTimesMinsBeforeEnd12SD, // 14sd
+			AvgLastBidAmount19Ln, // 15
+			AvgFinalBidAmount19SD, // 15sd
+			AvgFinalBidAmountPropMax14, // 16
+			AvgFinalBidAmountPropMax14SD // 16sd
+			);
 	
 	public static final List<Features> DEFAULT_FEATURES = Arrays.<Features>asList(
 			Features.UserId0,
@@ -388,12 +468,12 @@ public enum Features {
 			Features.AvgBid3Ln,
 			Features.AvgBidIncMinusMinInc4Ln,
 			Features.BidsPerAuc6Ln,
-			Features.FirstBidTimes13,
+			Features.FirstBidTimes13Ln,
 			Features.BidTimesElapsed9,
 			Features.PropWin5,
 			Features.AvgBidPropMax10,
 			Features.AvgBidProp11
-		);
+			);
 	
 	public static final List<Features> ALL_FEATURES = Arrays.asList(Features.values());
 	public static final List<Features> ALL_FEATURES_MINUS_TYPE;

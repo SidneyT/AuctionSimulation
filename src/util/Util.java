@@ -171,11 +171,12 @@ public class Util {
 			if (insIndex < 0)
 				insIndex = -insIndex + 1;
 			double percentile = (double) insIndex / valuesA.length;
-			percentiles.add(percentile * percentile);
+			percentiles.add(percentile);
+//			percentiles.add(percentile * percentile);
 //			System.out.println(i++ + " " + percentile);
 			
 		}
-		
+
 		return percentiles;
 	}
 	

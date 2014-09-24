@@ -20,7 +20,6 @@ import simulator.buffers.PaymentSender.Payment;
 import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
-import simulator.objects.Auction.AuctionLength;
 import simulator.objects.Item;
 import simulator.records.UserRecord;
 import agents.EventListener;
@@ -95,7 +94,7 @@ public class HiredRepInflaters extends EventListener implements Controller {
 	private boolean tryTosubmitFraudAuctionFor(SimpleUserI seller) {
 		if (r.nextDouble() < 0.1) {
 			Item item = new Item(CreateItemTypes.pickType(itemTypes, r.nextDouble()), "item" + r.nextInt(100000));
-			Auction auction = new Auction(seller, item, AuctionLength.SEVEN_DAYS.length(), 100, 0, 0.1); // auction of low popularity, so few normal users will bid on them
+			Auction auction = new Auction(seller, item, AuctionHouse.SEVEN_DAYS, 100, 0, 0.1); // auction of low popularity, so few normal users will bid on them
 			seller.submitAuction(auction);
 			// remember the auction is a fraud one, and assign a puppet to it
 			fraudAuctions.put(auction, selectPuppet());

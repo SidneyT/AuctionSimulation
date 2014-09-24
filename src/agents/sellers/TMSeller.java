@@ -19,7 +19,6 @@ import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
 import simulator.objects.Auction;
 import simulator.objects.Item;
-import simulator.objects.Auction.AuctionLength;
 import util.Sample;
 
 /**
@@ -37,7 +36,7 @@ public class TMSeller extends SimpleUser {
 		super(bh, ps, is, ah);
 		
 		int numberOfAuctions = numberOfAuctions(r.nextDouble());
-		int numberOfTimeUnits = AuctionLength.ONE_DAY.length() * (100 - 7);
+		int numberOfTimeUnits = AuctionHouse.ONE_DAY * (100 - 7);
 
 		List<Integer> listOfTimes = Sample.randomSample(numberOfTimeUnits, numberOfAuctions, r);
 		Collections.sort(listOfTimes, Collections.reverseOrder());
@@ -50,7 +49,7 @@ public class TMSeller extends SimpleUser {
 		super(bh, ps, is, ah, id);
 		
 		int numberOfAuctions = numberOfAuctions(r.nextDouble());
-		int numberOfTimeUnits = AuctionLength.ONE_DAY.length() * (100 - 7);
+		int numberOfTimeUnits = AuctionHouse.ONE_DAY * (100 - 7);
 
 		List<Integer> listOfTimes = Sample.randomSample(numberOfTimeUnits, numberOfAuctions, r);
 		Collections.sort(listOfTimes, Collections.reverseOrder());

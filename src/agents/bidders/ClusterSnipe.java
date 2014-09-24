@@ -12,7 +12,6 @@ import org.apache.log4j.Logger;
 import com.google.common.collect.HashMultimap;
 
 import distributions.Uniform;
-
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
@@ -153,13 +152,13 @@ public class ClusterSnipe extends ClusterBidder {
 		do {
 			double random = r.nextDouble();
 			if (random < 0.222)
-				bidTimeBeforeEnd = 1.720952 * Math.pow(88753792, random) / 5;
+				bidTimeBeforeEnd = 1.720952 * Math.pow(88753792, random) / AuctionHouse.UNIT_LENGTH;
 			else if (random < 0.4633)
-				bidTimeBeforeEnd = 12.46477 * Math.pow(16778.98, random) / 5;
+				bidTimeBeforeEnd = 12.46477 * Math.pow(16778.98, random) / AuctionHouse.UNIT_LENGTH;
 			else
-				bidTimeBeforeEnd = 169.6812 * Math.pow(66.27293, random) / 5;
+				bidTimeBeforeEnd = 169.6812 * Math.pow(66.27293, random) / AuctionHouse.UNIT_LENGTH;
 		} while (bidTimeBeforeEnd > 260 || bidTimeBeforeEnd < 1);
-		return SEVEN_DAYS - (int) bidTimeBeforeEnd;
+		return AuctionHouse.SEVEN_DAYS - (int) bidTimeBeforeEnd;
 	}
 
 	@Override

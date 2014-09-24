@@ -18,7 +18,6 @@ import com.google.common.collect.Multiset;
 
 import distributions.Exponential;
 import distributions.Normal;
-
 import simulator.AuctionHouse;
 import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
@@ -41,8 +40,7 @@ public abstract class ClusterBidder extends SimpleUser {
 //	private static final List<Integer> allClusterBidderIds = new ArrayList<>();
 	
 	// constants...
-	protected static final int ONE_DAY = 24*60/AuctionHouse.UNIT_LENGTH;
-	protected static final int SEVEN_DAYS = ONE_DAY * 7;
+//	protected static final int ONE_DAY = 24*60/AuctionHouse.UNIT_LENGTH;
 	// probability of bidding when auction has 1-7 days to go, adjusted by number of users 
 	
 	// parameters
@@ -77,7 +75,7 @@ public abstract class ClusterBidder extends SimpleUser {
 			privateValuationProportion *= -1;
 		
 		maxAuctions = numberOfAuctionsPer100Days(r.nextDouble());
-		List<Integer> times = Sample.randomSample(100 * ONE_DAY - SEVEN_DAYS, maxAuctions, r); // equals 26784 time units which is (100 - 7) days
+		List<Integer> times = Sample.randomSample(AuctionHouse.HUNDRED_DAYS - AuctionHouse.SEVEN_DAYS, maxAuctions, r); // equals 26784 time units which is (100 - 7) days
 		Collections.sort(times, Collections.reverseOrder());
 		interestTimes = new ArrayDeque<>(times);
 		
@@ -102,7 +100,7 @@ public abstract class ClusterBidder extends SimpleUser {
 			privateValuationProportion *= -1;
 		
 		maxAuctions = numberOfAuctionsPer100Days(r.nextDouble());
-		List<Integer> times = Sample.randomSample(100 * ONE_DAY - SEVEN_DAYS, maxAuctions, r); // equals 26784 time units which is (100 - 7) days
+		List<Integer> times = Sample.randomSample(AuctionHouse.HUNDRED_DAYS - AuctionHouse.SEVEN_DAYS, maxAuctions, r); // equals 26784 time units which is (100 - 7) days
 		Collections.sort(times, Collections.reverseOrder());
 		interestTimes = new ArrayDeque<>(times);
 		
@@ -128,7 +126,6 @@ public abstract class ClusterBidder extends SimpleUser {
 	private static final double logParam = 2.4;
 	
 	public static long earlyCount, sniperCount;
-	
 	
 	/**
 	 * Selects auctions to bid in, and the time to begin bidding in them.
@@ -213,13 +210,6 @@ public abstract class ClusterBidder extends SimpleUser {
 		}
 		
 		newAuctionsUnprocessed.clear();
-	}
-	
-	static {
-		ArrayList<Double> probabilities = new ArrayList<>(100);
-		for (int i = 0; i < 50; i++) {
-			probabilities.add(FastMath.pow(i, 1.8) / 12000);
-		}
 	}
 	
 	private void scheduleBid(int timeToMakeBid, Auction auction) {

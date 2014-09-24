@@ -1,5 +1,6 @@
 package util;
 
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -19,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import util.CsvManipulation.CsvThing;
+
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -392,6 +396,55 @@ public class CsvManipulation {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	
+	/**
+	 * featureValues can hold nulls if there is no value for that feature for that user.
+	 */
+	public static class CsvThing {
+		public String[] headingRow;
+		public ArrayListMultimap<Integer, Double> featureValues;
+	}
+
+	/**
+	 * Reads csv file into a ArrayListMultimap.
+	 * First column is used as a key, and must be an Integer. The other columns make up the array list.
+	 * If a value cannot be parsed as a double, the value is left as null.
+	 */
+	public static CsvManipulation.CsvThing readCsvFile(String filepath) {
+		List<String[]> rows = readWholeFile(Paths.get(filepath), false);
+		
+		CsvManipulation.CsvThing csvThing = new CsvManipulation.CsvThing();
+		csvThing.headingRow = rows.get(0);
+		
+		ArrayListMultimap<Integer, Double> featureValues = ArrayListMultimap.create(); 
+		for (String[] row : rows.subList(1, rows.size())) {
+			int id = (int) Double.parseDouble(row[0]);
+			for (int i = 1; i < row.length; i++) {
+				String valueString = row[i];
+	
+				Double value;
+				if (valueString.isEmpty() || valueString.equals("null"))
+					value = null;
+				else if (valueString.equals("-Infinity"))
+					value = Double.NEGATIVE_INFINITY;
+				else if (valueString.equals("Infinity")) {
+					value = Double.POSITIVE_INFINITY;
+				} else {
+					try {
+						value = Double.parseDouble(row[i]);
+					} catch (NumberFormatException e) {
+						value = null;
+					}
+				}
+				
+				featureValues.put(id, value);
+			}
+		}
+		
+		csvThing.featureValues = featureValues;
+		return csvThing;
 	}
 	
 	

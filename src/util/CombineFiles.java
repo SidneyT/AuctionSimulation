@@ -26,7 +26,8 @@ public class CombineFiles {
 //		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/shillingResults/trevathan");
 //		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/single_feature_shillvsnormal/hybrid");
 //		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/shillingResults/hybridnormal");
-		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/shillingResults/hybridlp");
+//		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/shillingResults/hybridlp");
+		Path synDataFolder = Paths.get("F:/workstuff2011/AuctionSimulation/shillingResults/trevathanAll");
 		Path outputFolder = Paths.get(synDataFolder.toString(), "combined");
 		
 		String ratings = "ShillScores_";

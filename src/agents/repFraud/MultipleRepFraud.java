@@ -84,7 +84,7 @@ public class MultipleRepFraud extends EventListener implements Controller {
 		puppets = ImmutableBiMap.copyOf(tempPuppets);
 		
 		// on average, try to get 1 rep every 3 days.
-		expBid = new ExponentialDistribution(3 * 24 * 60 / 5);
+		expBid = new ExponentialDistribution(AuctionHouse.ONE_DAY * 3);
 		nextBidTimes = new HashMap<>();
 		for (PuppetI puppet : puppets.keySet()) {
 			nextBidTimes.put(puppet, Math.round(expBid.sample()));
@@ -92,7 +92,7 @@ public class MultipleRepFraud extends EventListener implements Controller {
 
 		// submit auctions at a rate proportion to the number of collaborating fraudsters
 		if (numberOfFraudUsers > 1) {
-			expAuc = new ExponentialDistribution((double) 80 * 24 * 60 / 5 / (numberOfFraudUsers - 1));
+			expAuc = new ExponentialDistribution((double) 80 * AuctionHouse.ONE_DAY / (numberOfFraudUsers - 1));
 		} else {
 			expAuc = new ExponentialDistribution(Double.MAX_VALUE);
 		}

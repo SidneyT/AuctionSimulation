@@ -17,7 +17,7 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.log4j.Logger;
 
 import createUserFeatures.BuildUserFeatures.BidObject;
-
+import simulator.AuctionHouse;
 import simulator.categories.ItemType;
 import simulator.database.DBConnection;
 
@@ -52,7 +52,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 	}
 	
 	private static final long zeroTime = (long) 946684800 * 1000; // time since epoch at year 1/1/2000
-	private static final long timeUnitMillis = 5 * 60 * 1000;
+	private static final long timeUnitMillis = AuctionHouse.UNIT_LENGTH * 60 * 1000;
 	public static Date convertTimeunitToTimestamp(long timeUnit) {
 		return new Date(zeroTime + timeUnit * timeUnitMillis);
 	}
@@ -113,7 +113,7 @@ public class BuildSimFeatures extends BuildUserFeatures{
 		// this value can only be calculated for SIM-Auctions, since true valuation is not known for TM-Auctions.
 		for (BidObject bid : list) {
 			double proportionOfValuation = (double) bid.amount/itemtypes.get(auction.itemTypeId).getTrueValuation();
-			userFeaturesMap.get(bid.bidderId).getBidAmountComparedToValuation().addNext(proportionOfValuation);
+			userFeaturesMap.get(bid.bidderId).getBidAmountComparedToValuation().add(proportionOfValuation);
 		}
 	}
 }

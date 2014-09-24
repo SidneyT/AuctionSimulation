@@ -7,8 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
+import simulator.AuctionHouse;
 import util.Util;
-
 import agents.SimpleUser;
 import agents.SimpleUserI;
 
@@ -227,19 +227,19 @@ public class Auction {
 		return this.id != -1 && this.startTime != -1;
 	}
 	
-	public enum AuctionLength {
-		ONE_DAY(288),
-		SEVEN_DAYS(2016), 
-		TEN_DAYS(2880);
-		private final int timeUnits;
-		AuctionLength(int timeUnits) {
-			this.timeUnits = timeUnits;
-		}
-
-		public int length() {
-			return timeUnits;
-		}
-	}
+//	public enum AuctionLength {
+//		ONE_DAY(60 * 24),
+//		SEVEN_DAYS(60 * 24 * 7), 
+//		TEN_DAYS(60 * 24 * 10);
+//		private final int timeUnits;
+//		AuctionLength(int timeUnits) {
+//			this.timeUnits = timeUnits / AuctionHouse.UNIT_LENGTH;
+//		}
+//
+//		public int length() {
+//			return timeUnits;
+//		}
+//	}
 	
 	/*
 	 * % time elapsed since the auction was accepted by AH

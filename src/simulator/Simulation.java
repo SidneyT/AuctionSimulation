@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 
 import agents.EventListener;
 import agents.SimpleUserI;
-import agents.bidders.ClusterBidder;
 import agents.bidders.ClusterEarly;
 import agents.bidders.ClusterSnipe;
 import agents.sellers.TMSeller;
@@ -30,7 +29,6 @@ import simulator.categories.CreateItemTypes;
 import simulator.categories.ItemType;
 import simulator.database.SaveObjects;
 import simulator.objects.Auction;
-import simulator.objects.Auction.AuctionLength;
 import simulator.objects.Feedback;
 import simulator.records.UserRecord;
 import util.CrashOnAssertionErrorRunnable;
@@ -42,13 +40,13 @@ public class Simulation {
 
 	final static Logger logger = Logger.getLogger(Simulation.class);
 
-	static final int NUMBER_OF_THREADS = 3;
+	static final int NUMBER_OF_THREADS = 7;
 	
 	/**
 	 * Runs the simulator
 	 */
 	public static void run(SaveObjects saveObjects, AgentAdder... agentAdders) {
-		Simulation.run(saveObjects, 10000, agentAdders);
+		Simulation.run(saveObjects, 20000, agentAdders);
 //		CalculateStats.calculateStats();
 	}
 
@@ -74,8 +72,6 @@ public class Simulation {
 			final ItemSender is = new ItemSender();
 	
 			// create item types
-	//		final CategoryRecord cr = CreateCategories.mockCategories();
-	//		ArrayList<ItemType> types = CreateItemTypes.mockItems(20, cr.getCategories());
 			final CategoryRecord cr = CreateCategories.TMCategories();
 			ArrayList<ItemType> itemTypes = CreateItemTypes.TMItems(cr.getRoot().getChildren());
 	
@@ -86,13 +82,9 @@ public class Simulation {
 			final AuctionHouse ah = new AuctionHouse(userRecord, bh, saveObjects);
 	
 			// parameters of simulator
-	//		final int numberOfBidders = 100000;
 			final double numberOfDays = 100;
-	//		final double auctionsPerBidder = 1.04; // value from TM data
-	//		final double auctionsPerBidder = 1.25; // assuming 35.9% of auctions have no bids, 1.04 becomes 1.62
 			final double auctionsPerBidder = 1.4;
-	//		final double failedAuctionsAdjustment = 1.033; // every 1.033 auctions, only 1 will be bid upon by at least 1 person
-			final double auctionsPerDay = auctionsPerBidder * numberOfBidders / numberOfDays; // * failedAuctionsAdjustment;
+			final double auctionsPerDay = auctionsPerBidder * numberOfBidders / numberOfDays;
 	
 	//		double probIsSniper = 0.33; // from tradeMeData
 			final double probIsSniper = 0.5;
@@ -105,21 +97,13 @@ public class Simulation {
 			}
 	//		System.out.println("average: " + ClusterBidder.debugAverage);
 	
-			// add sellers
-	//		int numSellers = TimedSeller.sellersRequired(auctionsPerDay);
-	//		// creating normal sellers
-	//		for (int i = 0; i < numSellers; i++) {
-	//			userRecord.addUser(new TimedSeller(bh, ps, is, ah, types));
-	//		}
 			int numSellers = TMSeller.sellersRequired(auctionsPerDay);
 			// creating normal sellers
 			for (int i = 0; i < numSellers; i++) {
 				userRecord.addUser(new TMSeller(bh, ps, is, ah, itemTypes));
 			}
 			
-			// TODO: Add fraud agents here
-			// initialise shillers; shillers are different from normal agents - their constructors add additional
-			// agents to the UserRecord
+			// Add fraud agents here
 			for (int i = 0; i < agentAdders.length; i++) {
 				agentAdders[i].add(bh, ps, is, ah, userRecord, itemTypes);
 			}
@@ -151,15 +135,8 @@ public class Simulation {
 			
 			ImmutableSet<Callable<Object>> userCallables = userCallablesBuilder.build();
 			
-			// starting the loops - each loop is 1 time unit
-			// 24 * 60 / 5 == 1 day
-			int timeUnits = AuctionLength.ONE_DAY.length() * 100;
-	//		long tenPercent = (long) (timeUnits/10);
-			for (int i = 0; i < timeUnits; i++) {
-	//			if ((i + 1) % tenPercent == 0) {
-	//				logger.warn("another 10% done");
-	//			}
-	//			System.out.println("time unit: " + i);
+			int simulationDurationInUnits = AuctionHouse.ONE_DAY * 100;
+			for (int i = 0; i < simulationDurationInUnits; i++) {
 				try {
 					ah.run();
 					bh.startUserTurn();
@@ -167,8 +144,6 @@ public class Simulation {
 					// invokeAll() blocks until all tasks are complete
 					es.invokeAll(callables); 
 					es.invokeAll(userCallables);
-//					if (i % 10 == 0)
-//						System.out.println("e, s: " + ClusterBidder.earlyCount + "," + ClusterBidder.sniperCount);
 					
 					bh.startAhTurn();
 				} catch (InterruptedException e) {

@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
 
 import org.apache.commons.math3.util.Pair;
 
@@ -19,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import simulator.database.DBConnection;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  *	Builds UserFeature object using scraped TradeMe data. 
@@ -46,24 +48,31 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	}
 	
 	private static void run() {
-		List<Features> featureList = Features.DEFAULT_FEATURES;
+		List<Features> featureList = Features.CLUSTERING_FEATURES;
+//		List<Features> featureList = Features.DEFAULT_FEATURES_NOID;
+//		List<Features> featureList = Features.MANY_FEATURES;
 //		List<Features> featureList = Features.ALL_FEATURES_MINUS_TYPE;
-		BuildTMFeatures bf = new BuildTMFeatures();
+//		BuildTMFeatures bf = new BuildTMFeatures();
 		
 //		int minimumFinalPrice = 10000;
 //		int maximumFinalPrice = 999999999;
 //		writeToFile(bf.build(minimumFinalPrice, maximumFinalPrice).values(), featureList, 
 //				Paths.get("TradeMeUserFeatures_" + Features.fileLabels(featureList) + "-" + minimumFinalPrice + "-" + maximumFinalPrice + ".csv"));
 		
-		writeToFile(bf.build().values(), featureList, Paths.get("TradeMeUserFeatures_" + Features.fileLabels(featureList) + ".csv"));
-		
+//		writeToFile(bf.build().values(), featureList, Paths.get("TradeMeUserFeatures_" + Features.fileLabels(featureList) + ".csv"));
+
+//		for (int i = 0; i < 20; i++) {
+//			BuildSimFeatures bf = new BuildSimFeatures(true);
+//			writeToFile(bf.build(new SimDBAuctionIterator(DBConnection.getConnection("syn_normal_20k_" + i), true)).values(), featureList, Paths.get("SimUserFeatures_" + Features.fileLabels(featureList) + "_" + i + ".csv"));
+//		}
 	}
 	
 	
 	public static final String DEFAULT_QUERY = 
-			"SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, b.bidderId, b.amount bidAmount, b.time bidTime " +
+			"SELECT a.listingId, a.category, a.sellerId, a.endTime, a.winnerId, u.userId bidderId, b.amount bidAmount, b.time bidTime " +
 			"FROM auctions AS a " +
 			"JOIN bids AS b ON a.listingId=b.listingId " +
+			"JOIN users as u ON b.bidderId=u.userId " +
 			"WHERE a.purchasedWithBuyNow=0 " + // for no buynow
 			"ORDER BY a.listingId ASC, amount ASC;";
 	/**
@@ -71,8 +80,11 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	 */
 	public Map<Integer, UserFeatures> build() {
 		// get bids (and user and auction info) for auctions that are not purchased with buy now
-		return constructUserFeatures(DEFAULT_QUERY);
+		if (buildCache == null)
+			buildCache = constructUserFeatures(DEFAULT_QUERY);
+		return buildCache;
 	}
+	private Map<Integer, UserFeatures> buildCache;
 	
 	/**
 	 * Builds user features for users using only auctions that ended with a price over a certain value. 
@@ -132,22 +144,31 @@ public class BuildTMFeatures extends BuildUserFeatures {
 	 * Information is stored in class variable "userFeaturesMap".  Map is in ascending key
 	 * order. Key is the userId.
 	 */
-	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
-		try (Connection conn = DBConnection.getTrademeConnection()) {
+	public Map<Integer, UserFeatures> constructUserFeatures(String dbName, String query) {
+		int totalAuctionCount = 0;
+		int totalBidCount = 0;
+//		try (Connection conn = DBConnection.getTrademeConnection()) {
+		try (Connection conn = DBConnection.getConnection(dbName)) {
 			Iterator<Pair<TMAuction, List<BidObject>>> auctionIterator = new TMAuctionIterator(conn, query).iterator();
 			
 			while(auctionIterator.hasNext()) {
 				Pair<TMAuction, List<BidObject>> pair = auctionIterator.next();
 				processAuction(pair.getKey(), pair.getValue()); // process the bidList for the last remaining auction
+				
+				totalAuctionCount++;
+				totalBidCount += pair.getValue().size();
 			}
-			
 			userRep(conn);
 			conn.close();
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 		
+		System.out.println("counts: a" + totalAuctionCount + ",b" + totalBidCount + ",u" + userFeaturesMap.keySet().size());
 		return this.userFeaturesMap;
+	}
+	public Map<Integer, UserFeatures> constructUserFeatures(String query) {
+		return constructUserFeatures("trademe_small", query);
 	}
 	
 	/**
@@ -239,14 +260,18 @@ public class BuildTMFeatures extends BuildUserFeatures {
 				}
 		}
 		
-		public Iterator<Pair<TMAuction, List<BidObject>>> iterator() {
+		public ArrayList<Pair<TMAuction, List<BidObject>>> list() {
 			TMIteratorInstance it = new TMIteratorInstance(rs);
 			ArrayList<Pair<TMAuction, List<BidObject>>> all = new ArrayList<>();
 			while (it.hasNext()) {
 				Pair<TMAuction, List<BidObject>> pair = it.next();
 				all.add(pair);
 			}
-			return all.iterator();
+			return all;
+		}
+		
+		public Iterator<Pair<TMAuction, List<BidObject>>> iterator() {
+			return list().iterator();
 //			return new TMIteratorInstance(rs);
 		}
 		

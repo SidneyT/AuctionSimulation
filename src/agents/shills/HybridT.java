@@ -27,7 +27,8 @@ public class HybridT extends Hybrid {
 	private static Logger logger = Logger.getLogger(HybridT.class);
 
 	public HybridT(BufferHolder bh, PaymentSender ps, ItemSender is, AuctionHouse ah, UserRecord ur, List<ItemType> types, Strategy strategy, PuppetFactoryI factory) {
-		super(bh, ps, is, ah, ur, types, strategy, factory, 1, 6, 3, 20); // shillCount = 6, shillsPerAuction = 3. This gives 20 combinations of 3 users. So 20 the shill auctionCount is 20.
+//		super(bh, ps, is, ah, ur, types, strategy, factory, 1, 6, 3, 20); // shillCount = 6, shillsPerAuction = 3. This gives 20 combinations of 3 users. So 20 the shill auctionCount is 20.
+		super(bh, ps, is, ah, ur, types, strategy, factory, 1, 6, 3, 50); // shillCount = 6, shillsPerAuction = 3. This gives 20 combinations of 3 users. So 20 the shill auctionCount is 20.
 	}
 
 	@Override

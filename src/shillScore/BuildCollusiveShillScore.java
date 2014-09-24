@@ -21,7 +21,6 @@ import createUserFeatures.SimDBAuctionIterator;
 
 import shillScore.BuildShillScore.ShillScoreInfo;
 import shillScore.CollusiveShillScore.ScoreType;
-import shillScore.evaluation.ShillVsNormalSS;
 import simulator.database.DBConnection;
 import util.CombinationGenerator;
 import util.Util;
@@ -72,7 +71,7 @@ public class BuildCollusiveShillScore {
 			}
 		}
 
-		List<Double> percentiles = ShillVsNormalSS.percentiles(normalCollusionScores, shillCollusionScores);
+		List<Double> percentiles = Util.percentiles(normalCollusionScores, shillCollusionScores);
 //		CompareShillScores.writePercentiles(Paths.get("shillingResults", "comparisons", "Percentiles" + type.name + suffix + ".csv"), percentiles, "");
 		
 //		List<TpFpPair> tpFps = CompareShillScores.generateTpFp(percentiles);
@@ -138,13 +137,13 @@ public class BuildCollusiveShillScore {
 					double iBeta = shillScores.get(iId).getBeta();
 //					System.out.println("iId: " + shillScores.get(iId));
 					double bindingFactorB = bindingFactor(iBeta, jBeta);
-					cs.bindingFactorB.addNext(bindingFactorB);
+					cs.bindingFactorB.add(bindingFactorB);
 					
 					// calculate binding factor A
 					double jAlpha = shillScores.get(jId).getAlpha(auctionCounts).maxAlpha;
 					double iAlpha = shillScores.get(iId).getAlpha(auctionCounts).maxAlpha;
 					double bindingFactorA = bindingFactor(iAlpha, jAlpha);
-					cs.bindingFactorA.addNext(bindingFactorA);
+					cs.bindingFactorA.add(bindingFactorA);
 				}
 				
 			}

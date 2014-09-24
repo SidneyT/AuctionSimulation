@@ -51,7 +51,7 @@ public class Silhouette {
 					
 					double s = (b - a)/FastMath.max(a, b);
 	//				System.out.println("s: " + s);
-					globalS.addNext(s);
+					globalS.add(s);
 					
 				}
 				System.out.println(globalS);
@@ -81,7 +81,7 @@ public class Silhouette {
 	private static double a(List<Double> point, Collection<List<Double>> others) {
 		IncrementalMean mean = new IncrementalMean();
 		for (List<Double> other : others) {
-			mean.addNext(euclideanDistance(point, other));
+			mean.add(euclideanDistance(point, other));
 		}
 		mean.removeAverage(1, 0); // 'others' includes 'point'. This undoes the adding of the extra distance of 0.
 		
@@ -106,7 +106,7 @@ public class Silhouette {
 	private static double bPart(List<Double> point, Collection<List<Double>> others) {
 		IncrementalMean mean = new IncrementalMean();
 		for (List<Double> other : others) {
-			mean.addNext(euclideanDistance(point, other));
+			mean.add(euclideanDistance(point, other));
 		}
 		
 		return mean.average();

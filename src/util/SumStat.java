@@ -8,7 +8,7 @@ public enum SumStat implements SumStatI {
 		public double summaryValue(List<Double> values) {
 			IncrementalMean mean = new IncrementalMean();
 			for (double value : values) {
-				mean.addNext(value);
+				mean.add(value);
 			}
 			return mean.average();
 		}

@@ -160,16 +160,16 @@ public abstract class BuildUserFeatures {
 			int increment = bid - previousBid; // find the difference between this and the previous bid amount
 //			uf.avgBidInc = Util.incrementalAvg(uf.avgBidInc, uf.bidIncCount, increment);
 			assert(increment > 0) : "Bid increment must be positive.";
-			uf.getAvgBidInc().addNext(increment);
+			uf.getAvgBidInc().add(increment);
 			
 
 			int incMinusMin = increment - Util.minIncrement(previousBid);
 			if (incMinusMin < 0)
 				incMinusMin = 0;
-			uf.getAvgBidIncMinusMinInc().addNext(incMinusMin);
+			uf.getAvgBidIncMinusMinInc().add(incMinusMin);
 		}
 		// update average bid value
-		uf.getAvgBid().addNext(bid);
+		uf.getAvgBid().add(bid);
 		// update avgBidComparedToFinal
 		double fractionOfMax = ((double) bid) / maximumBid;
 //		try {
@@ -179,7 +179,7 @@ public abstract class BuildUserFeatures {
 //		} catch (IOException e) {
 //			e.printStackTrace();
 //		}
-		uf.getAvgBidAmountComparedToMax().addNext(fractionOfMax);
+		uf.getAvgBidAmountComparedToMax().add(fractionOfMax);
 	}
 
 	/**
@@ -197,7 +197,7 @@ public abstract class BuildUserFeatures {
 			long interval = Util.timeDiffInMin(list.get(i).time, list.get(i - 1).time);
 			assert (interval >= 0);
 			UserFeatures user = userFeaturesMap.get(bidderId);
-			user.getAnyBidInterval().addNext(interval);
+			user.getAnyBidInterval().add(interval);
 		}
 	}
 
@@ -214,7 +214,7 @@ public abstract class BuildUserFeatures {
 			for (int i = 1; i < userBidList.size(); i++) {
 				long interval = Util.timeDiffInMin(userBidList.get(i).time, userBidList.get(i - 1).time);
 				assert (interval >= 0);
-				user.getSelfBidInterval().addNext(interval);
+				user.getSelfBidInterval().add(interval);
 			}
 		}
 	}
@@ -225,9 +225,9 @@ public abstract class BuildUserFeatures {
 			int highestAmount = bidsByUser.get(bidderId).get(bidsByUser.get(bidderId).size() - 1).amount;
 			
 			double finalBidComparedToMax = (double) highestAmount / finalPrice;
-			uf.getAvgFinalBidComparedToMax().addNext(finalBidComparedToMax);
+			uf.getAvgFinalBidComparedToMax().add(finalBidComparedToMax);
 			
-			uf.getAvgFinalBidAmount().addNext(highestAmount);
+			uf.getAvgFinalBidAmount().add(highestAmount);
 		}
 	}
 
@@ -236,8 +236,8 @@ public abstract class BuildUserFeatures {
 		for (int bidderId : bidsByUser.keySet()) {
 			UserFeatures uf = userFeaturesMap.get(bidderId);
 			double bidProp = ((double) bidsByUser.get(bidderId).size() / bidsByUser.size());
-			uf.getAvgBidProp().addNext(bidProp);
-			uf.getBidsPerAuc().addNext(bidsByUser.get(bidderId).size());
+			uf.getAvgBidProp().add(bidProp);
+			uf.getBidsPerAuc().add(bidsByUser.get(bidderId).size());
 		}
 	}
 	
@@ -246,11 +246,11 @@ public abstract class BuildUserFeatures {
 			UserFeatures user = userFeaturesMap.get(bidderId);
 			// record how many minutes before the end of the auction the FIRST bid was made by each user
 			long firstBidTime = Util.timeDiffInMin(auctionEnd, bidsByUser.get(bidderId).get(0).time);
-			user.getFirstBidTime().addNext(firstBidTime);
+			user.getFirstBidTime().add(firstBidTime);
 			
 			// record how many minutes before the end of the auction the LAST bid was made by each user
 			long lastBidTime = Util.timeDiffInMin(auctionEnd, bidsByUser.get(bidderId).get(bidsByUser.get(bidderId).size() - 1).time);
-			user.getLastBidTime().addNext(lastBidTime);
+			user.getLastBidTime().add(lastBidTime);
 			
 			// System.out.println("firstBidTimes: " + user.firstBidTimes);
 		}
@@ -270,11 +270,11 @@ public abstract class BuildUserFeatures {
 			for (BidObject bo : bidsByUser.get(userId)) {
 				// long bidMinsBeforeEnd = timeDiffInMin(bidList.get(bidList.size() - 1).time, bo.time);
 				long bidMinsBeforeEnd = Util.timeDiffInMin(auctionEnd, bo.time);
-				userFeature.getBidTimesMinsBeforeEnd().addNext(bidMinsBeforeEnd);
+				userFeature.getBidTimesMinsBeforeEnd().add(bidMinsBeforeEnd);
 	
 				// time of bid as a fraction from the time of the first bid in the auction to the end time
 				double fractionElapsed = ((double) Util.timeDiffInMin(bo.time, firstBidTime)) / length;
-				userFeature.getBidTimesFractionToEnd().addNext(fractionElapsed);
+				userFeature.getBidTimesFractionToEnd().add(fractionElapsed);
 			}
 		}
 	}

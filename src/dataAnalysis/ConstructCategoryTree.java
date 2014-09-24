@@ -57,7 +57,7 @@ public class ConstructCategoryTree {
 				if (!catMeanMap.containsKey(category)) {
 					catMeanMap.put(category, new IncrementalSD());
 				}
-				catMeanMap.get(category).addNext(finalPrice);
+				catMeanMap.get(category).add(finalPrice);
 			}
 			
 			for (Entry<String, IncrementalSD> entry : catMeanMap.entrySet()) {

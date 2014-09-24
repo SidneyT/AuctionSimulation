@@ -11,7 +11,6 @@ import simulator.buffers.BufferHolder;
 import simulator.buffers.ItemSender;
 import simulator.buffers.PaymentSender;
 import simulator.categories.ItemType;
-import simulator.objects.Auction.AuctionLength;
 import simulator.records.UserRecord;
 import util.Sample;
 import agents.shills.puppets.TMSellerPuppet;
@@ -41,7 +40,7 @@ public class RepFraudController implements Runnable {
 		repInflator = new HiredRepInflaters(bh, ps, is, ah, ur, itemTypes, puppetCount);
 		
 		// sellers getting rep from the repInflator
-		List<Integer> randomStartTimes = Sample.randomSample(AuctionLength.ONE_DAY.length() * 80, sellerCount, r);
+		List<Integer> randomStartTimes = Sample.randomSample(AuctionHouse.ONE_DAY * 80, sellerCount, r);
 		for (Integer startTime : randomStartTimes) {
 			
 			// randomly allocate start times, when the repInflators will begin submitting auctions and inflate rep.

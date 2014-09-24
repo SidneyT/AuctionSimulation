@@ -146,7 +146,7 @@ public abstract class CollusiveShillController extends EventListener implements 
 	public final Random r = new Random();
 	private void setNumberOfAuctions(int numberOfAuctions) {
 		auctionTimes = new ArrayList<>();
-		int latest = 100 * 24 * 60 / 5;
+		int latest = (AuctionHouse.HUNDRED_DAYS - AuctionHouse.SEVEN_DAYS) / AuctionHouse.UNIT_LENGTH;;
 		for (int i = 0; i < numberOfAuctions; i++) {
 			auctionTimes.add(r.nextInt(latest));
 		}

@@ -16,14 +16,14 @@ public class IncrementalMean {
 		this.average = average;
 	}
 	
-	public void addNext(double newValue) {
+	public void add(double newValue) {
 		this.average = this.average + (newValue - this.average)/(++numElements);
 		assert !Double.isNaN(this.average);
 	}
 	
 	public void add(Collection<Double> values) {
 		for (Double value : values) {
-			addNext(value);
+			add(value);
 		}
 	}
 	

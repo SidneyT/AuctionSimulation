@@ -311,7 +311,8 @@ public class ShillVsNormalSS {
 			AuctionObject auction = auctionBidderEntry.getKey();
 			List<Integer> bidders = auctionBidderEntry.getValue();
 			
-			if (users.get(auction.sellerId).userType.toLowerCase().contains("puppet")) {
+			String userType = users.get(auction.sellerId).userType.toLowerCase();
+			if (userType.contains("puppet") || userType.contains("sb")) {
 //			if (auction.sellerId >= 5000) {// TODO:
 				Set<Integer> seen = new HashSet<>();
 				List<ScoreBidderPair> pairs = new ArrayList<>();

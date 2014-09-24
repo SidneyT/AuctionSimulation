@@ -22,7 +22,7 @@ import weka.core.matrix.Matrix;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
-enum NodeFeature implements NodeFeatureI {
+public enum NodeFeature implements NodeFeatureI {
 
 	/**
 	 * Finds the number of edges for the given user's egonet. Assumes directed graph.
